@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { Church, Users, Heart, HandHeart, BookOpen, ChevronRight, MapPin, Phone, CheckCircle, Plus, ThumbsUp, MessageCircle, AlertTriangle, X } from 'lucide-react';
+import { Church, Users, Heart, HandHeart, BookOpen, BookMarked, ChevronRight, ChevronLeft, ChevronDown, MapPin, Phone, CheckCircle, Plus, ThumbsUp, MessageCircle, AlertTriangle, X, Calendar, Star, Bookmark } from 'lucide-react';
 import type { SamaritanAlert } from '../types';
 
-type CommunityTab = 'churches' | 'prayer' | 'testimonials' | 'volunteer';
+type CommunityTab = 'churches' | 'prayer' | 'testimonials' | 'volunteer' | 'bible';
 
 export default function CommunityPage() {
   const [tab, setTab] = useState<CommunityTab>('churches');
@@ -17,6 +17,7 @@ export default function CommunityPage() {
     { id: 'prayer', label: 'Oração', icon: <BookOpen size={14} /> },
     { id: 'testimonials', label: 'Testemunhos', icon: <Heart size={14} /> },
     { id: 'volunteer', label: 'Voluntário', icon: <HandHeart size={14} /> },
+    { id: 'bible', label: 'Bíblia', icon: <BookMarked size={14} /> },
   ];
 
   const handleSendAlert = () => {
@@ -57,6 +58,7 @@ export default function CommunityPage() {
         {tab === 'prayer' && <PrayerGroupsTab />}
         {tab === 'testimonials' && <TestimonialsTab />}
         {tab === 'volunteer' && <VolunteerTab />}
+        {tab === 'bible' && <BibleTab />}
       </div>
 
       {/* FAB — Botão Bom Samaritano */}
@@ -383,6 +385,590 @@ function VolunteerTab() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── Bible data ────────────────────────────────────────────────────────────────
+
+const DAILY_VERSES = [
+  { ref: 'João 3:16', text: 'Porque Deus amou o mundo de tal maneira que deu o seu Filho Unigênito, para que todo o que nele crer não pereça, mas tenha a vida eterna.' },
+  { ref: 'Salmos 23:1', text: 'O Senhor é o meu pastor; nada me faltará.' },
+  { ref: 'Filipenses 4:13', text: 'Tudo posso naquele que me fortalece.' },
+  { ref: 'Isaías 41:10', text: 'Não temas, porque eu sou contigo; não te assombres, porque eu sou teu Deus; eu te fortaleço, e te ajudo, e te sustento com a destra da minha justiça.' },
+  { ref: 'Romanos 8:28', text: 'E sabemos que todas as coisas contribuem juntamente para o bem daqueles que amam a Deus, daqueles que são chamados segundo o seu propósito.' },
+  { ref: 'Provérbios 3:5-6', text: 'Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento. Reconhece-o em todos os teus caminhos, e ele endireitará as tuas veredas.' },
+  { ref: 'Jeremias 29:11', text: 'Porque eu bem sei os pensamentos que tenho a vosso respeito, diz o Senhor; pensamentos de paz e não de mal, para vos dar o fim que esperais.' },
+  { ref: 'Mateus 5:16', text: 'Assim resplandeça a vossa luz diante dos homens, para que vejam as vossas boas obras e glorifiquem a vosso Pai, que está nos céus.' },
+  { ref: 'Josué 1:9', text: 'Não to mandei eu? Esforça-te e tem bom ânimo; não temas, nem te espantes, porque o Senhor, teu Deus, é contigo por onde quer que andares.' },
+  { ref: 'Salmos 46:1', text: 'Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia.' },
+];
+
+interface BibleBook { name: string; chapters: number; testament: 'AT' | 'NT'; }
+
+const BIBLE_BOOKS: BibleBook[] = [
+  { name: 'Gênesis', chapters: 50, testament: 'AT' },
+  { name: 'Êxodo', chapters: 40, testament: 'AT' },
+  { name: 'Levítico', chapters: 27, testament: 'AT' },
+  { name: 'Números', chapters: 36, testament: 'AT' },
+  { name: 'Deuteronômio', chapters: 34, testament: 'AT' },
+  { name: 'Josué', chapters: 24, testament: 'AT' },
+  { name: 'Juízes', chapters: 21, testament: 'AT' },
+  { name: 'Rute', chapters: 4, testament: 'AT' },
+  { name: '1 Samuel', chapters: 31, testament: 'AT' },
+  { name: '2 Samuel', chapters: 24, testament: 'AT' },
+  { name: '1 Reis', chapters: 22, testament: 'AT' },
+  { name: '2 Reis', chapters: 25, testament: 'AT' },
+  { name: '1 Crônicas', chapters: 29, testament: 'AT' },
+  { name: '2 Crônicas', chapters: 36, testament: 'AT' },
+  { name: 'Esdras', chapters: 10, testament: 'AT' },
+  { name: 'Neemias', chapters: 13, testament: 'AT' },
+  { name: 'Ester', chapters: 10, testament: 'AT' },
+  { name: 'Jó', chapters: 42, testament: 'AT' },
+  { name: 'Salmos', chapters: 150, testament: 'AT' },
+  { name: 'Provérbios', chapters: 31, testament: 'AT' },
+  { name: 'Eclesiastes', chapters: 12, testament: 'AT' },
+  { name: 'Cânticos', chapters: 8, testament: 'AT' },
+  { name: 'Isaías', chapters: 66, testament: 'AT' },
+  { name: 'Jeremias', chapters: 52, testament: 'AT' },
+  { name: 'Lamentações', chapters: 5, testament: 'AT' },
+  { name: 'Ezequiel', chapters: 48, testament: 'AT' },
+  { name: 'Daniel', chapters: 12, testament: 'AT' },
+  { name: 'Oséias', chapters: 14, testament: 'AT' },
+  { name: 'Joel', chapters: 3, testament: 'AT' },
+  { name: 'Amós', chapters: 9, testament: 'AT' },
+  { name: 'Obadias', chapters: 1, testament: 'AT' },
+  { name: 'Jonas', chapters: 4, testament: 'AT' },
+  { name: 'Miquéias', chapters: 7, testament: 'AT' },
+  { name: 'Naum', chapters: 3, testament: 'AT' },
+  { name: 'Habacuque', chapters: 3, testament: 'AT' },
+  { name: 'Sofonias', chapters: 3, testament: 'AT' },
+  { name: 'Ageu', chapters: 2, testament: 'AT' },
+  { name: 'Zacarias', chapters: 14, testament: 'AT' },
+  { name: 'Malaquias', chapters: 4, testament: 'AT' },
+  { name: 'Mateus', chapters: 28, testament: 'NT' },
+  { name: 'Marcos', chapters: 16, testament: 'NT' },
+  { name: 'Lucas', chapters: 24, testament: 'NT' },
+  { name: 'João', chapters: 21, testament: 'NT' },
+  { name: 'Atos', chapters: 28, testament: 'NT' },
+  { name: 'Romanos', chapters: 16, testament: 'NT' },
+  { name: '1 Coríntios', chapters: 16, testament: 'NT' },
+  { name: '2 Coríntios', chapters: 13, testament: 'NT' },
+  { name: 'Gálatas', chapters: 6, testament: 'NT' },
+  { name: 'Efésios', chapters: 6, testament: 'NT' },
+  { name: 'Filipenses', chapters: 4, testament: 'NT' },
+  { name: 'Colossenses', chapters: 4, testament: 'NT' },
+  { name: '1 Tessalonicenses', chapters: 5, testament: 'NT' },
+  { name: '2 Tessalonicenses', chapters: 3, testament: 'NT' },
+  { name: '1 Timóteo', chapters: 6, testament: 'NT' },
+  { name: '2 Timóteo', chapters: 4, testament: 'NT' },
+  { name: 'Tito', chapters: 3, testament: 'NT' },
+  { name: 'Filemom', chapters: 1, testament: 'NT' },
+  { name: 'Hebreus', chapters: 13, testament: 'NT' },
+  { name: 'Tiago', chapters: 5, testament: 'NT' },
+  { name: '1 Pedro', chapters: 5, testament: 'NT' },
+  { name: '2 Pedro', chapters: 3, testament: 'NT' },
+  { name: '1 João', chapters: 5, testament: 'NT' },
+  { name: '2 João', chapters: 1, testament: 'NT' },
+  { name: '3 João', chapters: 1, testament: 'NT' },
+  { name: 'Judas', chapters: 1, testament: 'NT' },
+  { name: 'Apocalipse', chapters: 22, testament: 'NT' },
+];
+
+interface ReadingPlan { id: string; title: string; description: string; totalDays: number; currentDay: number; icon: string; todayReading: string; }
+
+const READING_PLANS: ReadingPlan[] = [
+  { id: 'biblia-1-ano', title: 'Bíblia em 1 Ano', description: 'Leia toda a Bíblia em 365 dias', totalDays: 365, currentDay: 115, icon: '📖', todayReading: 'Josué 1–3, Salmos 115' },
+  { id: 'nt-90-dias', title: 'Novo Testamento em 90 Dias', description: 'Percorra todo o NT em 3 meses', totalDays: 90, currentDay: 23, icon: '✝️', todayReading: 'Mateus 23–25' },
+  { id: 'salmos-30', title: 'Salmos em 30 Dias', description: 'Um Salmo por dia durante um mês', totalDays: 30, currentDay: 8, icon: '🎵', todayReading: 'Salmos 8' },
+  { id: 'proverbios-31', title: 'Provérbios do Mês', description: 'Um capítulo de Provérbios por dia', totalDays: 31, currentDay: 12, icon: '💡', todayReading: 'Provérbios 12' },
+];
+
+type BibleVersionId = 'NVI' | 'ARA' | 'NTLH';
+interface BibleVersionDef { id: BibleVersionId; name: string; fullName: string; year: string; description: string; }
+
+const BIBLE_VERSIONS: BibleVersionDef[] = [
+  { id: 'NVI', name: 'NVI', fullName: 'Nova Versão Internacional', year: '2011', description: 'Linguagem contemporânea, fiel aos manuscritos originais' },
+  { id: 'ARA', name: 'ARA', fullName: 'Almeida Revista e Atualizada', year: '1993', description: 'Tradução clássica e amplamente utilizada no Brasil' },
+  { id: 'NTLH', name: 'NTLH', fullName: 'Nova Tradução na Linguagem de Hoje', year: '2000', description: 'Linguagem simples e acessível para o dia a dia' },
+];
+
+type BookVerses = Record<string, Record<number, string[]>>;
+type VersionedVerses = Record<BibleVersionId, BookVerses>;
+
+const VERSIONED_VERSES: VersionedVerses = {
+  NVI: {
+    'Gênesis': {
+      1: [
+        'No princípio Deus criou os céus e a terra.',
+        'A terra estava sem forma e vazia, as trevas cobriam a face do abismo, e o Espírito de Deus se movia sobre a face das águas.',
+        'Disse Deus: "Haja luz!" E houve luz.',
+        'Deus viu que a luz era boa e a separou das trevas.',
+        'Deus chamou a luz de "dia" e as trevas de "noite". Houve tarde e manhã: o primeiro dia.',
+      ],
+    },
+    'Salmos': {
+      23: [
+        'O Senhor é o meu pastor; nada me faltará.',
+        'Em pastos verdejantes ele me faz repousar; junto a águas tranquilas ele me conduz.',
+        'Restaura as minhas forças. Guia-me nas veredas da justiça por amor do seu nome.',
+        'Mesmo que eu ande no vale das sombras da morte, não temerei mal algum, pois tu estás comigo; o teu bordão e o teu cajado me consolam.',
+        'Preparas uma mesa diante de mim na presença dos meus inimigos. Unges minha cabeça com óleo; meu cálice transborda.',
+        'Certamente a bondade e a fidelidade me seguirão todos os dias da minha vida, e habitarei na casa do Senhor para sempre.',
+      ],
+    },
+    'João': {
+      3: [
+        'Havia entre os fariseus um homem chamado Nicodemos, um dos líderes dos judeus.',
+        'Este foi ter com Jesus de noite e disse: "Rabi, sabemos que você é um mestre que veio de Deus, pois ninguém poderia fazer os sinais miraculosos que você faz se Deus não fosse com ele."',
+        'Jesus respondeu: "Digo-lhe a verdade: ninguém pode ver o Reino de Deus se não nascer de novo."',
+        '"Porque Deus amou o mundo de tal maneira que deu o seu Filho Unigênito, para que todo o que nele crer não pereça, mas tenha a vida eterna."',
+        '"Pois Deus não enviou o seu Filho ao mundo para condenar o mundo, mas para que o mundo fosse salvo por meio dele."',
+      ],
+      14: [
+        '"Não se perturbe o coração de vocês. Creiam em Deus; creiam também em mim."',
+        '"Na casa de meu Pai há muitos aposentos; se não fosse assim, eu lhes teria dito. Vou preparar um lugar para vocês."',
+        '"E, se eu for e preparar um lugar para vocês, voltarei e os levarei para estar comigo, para que vocês estejam onde eu estiver."',
+        'Jesus respondeu: "Eu sou o caminho, a verdade e a vida. Ninguém vem ao Pai a não ser por mim."',
+        '"Deixo-lhes a paz; a minha paz lhes dou. Não a dou como o mundo a dá. Não se perturbe o coração de vocês, nem tenham medo."',
+      ],
+    },
+    'Mateus': {
+      5: [
+        '"Bem-aventurados os pobres em espírito, pois deles é o reino dos céus."',
+        '"Bem-aventurados os que choram, pois serão consolados."',
+        '"Bem-aventurados os humildes, pois receberão a terra como herança."',
+        '"Bem-aventurados os que têm fome e sede de justiça, pois serão satisfeitos."',
+        '"Bem-aventurados os misericordiosos, pois obterão misericórdia."',
+        '"Bem-aventurados os puros de coração, pois verão a Deus."',
+        '"Bem-aventurados os pacificadores, pois serão chamados filhos de Deus."',
+        '"Bem-aventurados os perseguidos por causa da justiça, pois deles é o reino dos céus."',
+      ],
+    },
+    'Romanos': {
+      8: [
+        'Portanto, agora já não há condenação para os que estão em Cristo Jesus,',
+        'E sabemos que Deus age em todas as coisas para o bem daqueles que o amam, dos que foram chamados de acordo com o seu propósito.',
+        'Quem nos separará do amor de Cristo? A tribulação, ou a angústia, ou a perseguição, ou a fome, ou a nudez, ou o perigo, ou a espada?',
+        'Não! Em todas essas coisas somos mais que vencedores por meio daquele que nos amou.',
+        'Pois estou convencido de que nem a morte nem a vida, nem os anjos nem os demônios, nem o presente nem o futuro, nem quaisquer poderes, nem a altura, nem a profundidade, nem qualquer outra coisa na criação será capaz de nos separar do amor de Deus que está em Cristo Jesus, nosso Senhor.',
+      ],
+    },
+  },
+  ARA: {
+    'Gênesis': {
+      1: [
+        'No princípio criou Deus os céus e a terra.',
+        'A terra era sem forma e vazia; e havia trevas sobre a face do abismo, mas o Espírito de Deus se movia sobre a face das águas.',
+        'E disse Deus: Haja luz; e houve luz.',
+        'E viu Deus que a luz era boa; e fez Deus separação entre a luz e as trevas.',
+        'E Deus chamou à luz Dia; e às trevas chamou Noite; e foi a tarde e a manhã, o dia primeiro.',
+      ],
+    },
+    'Salmos': {
+      23: [
+        'O Senhor é o meu pastor; nada me faltará.',
+        'Deitar-me faz em verdes pastos; guia-me mansamente a águas tranquilas.',
+        'Refrigera a minha alma; guia-me pelas veredas da justiça, por amor do seu nome.',
+        'Ainda que eu andasse pelo vale da sombra da morte, não temeria mal algum, porque tu estás comigo; o teu cajado e o teu báculo me consolam.',
+        'Preparas uma mesa perante mim na presença dos meus adversários; unges a minha cabeça com óleo; o meu cálice transborda.',
+        'Certamente que a bondade e a misericórdia me seguirão todos os dias da minha vida; e habitarei na casa do Senhor por longos dias.',
+      ],
+    },
+    'João': {
+      3: [
+        'Havia entre os fariseus um homem chamado Nicodemos, um dos líderes dos judeus.',
+        'Este foi ter com Jesus de noite e disse: Rabi, sabemos que você é um mestre que veio de Deus, pois ninguém poderia fazer estes sinais miraculosos que você faz se Deus não fosse com ele.',
+        'Jesus respondeu: Digo-lhe a verdade: ninguém pode ver o reino de Deus sem que nasça de novo.',
+        'Porque Deus amou o mundo de tal maneira que deu o seu Filho Unigênito, para que todo o que nele crer não pereça, mas tenha a vida eterna.',
+        'Porque Deus enviou o seu Filho ao mundo não para condenar o mundo, mas para que o mundo por ele fosse salvo.',
+      ],
+      14: [
+        'Não se perturbe o vosso coração; credes em Deus, crede também em mim.',
+        'Na casa de meu Pai há muitas moradas; se assim não fosse, eu vo-lo teria dito; vou preparar-vos lugar.',
+        'E quando eu for, e vos preparar lugar, virei outra vez, e vos levarei para mim mesmo, para que onde eu estiver, estejais vós também.',
+        'Eu sou o caminho, a verdade e a vida; ninguém vem ao Pai senão por mim.',
+        'A paz vos deixo, a minha paz vos dou; não vo-la dou como o mundo a dá. Não se turbe o vosso coração, nem se atemorize.',
+      ],
+    },
+    'Mateus': {
+      5: [
+        'Bem-aventurados os pobres de espírito, porque deles é o reino dos céus.',
+        'Bem-aventurados os que choram, porque eles serão consolados.',
+        'Bem-aventurados os mansos, porque eles herdarão a terra.',
+        'Bem-aventurados os que têm fome e sede de justiça, porque eles serão fartos.',
+        'Bem-aventurados os misericordiosos, porque eles alcançarão misericórdia.',
+        'Bem-aventurados os limpos de coração, porque eles verão a Deus.',
+        'Bem-aventurados os pacificadores, porque eles serão chamados filhos de Deus.',
+        'Bem-aventurados os que são perseguidos por causa da justiça, porque deles é o reino dos céus.',
+      ],
+    },
+    'Romanos': {
+      8: [
+        'Portanto, já não há nenhuma condenação para os que estão em Cristo Jesus.',
+        'E sabemos que todas as coisas contribuem juntamente para o bem daqueles que amam a Deus, daqueles que são chamados segundo o seu propósito.',
+        'Quem nos separará do amor de Cristo? A tribulação, ou a angústia, ou a perseguição, ou a fome, ou a nudez, ou o perigo, ou a espada?',
+        'Mas em todas estas coisas somos mais do que vencedores, por meio daquele que nos amou.',
+        'Porque estou convicto de que nem a morte, nem a vida, nem os anjos, nem os principados, nem as potestades, nem o presente, nem o porvir, nem a altura, nem a profundidade, nem alguma outra criatura nos poderá separar do amor de Deus, que está em Cristo Jesus nosso Senhor.',
+      ],
+    },
+  },
+  NTLH: {
+    'Gênesis': {
+      1: [
+        'No começo, Deus criou o céu e a terra.',
+        'A terra era um caos, sem nenhuma forma, e havia trevas sobre o oceano; o Espírito de Deus estava se movendo sobre a água.',
+        'Então Deus disse: "Que haja luz!" E houve luz.',
+        'Deus viu que a luz era boa e a separou das trevas.',
+        'Deus chamou a luz de "dia" e as trevas de "noite". A tarde chegou e passou, e a manhã veio: esse foi o primeiro dia.',
+      ],
+    },
+    'Salmos': {
+      23: [
+        'O Senhor é o meu pastor; não me falta nada.',
+        'Ele me deixa descansar em pastos verdejantes e me leva a águas tranquilas.',
+        'Ele me dá novas forças e me guia pelos caminhos certos, como ele prometeu.',
+        'Mesmo que eu passe pelo vale mais escuro, não tenho medo de perigo algum, porque você está comigo; o seu cajado me dá segurança.',
+        'Você prepara um banquete para mim na frente dos meus inimigos; você me recebe bem e me serve até transbordar.',
+        'Com certeza a sua bondade e o seu amor me acompanharão todos os dias da minha vida, e eu viverei na casa do Senhor para sempre.',
+      ],
+    },
+    'João': {
+      3: [
+        'Havia um homem chamado Nicodemos, que era da seita dos fariseus e um dos chefes dos judeus.',
+        'Ele foi ter com Jesus de noite e lhe disse: "Mestre, sabemos que você é um mestre que vem de Deus, pois ninguém poderia fazer os milagres que você faz se Deus não estivesse com ele."',
+        'Jesus lhe respondeu: "Afirmo a você que ninguém pode ver o Reino de Deus se não nascer de novo."',
+        '"Porque Deus amou o mundo tanto que deu o seu Filho único, para que todo aquele que nele crer não morra, mas tenha a vida eterna."',
+        '"Pois Deus mandou o seu Filho ao mundo, não para julgar o mundo, mas para que o mundo seja salvo por meio dele."',
+      ],
+      14: [
+        '"Não fiquem perturbados. Acreditem em Deus e acreditem também em mim."',
+        '"Na casa do meu Pai há muitos lugares. Se não fosse assim, eu já teria dito a vocês. Vou preparar um lugar para vocês."',
+        '"E depois que eu for e preparar o lugar de vocês, voltarei e os levarei comigo, para que vocês estejam onde eu estiver."',
+        'Jesus lhe respondeu: "Eu sou o caminho, a verdade e a vida. Ninguém vai ao Pai a não ser por mim."',
+        '"Estou lhes deixando a paz, a minha própria paz. Não a dou como o mundo a dá. Não fiquem perturbados nem com medo."',
+      ],
+    },
+    'Mateus': {
+      5: [
+        '"Felizes os que se reconhecem espiritualmente pobres, pois deles é o Reino dos Céus."',
+        '"Felizes os que choram, pois Deus os consolará."',
+        '"Felizes os humildes, pois receberão o que Deus prometeu."',
+        '"Felizes os que têm fome e sede de justiça, pois Deus os satisfará."',
+        '"Felizes os que têm misericórdia dos outros, pois Deus terá misericórdia deles."',
+        '"Felizes os de coração puro, pois eles verão a Deus."',
+        '"Felizes os que trabalham pela paz, pois Deus os chamará seus filhos."',
+        '"Felizes os perseguidos por fazerem o que é certo, pois deles é o Reino dos Céus."',
+      ],
+    },
+    'Romanos': {
+      8: [
+        'Portanto, agora já não há condenação para os que estão em Jesus Cristo.',
+        'Nós sabemos que Deus faz com que tudo ajude para o bem daqueles que o amam, os que foram chamados de acordo com o seu propósito.',
+        'Então, quem nos separará do amor de Cristo? Será que a tribulação, ou a angústia, ou a perseguição, ou a fome, ou a nudez, ou o perigo, ou a espada?',
+        'Mas em tudo isso somos mais do que vencedores, por meio daquele que nos amou.',
+        'Pois estou convicto de que nem a morte, nem a vida, nem os anjos, nem os governos do além, nem o presente, nem o futuro, nem os poderes, nem as alturas, nem as profundezas, nem qualquer outra coisa criada poderá nos separar do amor de Deus que nos foi dado em Jesus Cristo, nosso Senhor.',
+      ],
+    },
+  },
+};
+
+// ─── BibleTab component ────────────────────────────────────────────────────────
+
+function BibleTab() {
+  const [view, setView] = useState<'home' | 'chapters' | 'reading'>('home');
+  const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [testament, setTestament] = useState<'AT' | 'NT'>('AT');
+  const [enrolledPlans, setEnrolledPlans] = useState<string[]>(['biblia-1-ano']);
+  const [bibleVersion, setBibleVersion] = useState<BibleVersionId>('NVI');
+  const [showVersionPicker, setShowVersionPicker] = useState(false);
+
+  const today = new Date();
+  const todayVerse = DAILY_VERSES[today.getDate() % DAILY_VERSES.length];
+  const currentVersionDef = BIBLE_VERSIONS.find(v => v.id === bibleVersion)!;
+
+  const togglePlan = (planId: string) => {
+    setEnrolledPlans(prev =>
+      prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
+    );
+  };
+
+  const VersionBadge = () => (
+    <button
+      onClick={() => setShowVersionPicker(true)}
+      className="flex items-center gap-1 bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-purple-100 transition-colors"
+    >
+      {bibleVersion} <ChevronDown size={11} />
+    </button>
+  );
+
+  const bookVerses = VERSIONED_VERSES[bibleVersion];
+
+  const readingContent = view === 'reading' && selectedBook && selectedChapter !== null ? (() => {
+    const verses = bookVerses[selectedBook.name]?.[selectedChapter];
+    return (
+      <div className="p-4 pb-24">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => setView('chapters')}
+            className="flex items-center gap-1.5 text-purple-600 text-sm font-semibold"
+          >
+            <ChevronLeft size={16} /> {selectedBook.name}
+          </button>
+          <VersionBadge />
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <h2 className="font-bold text-slate-800 text-lg">{selectedBook.name}</h2>
+          <p className="text-sm text-purple-600 font-semibold mb-4">Capítulo {selectedChapter}</p>
+          {verses ? (
+            <div className="space-y-4">
+              {verses.map((verse, idx) => (
+                <div key={idx} className="flex gap-3">
+                  <span className="text-xs font-bold text-purple-300 mt-0.5 w-5 flex-shrink-0">{idx + 1}</span>
+                  <p className="text-sm text-slate-700 leading-relaxed">{verse}</p>
+                </div>
+              ))}
+              <p className="text-xs text-center text-slate-300 mt-6 pt-4 border-t border-slate-50">
+                — {currentVersionDef.fullName} ({currentVersionDef.year}) —
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <BookOpen size={42} className="text-purple-100 mx-auto mb-3" />
+              <p className="text-slate-400 text-sm font-semibold">Conteúdo em breve</p>
+              <p className="text-xs text-slate-300 mt-1">Esta é uma versão de demonstração</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  })() : null;
+
+  const chaptersContent = view === 'chapters' && selectedBook ? (() => (
+    <div className="p-4 pb-24">
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setView('home')}
+          className="flex items-center gap-1.5 text-purple-600 text-sm font-semibold"
+        >
+          <ChevronLeft size={16} /> Voltar
+        </button>
+        <VersionBadge />
+      </div>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-4">
+        <h2 className="font-bold text-slate-800 text-xl">{selectedBook.name}</h2>
+        <p className="text-xs text-purple-600 font-semibold mt-0.5">
+          {selectedBook.testament === 'AT' ? 'Antigo Testamento' : 'Novo Testamento'} • {selectedBook.chapters} capítulos
+        </p>
+      </div>
+      <div className="grid grid-cols-5 gap-2">
+        {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map(ch => {
+          const hasContent = !!bookVerses[selectedBook.name]?.[ch];
+          return (
+            <button
+              key={ch}
+              onClick={() => { setSelectedChapter(ch); setView('reading'); }}
+              className={`py-3 rounded-xl text-sm font-bold transition-colors ${
+                hasContent
+                  ? 'bg-purple-600 text-white hover:bg-purple-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {ch}
+            </button>
+          );
+        })}
+      </div>
+      {Object.keys(bookVerses[selectedBook.name] ?? {}).length > 0 && (
+        <p className="text-xs text-center text-purple-400 font-semibold mt-3">
+          Capítulos em roxo possuem conteúdo disponível
+        </p>
+      )}
+    </div>
+  ))() : null;
+
+  const books = BIBLE_BOOKS.filter(b => b.testament === testament);
+
+  const homeContent = view === 'home' ? (
+    <div className="p-4 space-y-5 pb-24">
+      {/* Versículo do Dia */}
+      <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Star size={13} className="text-yellow-300 fill-yellow-300" />
+            <span className="text-xs font-bold text-purple-200 uppercase tracking-wide">Versículo do Dia</span>
+          </div>
+          <VersionBadge />
+        </div>
+        <p className="text-sm leading-relaxed font-medium italic mb-3">"{todayVerse.text}"</p>
+        <p className="text-xs font-bold text-purple-200">— {todayVerse.ref}</p>
+        <div className="flex items-center gap-2 mt-4">
+          <button className="flex items-center gap-1 text-xs text-purple-200 hover:text-white transition-colors">
+            <Bookmark size={11} /> Salvar
+          </button>
+          <span className="text-purple-500">•</span>
+          <span className="text-xs text-purple-300">
+            {today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </span>
+        </div>
+      </div>
+
+      {/* Planos de Leitura */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar size={14} className="text-slate-500" />
+          <h3 className="font-bold text-slate-700 text-sm">Planos de Leitura</h3>
+        </div>
+        <div className="space-y-3">
+          {READING_PLANS.map(plan => {
+            const joined = enrolledPlans.includes(plan.id);
+            const progress = Math.round((plan.currentDay / plan.totalDays) * 100);
+            return (
+              <div key={plan.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl">{plan.icon}</span>
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">{plan.title}</p>
+                      <p className="text-xs text-slate-400">{plan.description}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => togglePlan(plan.id)}
+                    className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                      joined
+                        ? 'bg-green-50 text-green-600 border border-green-200'
+                        : 'bg-purple-600 text-white hover:bg-purple-700'
+                    }`}
+                  >
+                    {joined ? <><CheckCircle size={10} /> Ativo</> : 'Iniciar'}
+                  </button>
+                </div>
+                {joined && (
+                  <>
+                    <div className="w-full bg-slate-100 rounded-full h-1.5 mb-1.5">
+                      <div className="bg-purple-500 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-500">
+                        Dia {plan.currentDay}/{plan.totalDays} •{' '}
+                        <span className="text-purple-600 font-semibold">{plan.todayReading}</span>
+                      </p>
+                      <span className="text-xs text-slate-400">{progress}%</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Explorar a Bíblia */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <BookOpen size={14} className="text-slate-500" />
+          <h3 className="font-bold text-slate-700 text-sm">Explorar a Bíblia</h3>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setTestament('AT')}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${
+              testament === 'AT' ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Antigo Testamento (39)
+          </button>
+          <button
+            onClick={() => setTestament('NT')}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${
+              testament === 'NT' ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Novo Testamento (27)
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {books.map(book => (
+            <button
+              key={book.name}
+              onClick={() => { setSelectedBook(book); setView('chapters'); }}
+              className="bg-white rounded-xl shadow-sm border border-slate-100 p-3 text-left hover:border-purple-200 hover:bg-purple-50 transition-colors group"
+            >
+              <p className="font-semibold text-slate-700 text-sm group-hover:text-purple-700">{book.name}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{book.chapters} caps.</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  return (
+    <div className="relative h-full">
+      {readingContent}
+      {chaptersContent}
+      {homeContent}
+
+      {/* Version picker overlay */}
+      {showVersionPicker && (
+        <div
+          className="absolute inset-0 bg-black/40 z-20 flex items-end"
+          onClick={() => setShowVersionPicker(false)}
+        >
+          <div
+            className="w-full bg-white rounded-t-3xl p-5 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-bold text-slate-800">Versão da Bíblia</p>
+                <p className="text-xs text-slate-400 mt-0.5">Escolha a tradução preferida</p>
+              </div>
+              <button onClick={() => setShowVersionPicker(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {BIBLE_VERSIONS.map(v => {
+                const isSelected = bibleVersion === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => { setBibleVersion(v.id); setShowVersionPicker(false); }}
+                    className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border text-left transition-colors ${
+                      isSelected
+                        ? 'bg-purple-50 border-purple-300'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-sm ${
+                      isSelected ? 'bg-purple-600 text-white' : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {v.id}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className={`font-bold text-sm ${isSelected ? 'text-purple-800' : 'text-slate-700'}`}>
+                          {v.fullName}
+                        </p>
+                        {v.id === 'NVI' && (
+                          <span className="text-xs bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-md flex-shrink-0">
+                            Recomendada
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5 truncate">{v.description}</p>
+                    </div>
+                    {isSelected && <CheckCircle size={18} className="text-purple-600 flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
