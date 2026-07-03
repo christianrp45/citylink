@@ -1,7 +1,10 @@
+'use client';
+
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { mockUsers, mockSamaritanAlerts, mockBusinesses } from "@/lib/mockData";
 import type { SamaritanAlert } from "@/lib/types";
+import { BottomNav } from "@/components/citylink-bottom-nav";
 
 export default function CommunityPage() {
   const store = useStore();
