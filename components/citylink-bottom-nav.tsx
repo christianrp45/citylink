@@ -2,12 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MapPin, Users, Building2, Calendar, MessageCircle, User, Church } from 'lucide-react';
+import { MapPin, Users, Calendar, MessageCircle, User, Church } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/map', label: 'Mapa', icon: MapPin },
   { href: '/community', label: 'Amigos', icon: Users },
-  { href: '/businesses', label: 'Empresas', icon: Building2 },
   { href: '/events', label: 'Eventos', icon: Calendar },
   { href: '/chat', label: 'Chat', icon: MessageCircle },
   { href: '/pib', label: 'Igreja', icon: Church },
