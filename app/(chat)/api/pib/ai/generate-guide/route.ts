@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { myProvider } from "@/lib/ai/providers";
+import { getLanguageModel } from "@/lib/ai/providers";
 import { generateText } from "ai";
 
 export async function POST(request: Request) {
@@ -44,9 +44,8 @@ Diretrizes:
 
   try {
     const { text } = await generateText({
-      model: myProvider.languageModel("chat-model"),
+      model: getLanguageModel("chat-model"),
       prompt,
-      maxTokens: 1024,
     });
 
     // extrair JSON da resposta
