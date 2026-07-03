@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { CityLinkHeader } from '@/components/citylink-header';
 
 export default function CityLinkLayout({ children }: { children: React.ReactNode }) {
@@ -5,7 +6,9 @@ export default function CityLinkLayout({ children }: { children: React.ReactNode
     <div className="flex flex-col h-screen bg-slate-50">
       <CityLinkHeader />
       <main className="flex-1 overflow-y-auto pb-16">
-        {children}
+        <Suspense fallback={<div className="flex h-full items-center justify-center text-slate-400">Carregando...</div>}>
+          {children}
+        </Suspense>
       </main>
     </div>
   );
