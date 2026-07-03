@@ -1,304 +1,211 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useStore } from '@/lib/store';
+import { useEffect, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
+import { Navigation, Users, AlertTriangle, HandHeart, X } from 'lucide-react';
 import { BottomNav } from '@/components/citylink-bottom-nav';
-import { mockUsers, mockSamaritanAlerts } from '@/lib/mockData';
-import type { SamaritanAlert, User } from '@/lib/types';
+import VisitRequestModal from '@/components/visit-request-modal';
 
-// Haversine distance formula
-function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Raio da Terra em km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(m => m.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then(m => m.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then(m => m.Popup), { ssr: false });
+const Circle = dynamic(() => import('react-leaflet').then(m => m.Circle), { ssr: false });
+
+const GOIANIA = { lat: -16.6864, lng: -49.2643 };
+const NEARBY_RADIUS = 2000;
+
+function haversine(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 6371000;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLon = ((b.lng - a.lng) * Math.PI) / 180;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-export default function MapPage() {
-  const store = useStore();
-  const [userLocation, setUserLocation] = useState({ lat: -23.55, lng: -46.63 });
-  const [selectedItem, setSelectedItem] = useState<SamaritanAlert | User | null>(null);
-  const [nearbyAlerts, setNearbyAlerts] = useState<SamaritanAlert[]>([]);
-  const [nearbyUsers, setNearbyUsers] = useState<User[]>([]);
+function formatDistance(m: number) {
+  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+}
 
-  // Initialize store
-  if (store.users.length === 0) {
-    store.users = mockUsers;
-    store.samaritanAlerts = mockSamaritanAlerts;
-    store.setCurrentUser(mockUsers[0]);
+const MOCK_USERS = [
+  { id: 'u1', name: 'Joao Silva', avatar: 'https://i.pravatar.cc/150?img=1', profession: 'Engenheiro', isOnline: true, openToVisits: true, location: { lat: -16.6864, lng: -49.2643 }, homeLocation: { lat: -16.6864, lng: -49.2643, address: 'Setor Bueno, Goiania' } },
+  { id: 'u2', name: 'Maria Santos', avatar: 'https://i.pravatar.cc/150?img=5', profession: 'Medica', isOnline: true, openToVisits: false, location: { lat: -16.678, lng: -49.253 }, homeLocation: { lat: -16.678, lng: -49.253, address: 'Jardim Goias, Goiania' } },
+  { id: 'u3', name: 'Pedro Oliveira', avatar: 'https://i.pravatar.cc/150?img=8', profession: 'Pastor', isOnline: false, openToVisits: true, location: { lat: -16.691, lng: -49.271 }, homeLocation: { lat: -16.691, lng: -49.271, address: 'Setor Oeste, Goiania' } },
+  { id: 'u4', name: 'Ana Costa', avatar: 'https://i.pravatar.cc/150?img=9', profession: 'Professora', isOnline: true, openToVisits: true, location: { lat: -16.682, lng: -49.259 }, homeLocation: { lat: -16.682, lng: -49.259, address: 'Setor Sul, Goiania' } },
+];
+
+const MOCK_ALERTS = [
+  { id: 'a1', userName: 'Carlos Mendes', userAvatar: 'https://i.pravatar.cc/150?img=3', type: 'urgency' as const, description: 'Idosa vizinha passou mal, precisa de ajuda para ir ao hospital.', location: { lat: -16.684, lng: -49.261, address: 'Rua 10, Setor Sul' } },
+];
+
+const ALERT_LABEL: Record<string, string> = { urgency: 'Urgencia', prayer: 'Oracao', practical_help: 'Ajuda Pratica' };
+
+type MockUser = typeof MOCK_USERS[0];
+type MockAlert = typeof MOCK_ALERTS[0];
+
+export default function MapPage() {
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [center, setCenter] = useState<[number, number]>([GOIANIA.lat, GOIANIA.lng]);
+  const [openToVisits, setOpenToVisits] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<MockUser | null>(null);
+  const [selectedAlert, setSelectedAlert] = useState<MockAlert | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [leaflet, setLeaflet] = useState<any>(null);
+
+  const simulate = useCallback(() => {
+    const loc = { lat: GOIANIA.lat + (Math.random() - 0.5) * 0.02, lng: GOIANIA.lng + (Math.random() - 0.5) * 0.02 };
+    setUserLoc(loc);
+    setCenter([loc.lat, loc.lng]);
+  }, []);
+
+  useEffect(() => {
+    import('leaflet').then(m => { setLeaflet(m.default); setMapReady(true); });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => { const l = { lat: pos.coords.latitude, lng: pos.coords.longitude }; setUserLoc(l); setCenter([l.lat, l.lng]); },
+        () => simulate()
+      );
+    } else {
+      simulate();
+    }
+  }, [simulate]);
+
+  const nearbyFriends = userLoc ? MOCK_USERS.filter(u => haversine(userLoc, u.location) <= NEARBY_RADIUS) : MOCK_USERS;
+
+  function userIcon(u: MockUser) {
+    if (!leaflet) return undefined;
+    const border = u.openToVisits ? '#10b981' : u.isOnline ? '#6366f1' : '#94a3b8';
+    return leaflet.divIcon({
+      className: '',
+      html: `<div style="position:relative;width:44px;height:44px"><img src="${u.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:3px solid ${border};position:absolute;top:2px;left:2px"/>${u.isOnline ? `<div style="position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;background:${u.openToVisits ? '#10b981' : '#6366f1'};border:2px solid white"></div>` : ''}</div>`,
+      iconSize: [44, 44], iconAnchor: [22, 22],
+    });
   }
 
-  // Filter by 5km radius
-  useEffect(() => {
-    const activeAlerts = store.samaritanAlerts.filter((alert) => {
-      if (!alert.location) return false;
-      const distance = getDistance(
-        userLocation.lat,
-        userLocation.lng,
-        alert.location.lat,
-        alert.location.lng
-      );
-      return distance <= 5;
+  function alertIcon() {
+    if (!leaflet) return undefined;
+    return leaflet.divIcon({
+      className: '',
+      html: '<div style="width:36px;height:36px;background:#f59e0b;border-radius:50%;border:3px solid white;box-shadow:0 0 0 3px rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-size:16px">SOS</div>',
+      iconSize: [36, 36], iconAnchor: [18, 18],
     });
+  }
 
-    const nearby = store.users.filter((user) => {
-      if (!user.location || user.id === store.currentUser?.id) return false;
-      const distance = getDistance(
-        userLocation.lat,
-        userLocation.lng,
-        user.location.lat,
-        user.location.lng
-      );
-      return distance <= 5 && user.availabilityStatus !== 'offline';
+  function meIcon() {
+    if (!leaflet) return undefined;
+    return leaflet.divIcon({
+      className: '',
+      html: '<div style="width:24px;height:24px;background:#3b82f6;border-radius:50%;border:3px solid white;box-shadow:0 0 0 4px rgba(59,130,246,0.3)"></div>',
+      iconSize: [24, 24], iconAnchor: [12, 12],
     });
-
-    setNearbyAlerts(activeAlerts);
-    setNearbyUsers(nearby);
-  }, [store.samaritanAlerts, store.users, userLocation, store.currentUser?.id]);
-
-  const handleRespondToAlert = (alertId: string) => {
-    if (store.currentUser) {
-      store.respondToAlert(alertId, store.currentUser.id);
-      alert('✅ Você respondeu ao pedido de ajuda!');
-    }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-indigo-900">🗺️ Mapa da Comunidade</h1>
-          <p className="text-sm text-gray-600">Raio de 5km</p>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Map Area - Placeholder */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <div className="w-full h-80 bg-gradient-to-br from-blue-50 to-emerald-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-3xl mb-2">📍</p>
-              <p className="text-gray-600 font-medium">
-                Integração com Leaflet/OpenStreetMap
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Sua localização: {userLocation.lat.toFixed(3)}, {userLocation.lng.toFixed(3)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="bg-white rounded-xl shadow-md p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">Legenda</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-emerald-500"></div>
-              <span className="text-sm text-gray-700">Mesa Posta</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-amber-500"></div>
-              <span className="text-sm text-gray-700">Requer Aviso</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-orange-600"></div>
-              <span className="text-sm text-gray-700">Alerta Samaritano</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-gray-400"></div>
-              <span className="text-sm text-gray-700">Offline</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Samaritan Alerts Section */}
-        {nearbyAlerts.length > 0 && (
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="text-2xl">🚨</span> Alertas Próximos ({nearbyAlerts.length})
-            </h2>
-            <div className="space-y-3">
-              {nearbyAlerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="bg-white rounded-lg border-l-4 border-orange-500 p-4 shadow-sm hover:shadow-md transition cursor-pointer"
-                  onClick={() => setSelectedItem(alert)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">
-                        {alert.type === 'urgency' && '🚨 '}
-                        {alert.type === 'prayer' && '🙏 '}
-                        {alert.type === 'practical_help' && '🤝 '}
-                        {alert.description}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        por {alert.userName}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        ⏰{' '}
-                        {new Date(alert.createdAt).toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleRespondToAlert(alert.id)}
-                      className="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition whitespace-nowrap"
-                    >
-                      Ajudar
+    <div className="flex flex-col h-full relative">
+      <div className="flex-1 relative min-h-0">
+        {mapReady && (
+          <MapContainer center={center} zoom={14} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="OpenStreetMap" />
+            {userLoc && leaflet && (
+              <>
+                <Marker position={[userLoc.lat, userLoc.lng]} icon={meIcon()}>
+                  <Popup><strong>Voce esta aqui</strong></Popup>
+                </Marker>
+                <Circle center={[userLoc.lat, userLoc.lng]} radius={NEARBY_RADIUS}
+                  pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.05, weight: 1, dashArray: '6' }} />
+              </>
+            )}
+            {leaflet && MOCK_ALERTS.map(a => (
+              <Marker key={a.id} position={[a.location.lat, a.location.lng]} icon={alertIcon()}
+                eventHandlers={{ click: () => setSelectedAlert(a) }} />
+            ))}
+            {leaflet && MOCK_USERS.map(u => (
+              <Marker key={u.id} position={[u.location.lat, u.location.lng]} icon={userIcon(u)}
+                eventHandlers={{ click: () => setSelectedUser(u) }}>
+                <Popup>
+                  <div style={{ textAlign: 'center', minWidth: 140 }}>
+                    <img src={u.avatar} alt={u.name} style={{ width: 48, height: 48, borderRadius: '50%', margin: '0 auto 4px', objectFit: 'cover' }} />
+                    <p style={{ fontWeight: 600, fontSize: 14 }}>{u.name}</p>
+                    <p style={{ fontSize: 12, color: '#6b7280' }}>{u.profession}</p>
+                    <button onClick={() => setSelectedUser(u)} style={{ marginTop: 8, width: '100%', fontSize: 12, background: '#2563eb', color: 'white', padding: '6px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+                      Solicitar Visita
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         )}
-
-        {/* Nearby Users Section */}
-        {nearbyUsers.length > 0 && (
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="text-2xl">👥</span> Pessoas Próximas ({nearbyUsers.length})
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {nearbyUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition cursor-pointer"
-                  onClick={() => setSelectedItem(user)}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-gray-900">{user.name}</p>
-                      <p className="text-sm text-gray-600">{user.profession}</p>
-                    </div>
-                    <div
-                      className={`w-4 h-4 rounded-full ${
-                        user.availabilityStatus === 'mesa-posta'
-                          ? 'bg-emerald-500'
-                          : 'bg-amber-500'
-                      }`}
-                    />
-                  </div>
-                  {user.helpOffer && (
-                    <p className="text-sm text-indigo-600 font-medium">
-                      💪 {user.helpOffer}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-2">
-                    {user.availabilityStatus === 'mesa-posta'
-                      ? '🟢 Mesa Posta'
-                      : '🟡 Requer Aviso'}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Empty State */}
-        {nearbyAlerts.length === 0 && nearbyUsers.length === 0 && (
-          <div className="bg-white rounded-lg p-8 text-center shadow-sm">
-            <p className="text-3xl mb-2">😴</p>
-            <p className="text-gray-600 font-medium">Nenhuma pessoa próxima no momento</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Volte mais tarde ou expanda o raio de busca
-            </p>
-          </div>
-        )}
+        <button onClick={simulate} className="absolute bottom-4 right-4 z-[1000] bg-white rounded-full p-3 shadow-lg border border-slate-200">
+          <Navigation size={20} className="text-blue-600" />
+        </button>
       </div>
 
-      {/* Detail Modal */}
-      {selectedItem && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-3xl p-6 space-y-4">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                {'type' in selectedItem ? '🚨 Detalhes do Alerta' : '👤 Perfil'}
-              </h3>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="text-gray-600 hover:text-gray-900 text-2xl"
-              >
-                ✕
-              </button>
-            </div>
+      <div className="bg-white border-t border-slate-200 px-4 pt-3 pb-20 flex-shrink-0">
+        <button onClick={() => setOpenToVisits(v => !v)}
+          className={`w-full flex items-center justify-between mb-3 rounded-xl px-3 py-2 ${openToVisits ? 'bg-emerald-50' : 'bg-amber-50'}`}>
+          <div className="text-left">
+            <p className={`text-sm font-bold ${openToVisits ? 'text-emerald-700' : 'text-amber-700'}`}>
+              {openToVisits ? 'Mesa Posta' : 'Requer Aviso'}
+            </p>
+            <p className="text-xs text-slate-400">{openToVisits ? 'Portas abertas para visitas' : 'Solicite antes de visitar'}</p>
+          </div>
+          <div className={`w-10 h-5 rounded-full relative flex-shrink-0 ${openToVisits ? 'bg-emerald-400' : 'bg-slate-300'}`}>
+            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${openToVisits ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          </div>
+        </button>
 
-            {'type' in selectedItem ? (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-600">Nome</p>
-                  <p className="font-semibold text-gray-900">
-                    {selectedItem.userName}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Tipo</p>
-                  <p className="font-semibold text-gray-900">
-                    {selectedItem.type === 'urgency' && '🚨 Urgência'}
-                    {selectedItem.type === 'prayer' && '🙏 Oração'}
-                    {selectedItem.type === 'practical_help' && '🤝 Ajuda Prática'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Descrição</p>
-                  <p className="font-medium text-gray-900">
-                    {selectedItem.description}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    handleRespondToAlert(selectedItem.id);
-                    setSelectedItem(null);
-                  }}
-                  className="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition"
-                >
-                  Posso Ajudar! ✋
-                </button>
+        {MOCK_ALERTS.length > 0 && (
+          <button onClick={() => setSelectedAlert(MOCK_ALERTS[0])} className="w-full flex items-center gap-2 mb-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            <AlertTriangle size={14} className="text-amber-500 flex-shrink-0" />
+            <p className="text-xs font-semibold text-amber-700">{MOCK_ALERTS.length} alerta proximo</p>
+          </button>
+        )}
+
+        <div className="flex items-center gap-2 mb-2">
+          <Users size={14} className="text-indigo-600" />
+          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Amigos proximos ({nearbyFriends.length})</p>
+        </div>
+
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {nearbyFriends.map(u => (
+            <button key={u.id} onClick={() => setSelectedUser(u)} className="flex-shrink-0 flex flex-col items-center gap-1">
+              <div className="relative">
+                <img src={u.avatar} alt={u.name} className="w-12 h-12 rounded-full object-cover border-2 border-blue-300" />
+                {u.openToVisits && <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />}
               </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-600">Nome</p>
-                  <p className="font-semibold text-gray-900">{selectedItem.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Profissão</p>
-                  <p className="font-medium text-gray-900">
-                    {selectedItem.profession || 'N/A'}
-                  </p>
-                </div>
-                {selectedItem.helpOffer && (
-                  <div>
-                    <p className="text-sm text-gray-600">Como Pode Ajudar</p>
-                    <p className="font-medium text-indigo-600">
-                      {selectedItem.helpOffer}
-                    </p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm text-gray-600">Status</p>
-                  <p className="font-medium">
-                    {selectedItem.availabilityStatus === 'mesa-posta'
-                      ? '🟢 Mesa Posta'
-                      : '🟡 Requer Aviso'}
-                  </p>
-                </div>
+              <span className="text-xs text-slate-600 max-w-[52px] truncate">{u.name.split(' ')[0]}</span>
+              {userLoc && <span className="text-[10px] text-blue-500">{formatDistance(haversine(userLoc, u.location))}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {selectedUser && <VisitRequestModal user={selectedUser} onClose={() => setSelectedUser(null)} />}
+
+      {selectedAlert && (
+        <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => setSelectedAlert(null)}>
+          <div className="w-full bg-white rounded-t-3xl shadow-2xl p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-bold text-amber-600 bg-amber-100 px-3 py-1 rounded-full">{ALERT_LABEL[selectedAlert.type]}</span>
+              <button onClick={() => setSelectedAlert(null)} className="text-slate-400"><X size={20} /></button>
+            </div>
+            <div className="flex items-center gap-3 mb-3">
+              <img src={selectedAlert.userAvatar} alt={selectedAlert.userName} className="w-12 h-12 rounded-full object-cover border-2 border-amber-300" />
+              <div>
+                <p className="font-bold text-slate-800">{selectedAlert.userName}</p>
+                <p className="text-xs text-slate-400">{selectedAlert.location.address}</p>
               </div>
-            )}
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed mb-5">{selectedAlert.description}</p>
+            <button onClick={() => setSelectedAlert(null)} className="w-full py-3 bg-amber-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-amber-600">
+              <HandHeart size={18} /> Posso Ajudar!
+            </button>
           </div>
         </div>
       )}
+
+      <BottomNav />
     </div>
   );
 }
