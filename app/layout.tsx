@@ -7,9 +7,18 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://chat.vercel.ai"),
-  title: "Next.js Chatbot Template",
-  description: "Next.js chatbot template using the AI SDK.",
+  metadataBase: new URL("https://citylink-rosy.vercel.app"),
+  title: "CityLink",
+  description: "Conectando cristãos pela proximidade",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CityLink",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport = {
@@ -70,6 +79,13 @@ export default function RootLayout({
             __html: THEME_COLOR_SCRIPT,
           }}
         />
+        {/* PWA */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="CityLink" />
+        <link rel="apple-touch-icon" href="/images/icon-192.png" />
       </head>
       <body className="antialiased">
         <ThemeProvider

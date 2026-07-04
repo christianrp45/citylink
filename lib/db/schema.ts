@@ -16,6 +16,17 @@ export const user = pgTable("User", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   email: varchar("email", { length: 64 }).notNull(),
   password: varchar("password", { length: 64 }),
+  name: varchar("name", { length: 100 }),
+  phone: varchar("phone", { length: 20 }),
+  profession: varchar("profession", { length: 100 }),
+  avatar: text("avatar"),
+  bio: text("bio"),
+  availabilityStatus: varchar("availabilityStatus", {
+    enum: ["mesa-posta", "requer-aviso", "offline"],
+  }).default("mesa-posta"),
+  lat: varchar("lat", { length: 20 }),
+  lng: varchar("lng", { length: 20 }),
+  updatedAt: timestamp("updatedAt").defaultNow(),
 });
 
 export type User = InferSelectModel<typeof user>;
@@ -169,6 +180,157 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// ============================================================
+// CITYLINK — AMIZADES E VISITAS
+// ============================================================
+
+export const friendship = pgTable(
+  "Friendship",
+  {
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    friendId: uuid("friendId")
+      .notNull()
+      .references(() => user.id),
+    status: varchar("status", {
+      enum: ["pending", "accepted"],
+    })
+      .notNull()
+      .default("pending"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.friendId] }),
+  })
+);
+
+export type Friendship = InferSelectModel<typeof friendship>;
+
+// ============================================================
+// CITYLINK — EVENTOS
+// ============================================================
+
+export const event = pgTable("Event", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: varchar("type", {
+    enum: ["social", "religious", "volunteer", "business"],
+  })
+    .notNull()
+    .default("social"),
+  address: text("address"),
+  lat: varchar("lat", { length: 20 }),
+  lng: varchar("lng", { length: 20 }),
+  date: timestamp("date").notNull(),
+  organizerId: uuid("organizerId")
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type Event = InferSelectModel<typeof event>;
+
+export const eventAttendee = pgTable(
+  "EventAttendee",
+  {
+    eventId: uuid("eventId")
+      .notNull()
+      .references(() => event.id),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    joinedAt: timestamp("joinedAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.eventId, table.userId] }),
+  })
+);
+
+export type EventAttendee = InferSelectModel<typeof eventAttendee>;
+
+// ============================================================
+// CITYLINK — ALERTAS SAMARITANOS
+// ============================================================
+
+export const samaritanAlert = pgTable("SamaritanAlert", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  type: varchar("type", {
+    enum: ["urgency", "prayer", "practical_help"],
+  })
+    .notNull()
+    .default("practical_help"),
+  description: text("description").notNull(),
+  lat: varchar("lat", { length: 20 }),
+  lng: varchar("lng", { length: 20 }),
+  status: varchar("status", {
+    enum: ["open", "resolved"],
+  })
+    .notNull()
+    .default("open"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type SamaritanAlert = InferSelectModel<typeof samaritanAlert>;
+
+export const alertResponse = pgTable(
+  "AlertResponse",
+  {
+    alertId: uuid("alertId")
+      .notNull()
+      .references(() => samaritanAlert.id),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    message: text("message"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.alertId, table.userId] }),
+  })
+);
+
+export type AlertResponse = InferSelectModel<typeof alertResponse>;
+
+export const directMessage = pgTable("DirectMessage", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  fromUserId: uuid("fromUserId")
+    .notNull()
+    .references(() => user.id),
+  toUserId: uuid("toUserId")
+    .notNull()
+    .references(() => user.id),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  readAt: timestamp("readAt"),
+});
+
+export type DirectMessage = InferSelectModel<typeof directMessage>;
+
+export const visitRequest = pgTable("VisitRequest", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  fromUserId: uuid("fromUserId")
+    .notNull()
+    .references(() => user.id),
+  toUserId: uuid("toUserId")
+    .notNull()
+    .references(() => user.id),
+  message: text("message"),
+  status: varchar("status", {
+    enum: ["pending", "accepted", "declined"],
+  })
+    .notNull()
+    .default("pending"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  respondedAt: timestamp("respondedAt"),
+});
+
+export type VisitRequest = InferSelectModel<typeof visitRequest>;
 
 // ============================================================
 // CITYLINK — MÓDULO CÉLULAS
@@ -325,3 +487,159 @@ export const prayerInteraction = pgTable(
 );
 
 export type PrayerInteraction = InferSelectModel<typeof prayerInteraction>;
+
+// ============================================================
+// CITYLINK — FASE 6: PUSH NOTIFICATIONS
+// ============================================================
+
+export const pushSubscription = pgTable(
+  "PushSubscription",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  }
+);
+
+export type PushSubscription = InferSelectModel<typeof pushSubscription>;
+
+// ============================================================
+// CITYLINK — FASE 7: IGREJAS, TESTEMUNHOS, ORAÇÃO, VOLUNTARIADO
+// ============================================================
+
+export const church = pgTable("Church", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  denomination: varchar("denomination", { length: 100 }),
+  description: text("description"),
+  address: text("address"),
+  lat: varchar("lat", { length: 20 }),
+  lng: varchar("lng", { length: 20 }),
+  phone: varchar("phone", { length: 30 }),
+  schedule: text("schedule"),
+  pastor: varchar("pastor", { length: 100 }),
+  members: integer("members").default(0),
+  adminUserId: uuid("adminUserId").references(() => user.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type Church = InferSelectModel<typeof church>;
+
+export const testimonial = pgTable("Testimonial", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type Testimonial = InferSelectModel<typeof testimonial>;
+
+export const testimonialLike = pgTable(
+  "TestimonialLike",
+  {
+    testimonialId: uuid("testimonialId")
+      .notNull()
+      .references(() => testimonial.id),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.testimonialId, table.userId] }),
+  })
+);
+
+export type TestimonialLike = InferSelectModel<typeof testimonialLike>;
+
+export const testimonialComment = pgTable("TestimonialComment", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  testimonialId: uuid("testimonialId")
+    .notNull()
+    .references(() => testimonial.id),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type TestimonialComment = InferSelectModel<typeof testimonialComment>;
+
+export const prayerGroup = pgTable("PrayerGroup", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  schedule: varchar("schedule", { length: 100 }),
+  topic: varchar("topic", { length: 100 }),
+  isOnline: boolean("isOnline").notNull().default(false),
+  creatorId: uuid("creatorId")
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type PrayerGroup = InferSelectModel<typeof prayerGroup>;
+
+export const prayerGroupMember = pgTable(
+  "PrayerGroupMember",
+  {
+    groupId: uuid("groupId")
+      .notNull()
+      .references(() => prayerGroup.id),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    joinedAt: timestamp("joinedAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.groupId, table.userId] }),
+  })
+);
+
+export type PrayerGroupMember = InferSelectModel<typeof prayerGroupMember>;
+
+export const volunteerOpportunity = pgTable("VolunteerOpportunity", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 100 }),
+  address: text("address"),
+  lat: varchar("lat", { length: 20 }),
+  lng: varchar("lng", { length: 20 }),
+  date: timestamp("date").notNull(),
+  spots: integer("spots").notNull().default(10),
+  organizerName: varchar("organizerName", { length: 100 }),
+  creatorId: uuid("creatorId")
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type VolunteerOpportunity = InferSelectModel<typeof volunteerOpportunity>;
+
+export const volunteerEnrollment = pgTable(
+  "VolunteerEnrollment",
+  {
+    opportunityId: uuid("opportunityId")
+      .notNull()
+      .references(() => volunteerOpportunity.id),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    enrolledAt: timestamp("enrolledAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.opportunityId, table.userId] }),
+  })
+);
+
+export type VolunteerEnrollment = InferSelectModel<typeof volunteerEnrollment>;

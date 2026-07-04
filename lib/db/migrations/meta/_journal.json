@@ -71,6 +71,48 @@
       "when": 1783078667729,
       "tag": "0009_jazzy_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783196795127,
+      "tag": "0010_romantic_risque",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783197539189,
+      "tag": "0011_tired_terrax",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1783197978858,
+      "tag": "0012_bright_sebastian_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1783198388708,
+      "tag": "0013_lovely_darkstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1783198880611,
+      "tag": "0014_loving_pyro",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1783199303977,
+      "tag": "0015_lonely_glorian",
+      "breakpoints": true
     }
   ]
 }

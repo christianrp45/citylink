@@ -85,50 +85,47 @@ REDIS_URL=            # opcional  — stream resumable do chat IA
 
 ## 3. O que Falta para o App Funcionar de Verdade
 
-### Fase 1 — Base (sem isso nada funciona) 🔴
+### Fase 1 — Base ✅ CONCLUÍDA (2026-07-04)
 
-**1.1 Expandir tabela de usuários**
-- Adicionar campos: `name`, `phone`, `profession`, `avatar`, `bio`, `availabilityStatus`, `lat`, `lng`, `updatedAt`
-- Criar e rodar migration com Drizzle
-- Arquivo: `lib/db/schema.ts` + `pnpm db:migrate`
+**1.1 Expandir tabela de usuários** ✅
+- Campos adicionados: `name`, `phone`, `profession`, `avatar`, `bio`, `availabilityStatus`, `lat`, `lng`, `updatedAt`
+- Migration gerada: `lib/db/migrations/0010_romantic_risque.sql`
 
-**1.2 Tela de Registro completa**
-- Hoje pede só email e senha
-- Adicionar: nome completo, telefone, profissão
-- Salvar todos no banco
+**1.2 Tela de Registro completa** ✅
+- Formulário PT-BR com: nome, email, senha, profissão, telefone
+- Server action `register` atualizada em `app/(auth)/actions.ts`
 
-**1.3 Perfil real**
-- Carregar dados do usuário logado via `session` do NextAuth
-- Editar nome, profissão, bio, telefone e salvar no banco
-- Upload de foto real usando a rota `/api/files/upload` que já existe
-- Mesa Posta: salvar `availabilityStatus` no banco quando o usuário altera
+**1.3 Perfil real** ✅
+- `profile/page.tsx` carrega dados reais via `GET /api/users/me`
+- Mesa Posta salva no banco via `PATCH /api/users/me`
+- Bio editável salva no banco
+- Upload de foto via `/api/files/upload` + salva URL no banco
 
-**1.4 API de atualização de localização**
-- `POST /api/users/location` → atualiza `lat/lng` do usuário logado
-- Chamada automática quando o mapa abre (com permissão do usuário)
+**1.4 API `/api/users/me`** ✅
+- `GET` retorna perfil do usuário logado (sem password)
+- `PATCH` atualiza name, phone, profession, avatar, bio, availabilityStatus, lat, lng
 
 ---
 
-### Fase 2 — Mapa com pessoas reais 🔴
+### Fase 2 — Mapa com pessoas reais ✅ CONCLUÍDA (2026-07-04)
 
-**2.1 API de usuários próximos**
-```
-GET /api/users/nearby?lat=-16.68&lng=-49.26&radius=2000
-```
-- Filtra usuários com `availabilityStatus != 'offline'` dentro do raio
-- Retorna: id, name, avatar, profession, lat, lng, availabilityStatus
+**2.1 API de usuários próximos** ✅
+- `GET /api/users/nearby?lat=&lng=&radius=2000`
+- Filtra por raio (haversine no servidor), exclui offline e sem localização
+- Retorna usuários ordenados por distância
 
-**2.2 Conectar mapa às pessoas reais**
-- Substituir `MOCK_USERS` pela chamada à API acima
-- Atualizar posição do usuário logado quando o mapa carrega
+**2.2 API de localização** ✅
+- `POST /api/users/location` → atualiza `lat/lng` do usuário logado no banco
+- Chamada automática quando o mapa abre (uma vez por sessão)
 
-**2.3 Algoritmo de distância já existe**
-- Função `haversine()` já implementada em `map/page.tsx`
-- Só precisa mover para `lib/utils.ts` e reutilizar
+**2.3 Mapa conectado** ✅
+- `MOCK_USERS` removido — dados vêm da API real
+- Fallback gracioso quando nenhum usuário está próximo
+- Centro do mapa padrão: Curitiba
 
 ---
 
-### Fase 3 — Amigos e Visitas 🟠
+### Fase 3 — Amigos e Visitas ✅ CONCLUÍDA (2026-07-04)
 
 **3.1 Tabela de amizades**
 ```typescript
@@ -162,7 +159,7 @@ GET  /api/visits/pending          — visitas pendentes para mim
 
 ---
 
-### Fase 4 — Chat entre membros 🟠
+### Fase 4 — Chat entre membros ✅ CONCLUÍDA (2026-07-04)
 
 **4.1 Tabela de mensagens diretas**
 ```typescript
