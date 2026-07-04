@@ -60,7 +60,7 @@ export default function EventsPage() {
   const sorted = [...filtered].sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="h-full overflow-y-auto bg-slate-50 pb-20">
       <div className="bg-white px-4 py-3 border-b border-slate-100 sticky top-0 z-10">
         <div className="flex gap-2 overflow-x-auto">
           {(['all', 'social', 'religious', 'volunteer', 'business'] as const).map(t => (

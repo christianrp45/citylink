@@ -175,7 +175,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="h-full overflow-y-auto bg-slate-50 pb-24">
       {/* Search */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm px-4 py-3">
         <div className="relative">

@@ -758,7 +758,7 @@ export default function IgrejaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="h-full overflow-y-auto bg-slate-50 pb-24">
       {/* Sticky tab bar */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
         <div className="flex gap-1 overflow-x-auto px-3 py-2 scrollbar-hide">

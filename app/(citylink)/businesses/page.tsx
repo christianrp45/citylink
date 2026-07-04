@@ -30,7 +30,7 @@ export default function BusinessPage() {
     : store.businesses;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="h-full overflow-y-auto bg-gray-50 pb-20">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4">

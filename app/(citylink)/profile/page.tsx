@@ -40,7 +40,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="h-full overflow-y-auto bg-slate-50 pb-24">
       {/* Profile Header */}
       <div className="bg-blue-600 pt-6 pb-16 px-4">
         <div className="flex items-center gap-4">

@@ -101,7 +101,7 @@ export default function MapPage() {
   }
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full overflow-hidden relative">
       <div className="flex-1 relative min-h-0">
         {mapReady && (
           <MapContainer center={center} zoom={14} style={{ height: '100%', width: '100%' }} zoomControl={false}>

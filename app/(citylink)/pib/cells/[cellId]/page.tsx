@@ -72,7 +72,7 @@ export default function CellDetailPage() {
   const nextMeeting = cell.meetings.find((m) => m.status === 'scheduled');
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="h-full overflow-y-auto bg-gray-50 pb-24">
       {/* Header */}
       <div className="bg-gradient-to-br from-indigo-700 to-indigo-900 text-white px-4 pt-6 pb-8">
         <div className="max-w-2xl mx-auto">
