@@ -1,242 +1,182 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '@/lib/store';
+import { LogOut, Edit2, MapPin, Phone, Mail, Users, Star } from 'lucide-react';
 import { BottomNav } from '@/components/citylink-bottom-nav';
-import { mockUsers } from '@/lib/mockData';
-import type { AvailabilityStatus } from '@/lib/types';
+
+// ─── Mock Data ────────────────────────────────────────────────────────────────
+const MOCK_PROFILE = {
+  id: 'u1',
+  name: 'João Silva',
+  avatar: 'https://i.pravatar.cc/150?img=1',
+  profession: 'Eletricista',
+  email: 'joao@exemplo.com',
+  phone: '(62) 98765-4321',
+  location: 'Setor Bueno, Goiânia',
+  helpOffer: 'Ajudo com pequenos consertos elétricos e instalações. Disponível aos finais de semana.',
+  friendCount: 3,
+  isOnline: true,
+};
+
+type AvailabilityStatus = 'mesa-posta' | 'requer-aviso' | 'offline';
+
+const STATUS_CONFIG: Record<AvailabilityStatus, { label: string; desc: string; color: string; dot: string }> = {
+  'mesa-posta':   { label: 'Mesa Posta',    desc: 'Aceito visitas sem aviso prévio', color: 'bg-green-50 border-green-200', dot: 'bg-green-500' },
+  'requer-aviso': { label: 'Requer Aviso',  desc: 'Prefiro ser avisado antes',       color: 'bg-amber-50 border-amber-200', dot: 'bg-amber-500' },
+  'offline':      { label: 'Offline',       desc: 'Não disponível para visitas',     color: 'bg-slate-50 border-slate-200', dot: 'bg-slate-400' },
+};
 
 export default function ProfilePage() {
-  const store = useStore();
+  const [profile, setProfile] = useState(MOCK_PROFILE);
+  const [status, setStatus] = useState<AvailabilityStatus>('mesa-posta');
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({
-    helpOffer: store.currentUser?.helpOffer || '',
-    availabilityStatus: store.currentUser?.availabilityStatus || ('mesa-posta' as AvailabilityStatus),
-  });
+  const [editHelp, setEditHelp] = useState(profile.helpOffer);
 
-  // Initialize if needed
-  if (!store.currentUser && mockUsers.length > 0) {
-    store.setCurrentUser(mockUsers[0]);
+  const statusInfo = STATUS_CONFIG[status];
+
+  function handleSave() {
+    setProfile((prev) => ({ ...prev, helpOffer: editHelp }));
+    setIsEditing(false);
   }
 
-  const user = store.currentUser;
-  if (!user) return <div>Carregando...</div>;
-
-  const handleSave = () => {
-    store.updateUser({
-      ...user,
-      helpOffer: editForm.helpOffer,
-      availabilityStatus: editForm.availabilityStatus,
-    });
-    setIsEditing(false);
-  };
-
-  const availabilityLabel =
-    editForm.availabilityStatus === 'mesa-posta'
-      ? '🟢 Mesa Posta (Portas Abertas)'
-      : editForm.availabilityStatus === 'requer-aviso'
-        ? '🟡 Requer Aviso (Privado)'
-        : '⚫ Offline';
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header with Avatar */}
-      <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white pt-6 pb-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl">
-              👤
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{user.name}</h1>
-              <p className="text-indigo-100">{user.profession}</p>
+    <div className="min-h-screen bg-slate-50 pb-24">
+      {/* Profile Header */}
+      <div className="bg-blue-600 pt-6 pb-16 px-4">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <img
+              src={profile.avatar}
+              alt={profile.name}
+              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+            />
+            {profile.isOnline && (
+              <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
+            )}
+          </div>
+          <div className="text-white">
+            <h1 className="text-xl font-bold">{profile.name}</h1>
+            <p className="text-blue-200 text-sm">{profile.profession}</p>
+            <div className="flex items-center gap-1 mt-1 text-blue-200 text-xs">
+              <MapPin size={11} />
+              <span>{profile.location}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Help Offer Section - PROMINENT */}
-        <section className="bg-white rounded-xl shadow-md p-6 border-l-4 border-indigo-500">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-2xl font-bold text-indigo-900">
-              💪 Meus Talentos / Como Posso Ajudar
-            </h2>
+      {/* Stats row */}
+      <div className="mx-4 -mt-8 bg-white rounded-2xl shadow-sm border border-slate-100 grid grid-cols-3 divide-x divide-slate-100">
+        <div className="py-4 text-center">
+          <p className="text-2xl font-bold text-blue-600">{profile.friendCount}</p>
+          <p className="text-xs text-slate-500 mt-0.5">Amigos</p>
+        </div>
+        <div className="py-4 text-center">
+          <p className="text-2xl font-bold text-green-500">✓</p>
+          <p className="text-xs text-slate-500 mt-0.5">Ativo</p>
+        </div>
+        <div className="py-4 text-center">
+          <p className="text-2xl font-bold text-amber-500">⭐</p>
+          <p className="text-xs text-slate-500 mt-0.5">Membro</p>
+        </div>
+      </div>
+
+      <div className="px-4 mt-4 space-y-4">
+        {/* Mesa Posta / Availability */}
+        <div className={`bg-white rounded-2xl border p-4 ${statusInfo.color}`}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-slate-800">Mesa Posta</h3>
+            <div className={`w-3 h-3 rounded-full ${statusInfo.dot}`} />
+          </div>
+          <p className="text-sm text-slate-600 mb-3">{statusInfo.desc}</p>
+          <div className="flex gap-2">
+            {(Object.entries(STATUS_CONFIG) as [AvailabilityStatus, typeof statusInfo][]).map(([key, cfg]) => (
+              <button
+                key={key}
+                onClick={() => setStatus(key)}
+                className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+                  status === key
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <span className={`inline-block w-2 h-2 rounded-full mr-1 ${cfg.dot}`} />
+                {cfg.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Help Offer */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-slate-800">Como posso ajudar</h3>
             {!isEditing && (
               <button
-                onClick={() => setIsEditing(true)}
-                className="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition"
+                onClick={() => { setEditHelp(profile.helpOffer); setIsEditing(true); }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
               >
-                Editar
+                <Edit2 size={15} />
               </button>
             )}
           </div>
-
           {isEditing ? (
-            <textarea
-              value={editForm.helpOffer}
-              onChange={(e) =>
-                setEditForm({ ...editForm, helpOffer: e.target.value })
-              }
-              placeholder="Descreva como você pode ajudar a comunidade..."
-              className="w-full px-4 py-3 border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-32"
-            />
+            <>
+              <textarea
+                value={editHelp}
+                onChange={(e) => setEditHelp(e.target.value)}
+                rows={4}
+                placeholder="Descreva como você pode ajudar a comunidade..."
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              />
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="flex-1 py-2 border border-slate-200 rounded-xl text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="flex-1 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Salvar
+                </button>
+              </div>
+            </>
           ) : (
-            <p className="text-lg text-gray-800 leading-relaxed">
-              {user.helpOffer || 'Nenhum talento registrado ainda'}
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {profile.helpOffer || 'Nenhum talento registrado ainda'}
             </p>
           )}
-        </section>
-
-        {/* Availability Status */}
-        <section className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            📍 Disponibilidade
-          </h3>
-
-          {isEditing ? (
-            <div className="space-y-3">
-              <label className="flex items-center gap-3 p-4 border-2 border-transparent rounded-lg cursor-pointer hover:bg-gray-50"
-                onClick={() =>
-                  setEditForm({
-                    ...editForm,
-                    availabilityStatus: 'mesa-posta',
-                  })
-                }
-              >
-                <input
-                  type="radio"
-                  name="availability"
-                  checked={editForm.availabilityStatus === 'mesa-posta'}
-                  readOnly
-                  className="w-4 h-4"
-                />
-                <div>
-                  <p className="font-semibold text-emerald-700">
-                    🟢 Mesa Posta (Portas Abertas)
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Posso receber visitas sem aviso prévio
-                  </p>
-                </div>
-              </label>
-
-              <label className="flex items-center gap-3 p-4 border-2 border-transparent rounded-lg cursor-pointer hover:bg-gray-50"
-                onClick={() =>
-                  setEditForm({
-                    ...editForm,
-                    availabilityStatus: 'requer-aviso',
-                  })
-                }
-              >
-                <input
-                  type="radio"
-                  name="availability"
-                  checked={editForm.availabilityStatus === 'requer-aviso'}
-                  readOnly
-                  className="w-4 h-4"
-                />
-                <div>
-                  <p className="font-semibold text-amber-700">
-                    🟡 Requer Aviso (Privado)
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Prefiro ser avisado antes de receber visitas
-                  </p>
-                </div>
-              </label>
-            </div>
-          ) : (
-            <div className={`flex items-center gap-3 p-4 rounded-lg ${
-              user.availabilityStatus === 'mesa-posta'
-                ? 'bg-emerald-50'
-                : 'bg-amber-50'
-            }`}>
-              <span className={`text-2xl ${
-                user.availabilityStatus === 'mesa-posta'
-                  ? 'text-emerald-600'
-                  : 'text-amber-600'
-              }`}>
-                {user.availabilityStatus === 'mesa-posta' ? '🟢' : '🟡'}
-              </span>
-              <div>
-                <p className="font-semibold text-gray-900">
-                  {availabilityLabel}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {user.availabilityStatus === 'mesa-posta'
-                    ? 'Você está disponível para receber visitas espontâneas'
-                    : 'Você prefere ser avisado antes de receber visitas'}
-                </p>
-              </div>
-            </div>
-          )}
-        </section>
+        </div>
 
         {/* Contact Info */}
-        <section className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            📋 Informações
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-gray-600">Email</p>
-              <p className="font-medium text-gray-900">{user.email}</p>
-            </div>
-            {user.phone && (
-              <div>
-                <p className="text-sm text-gray-600">Telefone</p>
-                <p className="font-medium text-gray-900">{user.phone}</p>
-              </div>
-            )}
-            {user.profession && (
-              <div>
-                <p className="text-sm text-gray-600">Profissão</p>
-                <p className="font-medium text-gray-900">{user.profession}</p>
-              </div>
-            )}
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+          <h3 className="font-bold text-slate-800">Informações</h3>
+          <div className="flex items-center gap-3 text-sm text-slate-600">
+            <Mail size={15} className="text-slate-400 flex-shrink-0" />
+            <span>{profile.email}</span>
           </div>
-        </section>
+          <div className="flex items-center gap-3 text-sm text-slate-600">
+            <Phone size={15} className="text-slate-400 flex-shrink-0" />
+            <span>{profile.phone}</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-slate-600">
+            <MapPin size={15} className="text-slate-400 flex-shrink-0" />
+            <span>{profile.location}</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-slate-600">
+            <Users size={15} className="text-slate-400 flex-shrink-0" />
+            <span>{profile.friendCount} amigos na rede</span>
+          </div>
+        </div>
 
-        {/* Stats */}
-        <section className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-indigo-600">
-              {user.friends.length}
-            </p>
-            <p className="text-sm text-gray-600">Amigos</p>
-          </div>
-          <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-emerald-600">
-              {user.isOnline ? '🟢' : '⚫'}
-            </p>
-            <p className="text-sm text-gray-600">
-              {user.isOnline ? 'Online' : 'Offline'}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-amber-600">⭐</p>
-            <p className="text-sm text-gray-600">Membro</p>
-          </div>
-        </section>
-
-        {/* Edit Actions */}
-        {isEditing && (
-          <div className="flex gap-3">
-            <button
-              onClick={handleSave}
-              className="flex-1 px-4 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-lg transition"
-            >
-              Salvar Alterações
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="flex-1 px-4 py-3 bg-gray-300 hover:bg-gray-400 text-gray-900 font-semibold rounded-lg transition"
-            >
-              Cancelar
-            </button>
-          </div>
-        )}
+        {/* Sign out */}
+        <button className="w-full py-3 rounded-2xl border border-red-200 text-red-500 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-red-50 transition-colors">
+          <LogOut size={16} />
+          Sair da Conta
+        </button>
       </div>
 
       <BottomNav />
