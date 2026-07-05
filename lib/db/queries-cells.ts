@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
@@ -21,12 +21,22 @@ const db = drizzle(client);
 
 // ─── CÉLULAS ─────────────────────────────────────────────────
 
-export async function getCells() {
+export async function getCells(filters?: { communityId?: string | null }) {
+  const conditions = [];
+  if (filters?.communityId !== undefined) {
+    conditions.push(
+      filters.communityId === null
+        ? isNull(cell.communityId)
+        : eq(cell.communityId, filters.communityId)
+    );
+  }
+
   const cells = await db
     .select({
       id: cell.id,
       name: cell.name,
       description: cell.description,
+      communityId: cell.communityId,
       neighborhood: cell.neighborhood,
       address: cell.address,
       meetingDay: cell.meetingDay,
@@ -40,6 +50,7 @@ export async function getCells() {
     })
     .from(cell)
     .leftJoin(user, eq(cell.leaderId, user.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(cell.createdAt));
 
   return cells;
@@ -56,6 +67,7 @@ export async function getCellById(id: string) {
 export async function createCell(data: {
   name: string;
   description?: string;
+  communityId?: string;
   leaderId: string;
   neighborhood?: string;
   address?: string;

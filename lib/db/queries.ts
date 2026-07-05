@@ -12,10 +12,12 @@ import {
   isNotNull,
   isNull,
   lt,
+  lte,
   ne,
   or,
   type SQL,
 } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import type { ArtifactKind } from "@/components/artifact";
@@ -24,9 +26,19 @@ import { ChatbotError } from "../errors";
 import { generateUUID } from "../utils";
 import {
   alertResponse,
+  bibleHighlight,
+  hospitalityWindow,
   type Chat,
   chat,
   church,
+  cell,
+  cellAttendance,
+  cellGuide,
+  cellMeeting,
+  cellMember,
+  community,
+  communityMember,
+  consentLog,
   type DBMessage,
   directMessage,
   document,
@@ -36,6 +48,9 @@ import {
   message,
   prayerGroup,
   prayerGroupMember,
+  prayerInteraction,
+  prayerRequest,
+  proximityAlert,
   pushSubscription,
   samaritanAlert,
   type Suggestion,
@@ -46,6 +61,9 @@ import {
   testimonialLike,
   type User,
   user,
+  userPrivacySettings,
+  userProximityConfig,
+  userVisibilityConfig,
   visitRequest,
   volunteerEnrollment,
   volunteerOpportunity,
@@ -807,7 +825,7 @@ export async function createVisitRequest(
 export async function respondVisitRequest(
   requestId: string,
   toUserId: string,
-  status: "accepted" | "declined"
+  status: "accepted" | "declined" | "postponed"
 ) {
   try {
     const [row] = await db
@@ -821,6 +839,31 @@ export async function respondVisitRequest(
   } catch (_error) {
     throw new ChatbotError("bad_request:database", "Failed to respond to visit request");
   }
+}
+
+export async function getAcceptedVisitsAsSender(fromUserId: string) {
+  const toUser = alias(user, "toUser");
+  return db
+    .select({
+      id: visitRequest.id,
+      status: visitRequest.status,
+      message: visitRequest.message,
+      createdAt: visitRequest.createdAt,
+      respondedAt: visitRequest.respondedAt,
+      toUserId: visitRequest.toUserId,
+      toUserName: toUser.name,
+      toUserAvatar: toUser.avatar,
+      toUserProfession: toUser.profession,
+    })
+    .from(visitRequest)
+    .innerJoin(toUser, eq(toUser.id, visitRequest.toUserId))
+    .where(
+      and(
+        eq(visitRequest.fromUserId, fromUserId),
+        eq(visitRequest.status, "accepted")
+      )
+    )
+    .orderBy(desc(visitRequest.respondedAt));
 }
 
 export async function getPendingVisitRequests(toUserId: string) {
@@ -1502,4 +1545,713 @@ export async function unenrollVolunteer(
         eq(volunteerEnrollment.userId, userId)
       )
     );
+}
+
+// ============================================================
+// ETAPA 8 — COMUNIDADES
+// ============================================================
+
+export async function getCommunities(filters?: { type?: string; city?: string; isPublic?: boolean }) {
+  let query = db.select().from(community);
+  const conditions = [];
+  if (filters?.isPublic !== undefined) conditions.push(eq(community.isPublic, filters.isPublic));
+  if (filters?.type) conditions.push(eq(community.type as any, filters.type));
+  if (filters?.city) conditions.push(eq(community.city as any, filters.city));
+  if (conditions.length > 0) {
+    return await (query as any).where(and(...conditions)).orderBy(desc(community.createdAt));
+  }
+  return await query.orderBy(desc(community.createdAt));
+}
+
+export async function getCommunityById(id: string) {
+  const [row] = await db.select().from(community).where(eq(community.id, id));
+  return row ?? null;
+}
+
+export async function createCommunity(data: {
+  name: string;
+  type: string;
+  description?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  phone?: string;
+  website?: string;
+  isPublic?: boolean;
+  requireApproval?: boolean;
+  adminUserId: string;
+}) {
+  const slug = data.name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 100);
+
+  const [created] = await db
+    .insert(community)
+    .values({
+      name: data.name,
+      slug,
+      type: data.type as any,
+      description: data.description,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      country: data.country ?? "BR",
+      phone: data.phone,
+      website: data.website,
+      isPublic: data.isPublic ?? true,
+      requireApproval: data.requireApproval ?? false,
+      adminUserId: data.adminUserId,
+    })
+    .returning();
+
+  // Admin é automaticamente membro owner
+  await db.insert(communityMember).values({
+    communityId: created.id,
+    userId: data.adminUserId,
+    role: "owner",
+    approvedAt: new Date(),
+    canPost: true,
+    canInvite: true,
+    canManageEvents: true,
+  });
+
+  return created;
+}
+
+export async function getCommunityMembers(communityId: string) {
+  return await db
+    .select({
+      userId: communityMember.userId,
+      role: communityMember.role,
+      joinedAt: communityMember.joinedAt,
+      approvedAt: communityMember.approvedAt,
+      name: user.name,
+      avatar: user.avatar,
+      profession: user.profession,
+    })
+    .from(communityMember)
+    .innerJoin(user, eq(communityMember.userId, user.id))
+    .where(
+      and(
+        eq(communityMember.communityId, communityId),
+        isNotNull(communityMember.approvedAt)
+      )
+    )
+    .orderBy(asc(communityMember.joinedAt));
+}
+
+export async function getMyCommunityIds(userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ communityId: communityMember.communityId })
+    .from(communityMember)
+    .where(
+      and(
+        eq(communityMember.userId, userId),
+        isNotNull(communityMember.approvedAt)
+      )
+    );
+  return rows.map((r) => r.communityId);
+}
+
+export async function joinCommunity(communityId: string, userId: string, requireApproval: boolean) {
+  await db
+    .insert(communityMember)
+    .values({
+      communityId,
+      userId,
+      role: "member",
+      approvedAt: requireApproval ? null : new Date(),
+    })
+    .onConflictDoNothing();
+}
+
+export async function leaveCommunity(communityId: string, userId: string) {
+  await db
+    .delete(communityMember)
+    .where(
+      and(
+        eq(communityMember.communityId, communityId),
+        eq(communityMember.userId, userId)
+      )
+    );
+}
+
+export async function approveCommunityMember(communityId: string, userId: string) {
+  await db
+    .update(communityMember)
+    .set({ approvedAt: new Date() })
+    .where(
+      and(
+        eq(communityMember.communityId, communityId),
+        eq(communityMember.userId, userId)
+      )
+    );
+}
+
+export async function getPendingCommunityMembers(communityId: string) {
+  return await db
+    .select({
+      userId: communityMember.userId,
+      role: communityMember.role,
+      joinedAt: communityMember.joinedAt,
+      name: user.name,
+      avatar: user.avatar,
+      profession: user.profession,
+    })
+    .from(communityMember)
+    .innerJoin(user, eq(communityMember.userId, user.id))
+    .where(
+      and(
+        eq(communityMember.communityId, communityId),
+        isNull(communityMember.approvedAt)
+      )
+    )
+    .orderBy(asc(communityMember.joinedAt));
+}
+
+export async function getUserCommunityRole(communityId: string, userId: string) {
+  const [row] = await db
+    .select({ role: communityMember.role, approvedAt: communityMember.approvedAt })
+    .from(communityMember)
+    .where(
+      and(
+        eq(communityMember.communityId, communityId),
+        eq(communityMember.userId, userId)
+      )
+    );
+  return row ?? null;
+}
+
+// ============================================================
+// ETAPA 8 — PRIVACIDADE E LGPD
+// ============================================================
+
+export async function getUserPrivacySettings(userId: string) {
+  const [row] = await db
+    .select()
+    .from(userPrivacySettings)
+    .where(eq(userPrivacySettings.userId, userId));
+  return row ?? null;
+}
+
+export async function upsertUserPrivacySettings(
+  userId: string,
+  data: Partial<{
+    consentDataProcessing: boolean;
+    consentLocation: boolean;
+    consentProximityAlerts: boolean;
+    consentVisitRequests: boolean;
+    consentProfileVisible: boolean;
+  }>
+) {
+  const now = new Date();
+  const values: Record<string, any> = { userId, updatedAt: now };
+  if (data.consentDataProcessing !== undefined) {
+    values.consentDataProcessing = data.consentDataProcessing;
+    values.consentDataProcessingAt = now;
+  }
+  if (data.consentLocation !== undefined) {
+    values.consentLocation = data.consentLocation;
+    values.consentLocationAt = now;
+  }
+  if (data.consentProximityAlerts !== undefined) {
+    values.consentProximityAlerts = data.consentProximityAlerts;
+    values.consentProximityAlertsAt = now;
+  }
+  if (data.consentVisitRequests !== undefined) {
+    values.consentVisitRequests = data.consentVisitRequests;
+    values.consentVisitRequestsAt = now;
+  }
+  if (data.consentProfileVisible !== undefined) {
+    values.consentProfileVisible = data.consentProfileVisible;
+    values.consentProfileVisibleAt = now;
+  }
+
+  await db
+    .insert(userPrivacySettings)
+    .values(values as any)
+    .onConflictDoUpdate({
+      target: userPrivacySettings.userId,
+      set: { ...values },
+    });
+}
+
+export async function getUserVisibilityConfig(userId: string) {
+  const [row] = await db
+    .select()
+    .from(userVisibilityConfig)
+    .where(eq(userVisibilityConfig.userId, userId));
+  return row ?? null;
+}
+
+type VisibilityOption = "nobody" | "friends" | "my_community" | "all";
+
+export async function upsertUserVisibilityConfig(
+  userId: string,
+  data: Partial<{
+    locationVisibleTo: VisibilityOption;
+    visitRequestFrom: VisibilityOption;
+    chatFrom: VisibilityOption;
+    profileVisibleTo: VisibilityOption;
+  }>
+) {
+  await db
+    .insert(userVisibilityConfig)
+    .values({ userId, ...data })
+    .onConflictDoUpdate({
+      target: userVisibilityConfig.userId,
+      set: {
+        ...(data.locationVisibleTo !== undefined && { locationVisibleTo: data.locationVisibleTo }),
+        ...(data.visitRequestFrom !== undefined && { visitRequestFrom: data.visitRequestFrom }),
+        ...(data.chatFrom !== undefined && { chatFrom: data.chatFrom }),
+        ...(data.profileVisibleTo !== undefined && { profileVisibleTo: data.profileVisibleTo }),
+        updatedAt: new Date(),
+      },
+    });
+}
+
+export async function getUserProximityConfig(userId: string) {
+  const [row] = await db
+    .select()
+    .from(userProximityConfig)
+    .where(eq(userProximityConfig.userId, userId));
+  return row ?? null;
+}
+
+type ActiveWhenOption = "same_city" | "same_state" | "same_country" | "always" | "never";
+
+export async function upsertUserProximityConfig(
+  userId: string,
+  data: Partial<{
+    isActive: boolean;
+    radiusMeters: number;
+    activeWhen: ActiveWhenOption;
+    locationExpiresHours: number;
+    notifyWhenFriendNear: boolean;
+    notifyWhenCellMemberNear: boolean;
+    notifyWhenCommunityNear: boolean;
+    cooldownMinutes: number;
+  }>
+) {
+  await db
+    .insert(userProximityConfig)
+    .values({ userId, ...data } as any)
+    .onConflictDoUpdate({
+      target: userProximityConfig.userId,
+      set: { ...data, updatedAt: new Date() },
+    });
+}
+
+export async function updateProximityLastSeen(userId: string) {
+  await db
+    .update(userProximityConfig)
+    .set({ lastLocationAt: new Date() })
+    .where(eq(userProximityConfig.userId, userId));
+}
+
+// ConsentLog — INSERT ONLY (nunca atualizar, auditoria LGPD)
+export async function logConsent(data: {
+  userId: string;
+  module: string;
+  action: "granted" | "revoked";
+  ipAddress?: string;
+  userAgent?: string;
+}) {
+  await db.insert(consentLog).values({
+    userId: data.userId,
+    module: data.module as any,
+    action: data.action,
+    // Anonimiza IP: apenas primeiros 3 octetos (ex: 200.158.32.xxx)
+    ipAddress: data.ipAddress
+      ? data.ipAddress.split(".").slice(0, 3).join(".") + ".xxx"
+      : undefined,
+    userAgent: data.userAgent,
+  });
+}
+
+// ============================================================
+// ETAPA 11 — ALERTAS DE PROXIMIDADE
+// ============================================================
+
+export async function createProximityAlert(data: {
+  userId: string;
+  nearUserId: string;
+  distanceMeters: number;
+  relationContext: "friend" | "cell_member" | "community_member";
+  expiresInHours?: number;
+}) {
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + (data.expiresInHours ?? 24));
+
+  await db.insert(proximityAlert).values({
+    userId: data.userId,
+    nearUserId: data.nearUserId,
+    distanceMeters: data.distanceMeters,
+    relationContext: data.relationContext,
+    expiresAt,
+  });
+}
+
+export async function getRecentProximityAlert(
+  userId: string,
+  nearUserId: string,
+  cooldownMinutes: number
+): Promise<boolean> {
+  const since = new Date();
+  since.setMinutes(since.getMinutes() - cooldownMinutes);
+  const [row] = await db
+    .select({ id: proximityAlert.id })
+    .from(proximityAlert)
+    .where(
+      and(
+        eq(proximityAlert.userId, userId),
+        eq(proximityAlert.nearUserId, nearUserId),
+        gt(proximityAlert.sentAt, since)
+      )
+    )
+    .limit(1);
+  return !!row;
+}
+
+export async function deleteExpiredProximityAlerts() {
+  await db
+    .delete(proximityAlert)
+    .where(lt(proximityAlert.expiresAt, new Date()));
+}
+
+// Pares de amigos onde AMBOS têm proximidade ativa e localização recente
+export async function getActiveFriendPairs() {
+  const u1 = alias(user, "u1");
+  const u2 = alias(user, "u2");
+  const p1 = alias(userProximityConfig, "p1");
+  const p2 = alias(userProximityConfig, "p2");
+
+  return await db
+    .select({
+      user1Id: friendship.userId,
+      user2Id: friendship.friendId,
+      user1Name: u1.name,
+      user1Lat: u1.lat,
+      user1Lng: u1.lng,
+      user2Name: u2.name,
+      user2Lat: u2.lat,
+      user2Lng: u2.lng,
+      radius1: p1.radiusMeters,
+      radius2: p2.radiusMeters,
+      cooldown1: p1.cooldownMinutes,
+      cooldown2: p2.cooldownMinutes,
+      activeWhen1: p1.activeWhen,
+      activeWhen2: p2.activeWhen,
+    })
+    .from(friendship)
+    .innerJoin(u1, eq(u1.id, friendship.userId))
+    .innerJoin(u2, eq(u2.id, friendship.friendId))
+    .innerJoin(p1, and(eq(p1.userId, friendship.userId), eq(p1.isActive, true), eq(p1.notifyWhenFriendNear, true)))
+    .innerJoin(p2, and(eq(p2.userId, friendship.friendId), eq(p2.isActive, true), eq(p2.notifyWhenFriendNear, true)))
+    .where(
+      and(
+        isNotNull(u1.lat),
+        isNotNull(u1.lng),
+        isNotNull(u2.lat),
+        isNotNull(u2.lng),
+        ne(p1.activeWhen, "never"),
+        ne(p2.activeWhen, "never"),
+      )
+    );
+}
+
+// Pares de membros da mesma comunidade onde AMBOS têm proximidade ativa
+export async function getActiveCommunityMemberPairs() {
+  const m1 = alias(communityMember, "m1");
+  const m2 = alias(communityMember, "m2");
+  const u1 = alias(user, "u1");
+  const u2 = alias(user, "u2");
+  const p1 = alias(userProximityConfig, "p1");
+  const p2 = alias(userProximityConfig, "p2");
+
+  return await db
+    .select({
+      communityId: m1.communityId,
+      user1Id: m1.userId,
+      user2Id: m2.userId,
+      user1Name: u1.name,
+      user1Lat: u1.lat,
+      user1Lng: u1.lng,
+      user2Name: u2.name,
+      user2Lat: u2.lat,
+      user2Lng: u2.lng,
+      radius1: p1.radiusMeters,
+      radius2: p2.radiusMeters,
+      cooldown1: p1.cooldownMinutes,
+      cooldown2: p2.cooldownMinutes,
+    })
+    .from(m1)
+    .innerJoin(m2, and(
+      eq(m2.communityId, m1.communityId),
+      ne(m2.userId, m1.userId),
+      isNotNull(m2.approvedAt),
+    ))
+    .innerJoin(u1, eq(u1.id, m1.userId))
+    .innerJoin(u2, eq(u2.id, m2.userId))
+    .innerJoin(p1, and(eq(p1.userId, m1.userId), eq(p1.isActive, true), eq(p1.notifyWhenCommunityNear, true)))
+    .innerJoin(p2, and(eq(p2.userId, m2.userId), eq(p2.isActive, true), eq(p2.notifyWhenCommunityNear, true)))
+    .where(
+      and(
+        isNotNull(m1.approvedAt),
+        isNotNull(u1.lat),
+        isNotNull(u1.lng),
+        isNotNull(u2.lat),
+        isNotNull(u2.lng),
+        // Evitar duplicatas (só processar u1 < u2)
+        ne(p1.activeWhen, "never"),
+      )
+    );
+}
+
+// ============================================================
+// ETAPA 9 — LGPD: EXCLUSÃO DE CONTA (art. 18)
+// Remove todos os dados do usuário em ordem de dependência FK
+// ============================================================
+
+export async function deleteUserAccount(userId: string) {
+  // 1. Dados LGPD e configurações (sem dependências)
+  await db.delete(consentLog).where(eq(consentLog.userId, userId));
+  await db.delete(proximityAlert).where(
+    or(eq(proximityAlert.userId, userId), eq(proximityAlert.nearUserId, userId))
+  );
+  await db.delete(userProximityConfig).where(eq(userProximityConfig.userId, userId));
+  await db.delete(userVisibilityConfig).where(eq(userVisibilityConfig.userId, userId));
+  await db.delete(userPrivacySettings).where(eq(userPrivacySettings.userId, userId));
+
+  // 2. Comunidade
+  await db.delete(communityMember).where(eq(communityMember.userId, userId));
+
+  // 3. Voluntariado
+  await db.delete(volunteerEnrollment).where(eq(volunteerEnrollment.userId, userId));
+
+  // 4. Testemunhos
+  await db.delete(testimonialLike).where(eq(testimonialLike.userId, userId));
+  await db.delete(testimonialComment).where(eq(testimonialComment.userId, userId));
+  await db.delete(testimonial).where(eq(testimonial.userId, userId));
+
+  // 5. Oração (interações antes dos pedidos)
+  await db.delete(prayerInteraction).where(eq(prayerInteraction.userId, userId));
+  await db.delete(prayerRequest).where(eq(prayerRequest.userId, userId));
+  await db.delete(prayerGroupMember).where(eq(prayerGroupMember.userId, userId));
+
+  // 6. Células (attendance antes de member)
+  await db.delete(cellAttendance).where(eq(cellAttendance.userId, userId));
+  await db.delete(cellMember).where(eq(cellMember.userId, userId));
+
+  // 7. Alertas e eventos
+  await db.delete(alertResponse).where(eq(alertResponse.userId, userId));
+  await db.delete(samaritanAlert).where(eq(samaritanAlert.userId, userId));
+  await db.delete(eventAttendee).where(eq(eventAttendee.userId, userId));
+
+  // 8. Mensagens diretas e visitas
+  await db.delete(directMessage).where(
+    or(eq(directMessage.fromUserId, userId), eq(directMessage.toUserId, userId))
+  );
+  await db.delete(visitRequest).where(
+    or(eq(visitRequest.fromUserId, userId), eq(visitRequest.toUserId, userId))
+  );
+
+  // 9. Amizades e push
+  await db.delete(friendship).where(
+    or(eq(friendship.userId, userId), eq(friendship.friendId, userId))
+  );
+  await db.delete(pushSubscription).where(eq(pushSubscription.userId, userId));
+
+  // 10. Chats (votes e messages primeiro)
+  const userChats = await db
+    .select({ id: chat.id })
+    .from(chat)
+    .where(eq(chat.userId, userId));
+  if (userChats.length > 0) {
+    const chatIds = userChats.map((c) => c.id);
+    await db.delete(vote).where(inArray(vote.chatId, chatIds));
+    await db.delete(message).where(inArray(message.chatId, chatIds));
+    await db.delete(stream).where(inArray(stream.chatId, chatIds));
+    // Suggestions referenciam documents, não chats
+  }
+  await db.delete(chat).where(eq(chat.userId, userId));
+
+  // 11. Documents e suggestions
+  const userDocs = await db
+    .select({ id: document.id })
+    .from(document)
+    .where(eq(document.userId, userId));
+  if (userDocs.length > 0) {
+    const docIds = userDocs.map((d) => d.id);
+    await db.delete(suggestion).where(inArray(suggestion.documentId, docIds));
+  }
+  await db.delete(document).where(eq(document.userId, userId));
+
+  // 12. Por fim, o próprio usuário
+  await db.delete(user).where(eq(user.id, userId));
+}
+
+// ── Bíblia: destaques ─────────────────────────────────────────────────────────
+
+export async function getUserHighlights(userId: string) {
+  return db
+    .select()
+    .from(bibleHighlight)
+    .where(eq(bibleHighlight.userId, userId))
+    .orderBy(desc(bibleHighlight.createdAt));
+}
+
+export async function getVerseHighlights(
+  userId: string,
+  book: string,
+  chapter: number
+) {
+  return db
+    .select()
+    .from(bibleHighlight)
+    .where(
+      and(
+        eq(bibleHighlight.userId, userId),
+        eq(bibleHighlight.book, book),
+        eq(bibleHighlight.chapter, chapter)
+      )
+    );
+}
+
+export async function upsertHighlight(params: {
+  userId: string;
+  book: string;
+  chapter: number;
+  verse: number;
+  color: "yellow" | "green" | "pink" | "blue";
+  note?: string;
+  version?: string;
+}) {
+  // Remove highlight existente para o mesmo versículo (uma cor por versículo)
+  await db
+    .delete(bibleHighlight)
+    .where(
+      and(
+        eq(bibleHighlight.userId, params.userId),
+        eq(bibleHighlight.book, params.book),
+        eq(bibleHighlight.chapter, params.chapter),
+        eq(bibleHighlight.verse, params.verse)
+      )
+    );
+  const [row] = await db
+    .insert(bibleHighlight)
+    .values({
+      userId: params.userId,
+      book: params.book,
+      chapter: params.chapter,
+      verse: params.verse,
+      color: params.color,
+      note: params.note ?? null,
+      version: params.version ?? "nvi",
+    })
+    .returning();
+  return row;
+}
+
+export async function deleteHighlight(userId: string, highlightId: string) {
+  await db
+    .delete(bibleHighlight)
+    .where(
+      and(eq(bibleHighlight.id, highlightId), eq(bibleHighlight.userId, userId))
+    );
+}
+
+// ── Janelas de Hospitalidade ──────────────────────────────────────────────────
+
+export async function createHospitalityWindow(params: {
+  userId: string;
+  title: string;
+  description?: string;
+  startsAt: Date;
+  endsAt: Date;
+  radiusMeters?: number;
+}) {
+  const [row] = await db
+    .insert(hospitalityWindow)
+    .values({
+      userId: params.userId,
+      title: params.title,
+      description: params.description ?? null,
+      startsAt: params.startsAt,
+      endsAt: params.endsAt,
+      radiusMeters: params.radiusMeters ?? 5000,
+    })
+    .returning();
+  return row;
+}
+
+export async function getActiveHospitalityWindows() {
+  const now = new Date();
+  const host = alias(user, "host");
+  return db
+    .select({
+      id: hospitalityWindow.id,
+      title: hospitalityWindow.title,
+      description: hospitalityWindow.description,
+      startsAt: hospitalityWindow.startsAt,
+      endsAt: hospitalityWindow.endsAt,
+      radiusMeters: hospitalityWindow.radiusMeters,
+      userId: hospitalityWindow.userId,
+      hostName: host.name,
+      hostAvatar: host.avatar,
+      hostProfession: host.profession,
+      hostLat: host.lat,
+      hostLng: host.lng,
+    })
+    .from(hospitalityWindow)
+    .innerJoin(host, eq(host.id, hospitalityWindow.userId))
+    .where(
+      and(
+        lte(hospitalityWindow.startsAt, now),
+        gte(hospitalityWindow.endsAt, now),
+        isNotNull(host.lat),
+        isNotNull(host.lng)
+      )
+    )
+    .orderBy(asc(hospitalityWindow.startsAt));
+}
+
+export async function getUserActiveWindow(userId: string) {
+  const now = new Date();
+  const [row] = await db
+    .select()
+    .from(hospitalityWindow)
+    .where(
+      and(
+        eq(hospitalityWindow.userId, userId),
+        lte(hospitalityWindow.startsAt, now),
+        gte(hospitalityWindow.endsAt, now)
+      )
+    )
+    .orderBy(asc(hospitalityWindow.startsAt))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function deleteHospitalityWindow(id: string, userId: string) {
+  await db
+    .delete(hospitalityWindow)
+    .where(
+      and(eq(hospitalityWindow.id, id), eq(hospitalityWindow.userId, userId))
+    );
+}
+
+export async function getAcceptedFriendIds(userId: string) {
+  const rows = await db
+    .select({ friendId: friendship.friendId })
+    .from(friendship)
+    .where(
+      and(eq(friendship.userId, userId), eq(friendship.status, "accepted"))
+    );
+  return rows.map((r) => r.friendId);
 }

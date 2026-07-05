@@ -5,13 +5,16 @@ import {
   getCells,
 } from "@/lib/db/queries-cells";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return Response.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const cells = await getCells();
+  const url = new URL(request.url);
+  const communityId = url.searchParams.get('communityId') ?? undefined;
+
+  const cells = await getCells(communityId ? { communityId } : undefined);
 
   const withCount = await Promise.all(
     cells.map(async (c) => ({
@@ -30,15 +33,16 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { name, description, neighborhood, address, meetingDay, meetingTime, targetAudience, maxMembers } = body;
+  const { name, description, communityId, neighborhood, address, meetingDay, meetingTime, targetAudience, maxMembers } = body;
 
   if (!name) {
-    return Response.json({ error: "Nome da célula é obrigatório" }, { status: 400 });
+    return Response.json({ error: "Nome do grupo é obrigatório" }, { status: 400 });
   }
 
   const newCell = await createCell({
     name,
     description,
+    communityId: typeof communityId === 'string' ? communityId : undefined,
     leaderId: session.user.id,
     neighborhood,
     address,

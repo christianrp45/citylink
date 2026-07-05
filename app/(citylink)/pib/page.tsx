@@ -1,80 +1,40 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, Send, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { BottomNav } from '@/components/citylink-bottom-nav';
-
-// ─── Versículo do Dia ─────────────────────────────────────────────────────────
-
-const DAILY_VERSES = [
-  { reference: 'Filipenses 4:13', text: 'Tudo posso naquele que me fortalece.', theme: 'Força' },
-  { reference: 'Salmos 23:1', text: 'O Senhor é meu pastor; nada me faltará.', theme: 'Provisão' },
-  { reference: 'João 3:16', text: 'Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna.', theme: 'Amor' },
-  { reference: 'Jeremias 29:11', text: 'Porque eu bem sei os planos que tenho para vós, diz o Senhor; planos de paz e não de mal, para vos dar um futuro e uma esperança.', theme: 'Esperança' },
-  { reference: 'Romanos 8:28', text: 'E sabemos que todas as coisas contribuem juntamente para o bem daqueles que amam a Deus.', theme: 'Propósito' },
-  { reference: 'Provérbios 3:5-6', text: 'Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento.', theme: 'Confiança' },
-  { reference: 'Isaías 40:31', text: 'Mas os que esperam no Senhor renovarão as suas forças; subirão com asas como águias.', theme: 'Renovação' },
-];
-
-const BIBLE_BOOKS = [
-  { name: 'Gênesis', chapters: 50, testament: 'AT' }, { name: 'Êxodo', chapters: 40, testament: 'AT' },
-  { name: 'Levítico', chapters: 27, testament: 'AT' }, { name: 'Números', chapters: 36, testament: 'AT' },
-  { name: 'Deuteronômio', chapters: 34, testament: 'AT' }, { name: 'Josué', chapters: 24, testament: 'AT' },
-  { name: 'Juízes', chapters: 21, testament: 'AT' }, { name: 'Rute', chapters: 4, testament: 'AT' },
-  { name: '1 Samuel', chapters: 31, testament: 'AT' }, { name: '2 Samuel', chapters: 24, testament: 'AT' },
-  { name: '1 Reis', chapters: 22, testament: 'AT' }, { name: '2 Reis', chapters: 25, testament: 'AT' },
-  { name: '1 Crônicas', chapters: 29, testament: 'AT' }, { name: '2 Crônicas', chapters: 36, testament: 'AT' },
-  { name: 'Esdras', chapters: 10, testament: 'AT' }, { name: 'Neemias', chapters: 13, testament: 'AT' },
-  { name: 'Ester', chapters: 10, testament: 'AT' }, { name: 'Jó', chapters: 42, testament: 'AT' },
-  { name: 'Salmos', chapters: 150, testament: 'AT' }, { name: 'Provérbios', chapters: 31, testament: 'AT' },
-  { name: 'Eclesiastes', chapters: 12, testament: 'AT' }, { name: 'Cântico dos Cânticos', chapters: 8, testament: 'AT' },
-  { name: 'Isaías', chapters: 66, testament: 'AT' }, { name: 'Jeremias', chapters: 52, testament: 'AT' },
-  { name: 'Lamentações', chapters: 5, testament: 'AT' }, { name: 'Ezequiel', chapters: 48, testament: 'AT' },
-  { name: 'Daniel', chapters: 12, testament: 'AT' }, { name: 'Oséias', chapters: 14, testament: 'AT' },
-  { name: 'Joel', chapters: 3, testament: 'AT' }, { name: 'Amós', chapters: 9, testament: 'AT' },
-  { name: 'Obadias', chapters: 1, testament: 'AT' }, { name: 'Jonas', chapters: 4, testament: 'AT' },
-  { name: 'Miquéias', chapters: 7, testament: 'AT' }, { name: 'Naum', chapters: 3, testament: 'AT' },
-  { name: 'Habacuque', chapters: 3, testament: 'AT' }, { name: 'Sofonias', chapters: 3, testament: 'AT' },
-  { name: 'Ageu', chapters: 2, testament: 'AT' }, { name: 'Zacarias', chapters: 14, testament: 'AT' },
-  { name: 'Malaquias', chapters: 4, testament: 'AT' },
-  { name: 'Mateus', chapters: 28, testament: 'NT' }, { name: 'Marcos', chapters: 16, testament: 'NT' },
-  { name: 'Lucas', chapters: 24, testament: 'NT' }, { name: 'João', chapters: 21, testament: 'NT' },
-  { name: 'Atos', chapters: 28, testament: 'NT' }, { name: 'Romanos', chapters: 16, testament: 'NT' },
-  { name: '1 Coríntios', chapters: 16, testament: 'NT' }, { name: '2 Coríntios', chapters: 13, testament: 'NT' },
-  { name: 'Gálatas', chapters: 6, testament: 'NT' }, { name: 'Efésios', chapters: 6, testament: 'NT' },
-  { name: 'Filipenses', chapters: 4, testament: 'NT' }, { name: 'Colossenses', chapters: 4, testament: 'NT' },
-  { name: '1 Tessalonicenses', chapters: 5, testament: 'NT' }, { name: '2 Tessalonicenses', chapters: 3, testament: 'NT' },
-  { name: '1 Timóteo', chapters: 6, testament: 'NT' }, { name: '2 Timóteo', chapters: 4, testament: 'NT' },
-  { name: 'Tito', chapters: 3, testament: 'NT' }, { name: 'Filemom', chapters: 1, testament: 'NT' },
-  { name: 'Hebreus', chapters: 13, testament: 'NT' }, { name: 'Tiago', chapters: 5, testament: 'NT' },
-  { name: '1 Pedro', chapters: 5, testament: 'NT' }, { name: '2 Pedro', chapters: 3, testament: 'NT' },
-  { name: '1 João', chapters: 5, testament: 'NT' }, { name: '2 João', chapters: 1, testament: 'NT' },
-  { name: '3 João', chapters: 1, testament: 'NT' }, { name: 'Judas', chapters: 1, testament: 'NT' },
-  { name: 'Apocalipse', chapters: 22, testament: 'NT' },
-];
-
-const BIBLE_VERSIONS = [
-  { id: 'ARC', name: 'Almeida Revista e Corrigida' },
-  { id: 'NVI', name: 'Nova Versão Internacional' },
-  { id: 'ACF', name: 'Almeida Corrigida Fiel' },
-  { id: 'NAA', name: 'Nova Almeida Atualizada' },
-  { id: 'NTLH', name: 'Nova Tradução na Linguagem de Hoje' },
-];
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
-type ChurchItem = {
+type CommunityItem = {
   id: string;
   name: string;
-  denomination: string | null;
+  slug: string;
+  type: string;
   description: string | null;
+  city: string | null;
+  state: string | null;
   address: string | null;
   phone: string | null;
-  schedule: string | null;
-  pastor: string | null;
-  members: number | null;
+  website: string | null;
+  isPublic: boolean;
+  requireApproval: boolean;
+  adminUserId: string | null;
+  createdAt: string;
+};
+
+type CommunityMemberItem = {
+  userId: string;
+  name: string | null;
+  avatar: string | null;
+  profession: string | null;
+  role: string;
+  joinedAt: string;
+  approvedAt: string | null;
 };
 
 type TestimonialItem = {
@@ -117,9 +77,53 @@ function avatarSrc(name: string | null, avatar: string | null) {
   return avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(name ?? 'U')}&background=7c3aed&color=fff`;
 }
 
-// ─── Células Tab (sem mudanças) ────────────────────────────────────────────────
+// ─── Células Tab ──────────────────────────────────────────────────────────────
+
+type Roteiro = {
+  tema: string;
+  versiculo: string;
+  abertura: string;
+  discussao: string;
+  oracao: string;
+  data: string;
+};
+
+const ROTEIRO_KEY = 'citylink_roteiro';
 
 function CelulasTab() {
+  const [showForm, setShowForm] = useState(false);
+  const [roteiro, setRoteiro] = useState<Roteiro | null>(null);
+  const [form, setForm] = useState<Roteiro>({ tema: '', versiculo: '', abertura: '', discussao: '', oracao: '', data: '' });
+  const [viewRoteiro, setViewRoteiro] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(ROTEIRO_KEY);
+      if (saved) setRoteiro(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.tema) return;
+    localStorage.setItem(ROTEIRO_KEY, JSON.stringify(form));
+    setRoteiro(form);
+    setShowForm(false);
+    setViewRoteiro(true);
+  }
+
+  function handleEdit() {
+    if (roteiro) setForm(roteiro);
+    setViewRoteiro(false);
+    setShowForm(true);
+  }
+
+  function handleDelete() {
+    localStorage.removeItem(ROTEIRO_KEY);
+    setRoteiro(null);
+    setViewRoteiro(false);
+  }
+
   return (
     <div className="space-y-4">
       <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl p-5 text-white shadow-lg">
@@ -128,6 +132,7 @@ function CelulasTab() {
           "Perseveravam na doutrina dos apóstolos, na comunhão, no partir do pão e nas orações."
         </p>
       </div>
+
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
         <h3 className="font-bold text-slate-800">Grupos Pequenos</h3>
         <p className="text-sm text-slate-500">
@@ -142,6 +147,83 @@ function CelulasTab() {
           </Link>
         </div>
       </div>
+
+      {/* Roteiro Manual */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-800">📋 Roteiro da Célula</h3>
+          {roteiro && (
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Salvo</span>
+          )}
+        </div>
+        <p className="text-sm text-slate-500">
+          Insira manualmente o roteiro da sua reunião de célula.
+        </p>
+        {roteiro ? (
+          <div className="space-y-2">
+            <button
+              onClick={() => setViewRoteiro((v) => !v)}
+              className="w-full py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors"
+            >
+              {viewRoteiro ? 'Ocultar Roteiro' : '👁 Ver Roteiro'}
+            </button>
+            <div className="flex gap-2">
+              <button onClick={handleEdit} className="flex-1 py-2 border border-indigo-300 text-indigo-700 text-sm font-semibold rounded-xl hover:bg-indigo-50 transition-colors">
+                ✏️ Editar
+              </button>
+              <button onClick={handleDelete} className="flex-1 py-2 border border-rose-200 text-rose-500 text-sm font-semibold rounded-xl hover:bg-rose-50 transition-colors">
+                🗑 Remover
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => { setForm({ tema: '', versiculo: '', abertura: '', discussao: '', oracao: '', data: '' }); setShowForm(true); }}
+            className="w-full py-2.5 border-2 border-dashed border-indigo-300 text-indigo-600 text-sm font-semibold rounded-xl hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={16} /> Inserir Roteiro Manual
+          </button>
+        )}
+
+        {/* Visualização do roteiro */}
+        {viewRoteiro && roteiro && (
+          <div className="mt-2 space-y-3 border-t border-slate-100 pt-3">
+            <div className="flex items-center justify-between">
+              <p className="font-bold text-slate-800 text-base">{roteiro.tema}</p>
+              {roteiro.data && (
+                <span className="text-xs text-slate-400">
+                  {new Date(roteiro.data + 'T00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
+              )}
+            </div>
+            {roteiro.versiculo && (
+              <div className="bg-indigo-50 rounded-xl p-3">
+                <p className="text-xs font-semibold text-indigo-500 mb-1">📖 Versículo Base</p>
+                <p className="text-sm text-indigo-800 italic">"{roteiro.versiculo}"</p>
+              </div>
+            )}
+            {roteiro.abertura && (
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs font-semibold text-slate-500 mb-1">🎉 Abertura / Dinâmica</p>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{roteiro.abertura}</p>
+              </div>
+            )}
+            {roteiro.discussao && (
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs font-semibold text-slate-500 mb-1">💬 Perguntas para Discussão</p>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{roteiro.discussao}</p>
+              </div>
+            )}
+            {roteiro.oracao && (
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs font-semibold text-slate-500 mb-1">🙏 Momento de Oração</p>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{roteiro.oracao}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
         <h3 className="font-bold text-slate-800">Guia de Estudo IA</h3>
         <p className="text-sm text-slate-500">
@@ -151,193 +233,508 @@ function CelulasTab() {
           Gerar Roteiro ✨
         </Link>
       </div>
+
+      {/* Bottom sheet — formulário de roteiro */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={() => setShowForm(false)}>
+          <form
+            onSubmit={handleSave}
+            className="w-full bg-white rounded-t-3xl p-6 space-y-3 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-bold text-slate-800">Roteiro da Célula</h3>
+              <button type="button" onClick={() => setShowForm(false)}><X size={20} className="text-slate-400" /></button>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Tema *</label>
+              <input
+                value={form.tema}
+                onChange={(e) => setForm((p) => ({ ...p, tema: e.target.value }))}
+                placeholder="Ex.: A Graça de Deus"
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Data da Reunião</label>
+              <input
+                type="date"
+                value={form.data}
+                onChange={(e) => setForm((p) => ({ ...p, data: e.target.value }))}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Versículo Base</label>
+              <textarea
+                value={form.versiculo}
+                onChange={(e) => setForm((p) => ({ ...p, versiculo: e.target.value }))}
+                placeholder="Ex.: João 3:16 — Porque Deus amou o mundo..."
+                rows={2}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Abertura / Dinâmica</label>
+              <textarea
+                value={form.abertura}
+                onChange={(e) => setForm((p) => ({ ...p, abertura: e.target.value }))}
+                placeholder="Descreva a dinâmica de abertura da reunião..."
+                rows={3}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Perguntas para Discussão</label>
+              <textarea
+                value={form.discussao}
+                onChange={(e) => setForm((p) => ({ ...p, discussao: e.target.value }))}
+                placeholder="1. O que esse versículo significa para você?&#10;2. Como aplicar isso na sua semana?"
+                rows={4}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Momento de Oração</label>
+              <textarea
+                value={form.oracao}
+                onChange={(e) => setForm((p) => ({ ...p, oracao: e.target.value }))}
+                placeholder="Direcionamentos para o tempo de oração..."
+                rows={2}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!form.tema}
+              className="w-full py-3 bg-indigo-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-50"
+            >
+              <Plus size={16} /> Salvar Roteiro
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── Igrejas Tab ──────────────────────────────────────────────────────────────
+// ─── Comunidades Tab ──────────────────────────────────────────────────────────
 
-function ChurchesTab() {
-  const [churches, setChurches] = useState<ChurchItem[]>([]);
+const COMMUNITY_TYPES = [
+  { id: '',             label: 'Todas' },
+  { id: 'church',      label: '⛪ Igreja' },
+  { id: 'company',     label: '🏢 Empresa' },
+  { id: 'family',      label: '👨‍👩‍👧 Família' },
+  { id: 'friends',     label: '👥 Amigos' },
+  { id: 'neighborhood',label: '🏘️ Bairro' },
+  { id: 'other',       label: '🌐 Outro' },
+] as const;
+
+const COMMUNITY_TYPE_EMOJI: Record<string, string> = {
+  church: '⛪', company: '🏢', family: '👨‍👩‍👧', friends: '👥', neighborhood: '🏘️', other: '🌐',
+};
+
+const COMMUNITY_TYPE_LABEL: Record<string, string> = {
+  church: 'Igreja', company: 'Empresa', family: 'Família', friends: 'Amigos', neighborhood: 'Bairro', other: 'Outro',
+};
+
+function avatarUrl(name: string | null, avatar: string | null) {
+  return avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(name ?? 'U')}&background=6366f1&color=fff`;
+}
+
+function CommunitiesTab({ myId }: { myId: string }) {
+  const [communities, setCommunities] = useState<CommunityItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<ChurchItem | null>(null);
+  const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<CommunityItem | null>(null);
+  const [detail, setDetail] = useState<{ members: CommunityMemberItem[]; pending: CommunityMemberItem[] } | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', denomination: '', description: '', address: '', phone: '', schedule: '', pastor: '', members: '' });
+  const [form, setForm] = useState({
+    name: '', type: 'church', description: '', city: '', address: '', phone: '', website: '',
+    isPublic: true, requireApproval: false,
+  });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch('/api/churches').then((r) => r.json()).then(setChurches).finally(() => setLoading(false));
-  }, []);
+    const params = new URLSearchParams();
+    if (typeFilter) params.set('type', typeFilter);
+    fetch(`/api/communities?${params}`).then(r => r.json()).then(setCommunities).finally(() => setLoading(false));
+  }, [typeFilter]);
+
+  async function loadDetail(community: CommunityItem) {
+    setSelected(community);
+    setDetailLoading(true);
+    try {
+      const [detRes, pendRes] = await Promise.all([
+        fetch(`/api/communities/${community.id}`),
+        community.adminUserId === myId ? fetch(`/api/communities/${community.id}/approve`) : Promise.resolve(null),
+      ]);
+      const { members } = await detRes.json();
+      const pending = pendRes?.ok ? await pendRes.json() : [];
+      setDetail({ members, pending });
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  const isMember = detail?.members.some(m => m.userId === myId) ?? false;
+  const isPending = selected?.requireApproval && !isMember;
+
+  async function handleJoinLeave() {
+    if (!selected) return;
+    setJoining(true);
+    try {
+      if (isMember) {
+        await fetch(`/api/communities/${selected.id}/join`, { method: 'DELETE' });
+        setDetail(prev => prev ? { ...prev, members: prev.members.filter(m => m.userId !== myId) } : prev);
+      } else {
+        const res = await fetch(`/api/communities/${selected.id}/join`, { method: 'POST' });
+        const data = await res.json();
+        if (!selected.requireApproval) {
+          // Recarrega membros
+          const { members } = await fetch(`/api/communities/${selected.id}`).then(r => r.json());
+          setDetail(prev => prev ? { ...prev, members } : prev);
+        } else {
+          alert(data.message);
+        }
+      }
+    } finally {
+      setJoining(false);
+    }
+  }
+
+  async function handleApprove(userId: string) {
+    if (!selected) return;
+    setApprovingId(userId);
+    try {
+      await fetch(`/api/communities/${selected.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      setDetail(prev => {
+        if (!prev) return prev;
+        const approved = prev.pending.find(m => m.userId === userId);
+        return {
+          members: approved ? [...prev.members, { ...approved, approvedAt: new Date().toISOString() }] : prev.members,
+          pending: prev.pending.filter(m => m.userId !== userId),
+        };
+      });
+    } finally {
+      setApprovingId(null);
+    }
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name) return;
     setSaving(true);
     try {
-      const res = await fetch('/api/churches', {
+      const res = await fetch('/api/communities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
       if (res.ok) {
         const created = await res.json();
-        setChurches((prev) => [...prev, created]);
+        setCommunities(prev => [created, ...prev]);
         setShowCreate(false);
-        setForm({ name: '', denomination: '', description: '', address: '', phone: '', schedule: '', pastor: '', members: '' });
+        setForm({ name: '', type: 'church', description: '', city: '', address: '', phone: '', website: '', isPublic: true, requireApproval: false });
       }
     } finally {
       setSaving(false);
     }
   }
 
-  const filtered = churches.filter((c) =>
+  const filtered = communities.filter(c =>
     !search || c.name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.denomination ?? '').toLowerCase().includes(search.toLowerCase())
+    (c.city ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
+  // ── Detalhe da comunidade ──────────────────────────────────────────────────
   if (selected) {
+    const isAdmin = selected.adminUserId === myId;
     return (
       <div className="space-y-3">
-        <button onClick={() => setSelected(null)} className="text-sm text-indigo-600 font-medium">← Voltar</button>
-        <div className="bg-white rounded-2xl shadow p-5 space-y-3">
+        <button onClick={() => { setSelected(null); setDetail(null); }} className="text-sm text-indigo-600 font-medium">← Voltar</button>
+
+        <div className="bg-white rounded-2xl shadow p-5 space-y-4">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-indigo-100 rounded-xl flex items-center justify-center text-3xl">⛪</div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-800">{selected.name}</h3>
-              {selected.denomination && (
-                <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">{selected.denomination}</span>
-              )}
+            <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
+              {COMMUNITY_TYPE_EMOJI[selected.type] ?? '🌐'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-bold text-slate-800 leading-tight">{selected.name}</h3>
+              <span className="inline-block mt-1 text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
+                {COMMUNITY_TYPE_LABEL[selected.type] ?? selected.type}
+              </span>
+              {selected.city && <p className="text-xs text-slate-400 mt-1">📍 {selected.city}{selected.state ? `, ${selected.state}` : ''}</p>}
             </div>
           </div>
-          {selected.description && <p className="text-slate-600 text-sm">{selected.description}</p>}
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            {selected.pastor && (
+
+          {selected.description && <p className="text-sm text-slate-600 leading-relaxed">{selected.description}</p>}
+
+          <div className="grid grid-cols-1 gap-2 text-sm">
+            {selected.address && (
               <div className="bg-slate-50 rounded-xl p-3">
-                <p className="text-slate-400 text-xs mb-1">Pastor</p>
-                <p className="font-semibold text-slate-800">{selected.pastor}</p>
+                <p className="text-slate-400 text-xs mb-0.5">Endereço</p>
+                <p className="font-medium text-slate-800">{selected.address}</p>
               </div>
             )}
-            {selected.members != null && (
+            {selected.phone && (
               <div className="bg-slate-50 rounded-xl p-3">
-                <p className="text-slate-400 text-xs mb-1">Membros</p>
-                <p className="font-semibold text-slate-800">{selected.members}</p>
+                <p className="text-slate-400 text-xs mb-0.5">Telefone</p>
+                <p className="font-medium text-slate-800">{selected.phone}</p>
+              </div>
+            )}
+            {selected.website && (
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-slate-400 text-xs mb-0.5">Site</p>
+                <p className="font-medium text-indigo-600 truncate">{selected.website}</p>
               </div>
             )}
           </div>
-          {selected.address && (
-            <div className="bg-slate-50 rounded-xl p-3 text-sm">
-              <p className="text-slate-400 text-xs mb-1">📍 Endereço</p>
-              <p className="font-medium text-slate-800">{selected.address}</p>
-            </div>
-          )}
-          {selected.schedule && (
-            <div className="bg-slate-50 rounded-xl p-3 text-sm">
-              <p className="text-slate-400 text-xs mb-1">🕐 Cultos</p>
-              <p className="font-medium text-slate-800">{selected.schedule}</p>
-            </div>
-          )}
-          {selected.phone && (
-            <div className="bg-slate-50 rounded-xl p-3 text-sm">
-              <p className="text-slate-400 text-xs mb-1">📞 Telefone</p>
-              <p className="font-medium text-slate-800">{selected.phone}</p>
-            </div>
+
+          {/* Botão entrar/sair */}
+          {myId && (
+            <button
+              onClick={handleJoinLeave}
+              disabled={joining}
+              className={`w-full py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
+                isMember
+                  ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              } disabled:opacity-60`}
+            >
+              {joining ? <Loader2 size={16} className="animate-spin" /> : null}
+              {isMember ? 'Sair da comunidade' : selected.requireApproval ? 'Solicitar entrada' : 'Entrar na comunidade'}
+            </button>
           )}
         </div>
+
+        {/* Membros */}
+        {detailLoading ? (
+          <div className="flex justify-center py-6"><Loader2 size={24} className="animate-spin text-indigo-400" /></div>
+        ) : (
+          <>
+            {detail && detail.members.length > 0 && (
+              <div className="bg-white rounded-2xl shadow p-4">
+                <h4 className="text-sm font-bold text-slate-700 mb-3">
+                  Membros ({detail.members.length})
+                </h4>
+                <div className="space-y-2">
+                  {detail.members.map(m => (
+                    <div key={m.userId} className="flex items-center gap-3">
+                      <img src={avatarUrl(m.name, m.avatar)} alt={m.name ?? ''} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{m.name ?? 'Membro'}</p>
+                        {m.profession && <p className="text-xs text-slate-400 truncate">{m.profession}</p>}
+                      </div>
+                      {(m.role === 'owner' || m.role === 'admin') && (
+                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0">
+                          {m.role === 'owner' ? 'Dono' : 'Admin'}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pendentes (admin only) */}
+            {isAdmin && detail && detail.pending.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                <h4 className="text-sm font-bold text-amber-800 mb-3">
+                  Aguardando aprovação ({detail.pending.length})
+                </h4>
+                <div className="space-y-2">
+                  {detail.pending.map(m => (
+                    <div key={m.userId} className="flex items-center gap-3">
+                      <img src={avatarUrl(m.name, m.avatar)} alt={m.name ?? ''} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{m.name ?? 'Usuário'}</p>
+                        {m.profession && <p className="text-xs text-slate-500 truncate">{m.profession}</p>}
+                      </div>
+                      <button
+                        onClick={() => handleApprove(m.userId)}
+                        disabled={approvingId === m.userId}
+                        className="px-3 py-1.5 bg-green-500 text-white text-xs font-semibold rounded-xl flex items-center gap-1 hover:bg-green-600 disabled:opacity-60"
+                      >
+                        {approvingId === m.userId ? <Loader2 size={11} className="animate-spin" /> : '✓'}
+                        Aprovar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     );
   }
 
+  // ── Listagem ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-3">
+      {/* Busca + botão criar */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            placeholder="Buscar igrejas..."
+            placeholder="Buscar comunidades..."
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700"
-        >
+        <button onClick={() => setShowCreate(true)} className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700">
           <Plus size={18} />
         </button>
       </div>
 
+      {/* Filtro de tipo */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
+        {COMMUNITY_TYPES.map(t => (
+          <button
+            key={t.id}
+            onClick={() => { setTypeFilter(t.id); setLoading(true); }}
+            className={`flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
+              typeFilter === t.id ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {loading && <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-indigo-400" /></div>}
+
       {!loading && filtered.length === 0 && (
         <div className="text-center py-12 text-slate-400">
-          <p className="text-4xl mb-2">⛪</p>
-          <p className="text-sm">Nenhuma igreja cadastrada ainda.</p>
-          <p className="text-xs mt-1">Toque em + para adicionar a primeira!</p>
+          <p className="text-4xl mb-2">🏛️</p>
+          <p className="text-sm">Nenhuma comunidade encontrada.</p>
+          <p className="text-xs mt-1">Toque em + para criar a primeira!</p>
         </div>
       )}
 
-      {filtered.map((church) => (
-        <button key={church.id} onClick={() => setSelected(church)} className="w-full text-left bg-white rounded-2xl shadow-sm border border-slate-100 p-4 hover:shadow-md transition-shadow">
+      {filtered.map(c => (
+        <button key={c.id} onClick={() => loadDetail(c)} className="w-full text-left bg-white rounded-2xl shadow-sm border border-slate-100 p-4 hover:shadow-md transition-shadow">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">⛪</div>
+            <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+              {COMMUNITY_TYPE_EMOJI[c.type] ?? '🌐'}
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-bold text-slate-800 text-sm">{church.name}</h3>
-                {church.denomination && (
-                  <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">{church.denomination}</span>
+                <h3 className="font-bold text-slate-800 text-sm">{c.name}</h3>
+                <span className="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full font-semibold">
+                  {COMMUNITY_TYPE_LABEL[c.type] ?? c.type}
+                </span>
+                {!c.isPublic && (
+                  <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">Privada</span>
                 )}
               </div>
-              {church.address && <p className="text-xs text-slate-500 mt-0.5">📍 {church.address}</p>}
-              {church.description && <p className="text-xs text-slate-600 mt-1 line-clamp-2">{church.description}</p>}
-              <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                {church.pastor && <span>👤 {church.pastor}</span>}
-                {church.members != null && <span>👥 {church.members} membros</span>}
-              </div>
+              {c.city && <p className="text-xs text-slate-500 mt-0.5">📍 {c.city}{c.state ? `, ${c.state}` : ''}</p>}
+              {c.description && <p className="text-xs text-slate-600 mt-1 line-clamp-2">{c.description}</p>}
+              {c.requireApproval && (
+                <p className="text-[10px] text-amber-600 mt-1">🔒 Entrada por aprovação</p>
+              )}
             </div>
           </div>
         </button>
       ))}
 
+      {/* Modal de criação */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={() => setShowCreate(false)}>
-          <form onSubmit={handleCreate} className="w-full bg-white rounded-t-3xl p-6 space-y-3 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-800">Cadastrar Igreja</h3>
+          <form onSubmit={handleCreate} className="w-full bg-white rounded-t-3xl p-6 space-y-3 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-bold text-slate-800 text-lg">Nova Comunidade</h3>
               <button type="button" onClick={() => setShowCreate(false)}><X size={20} className="text-slate-400" /></button>
             </div>
+
+            {/* Tipo */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Tipo *</label>
+              <select
+                value={form.type}
+                onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+              >
+                <option value="church">⛪ Igreja</option>
+                <option value="company">🏢 Empresa Cristã</option>
+                <option value="family">👨‍👩‍👧 Família</option>
+                <option value="friends">👥 Grupo de Amigos</option>
+                <option value="neighborhood">🏘️ Bairro / Região</option>
+                <option value="other">🌐 Outro</option>
+              </select>
+            </div>
+
+            {/* Campos de texto */}
             {[
-              { key: 'name', label: 'Nome *', placeholder: 'Ex.: PIB Curitiba' },
-              { key: 'denomination', label: 'Denominação', placeholder: 'Batista, Presbiteriana...' },
-              { key: 'pastor', label: 'Pastor', placeholder: 'Nome do pastor' },
+              { key: 'name', label: 'Nome *', placeholder: 'Ex.: Igreja Central' },
+              { key: 'city', label: 'Cidade', placeholder: 'Ex.: Curitiba' },
               { key: 'address', label: 'Endereço', placeholder: 'Rua, número, bairro' },
               { key: 'phone', label: 'Telefone', placeholder: '(41) 99999-9999' },
-              { key: 'schedule', label: 'Horários', placeholder: 'Domingos 9h e 18h' },
-              { key: 'members', label: 'Nº de membros', placeholder: '350' },
+              { key: 'website', label: 'Site', placeholder: 'https://...' },
             ].map(({ key, label, placeholder }) => (
               <div key={key}>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
                 <input
-                  value={(form as any)[key]}
-                  onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                  value={(form as unknown as Record<string, string>)[key]}
+                  onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
                   placeholder={placeholder}
                   className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
             ))}
+
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Descrição</label>
               <textarea
                 value={form.description}
-                onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="Conte sobre a igreja..."
+                onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                placeholder="Conte sobre a comunidade..."
                 rows={3}
                 className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
               />
             </div>
-            <button type="submit" disabled={saving || !form.name} className="w-full py-3 bg-indigo-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-50">
+
+            {/* Toggles */}
+            <div className="space-y-2 pt-1">
+              {[
+                { key: 'isPublic', label: 'Comunidade pública', desc: 'Aparece nas buscas' },
+                { key: 'requireApproval', label: 'Exige aprovação', desc: 'Admin aprova cada membro' },
+              ].map(({ key, label, desc }) => (
+                <label key={key} className="flex items-center gap-3 cursor-pointer">
+                  <div
+                    onClick={() => setForm(p => ({ ...p, [key]: !(p as unknown as Record<string, boolean>)[key] }))}
+                    className={`relative w-10 h-6 rounded-full transition-colors ${(form as unknown as Record<string, boolean>)[key] ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${(form as unknown as Record<string, boolean>)[key] ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">{label}</p>
+                    <p className="text-xs text-slate-400">{desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <button type="submit" disabled={saving || !form.name} className="w-full py-3 bg-indigo-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-50 mt-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              {saving ? 'Salvando...' : 'Cadastrar Igreja'}
+              {saving ? 'Criando...' : 'Criar Comunidade'}
             </button>
           </form>
         </div>
@@ -742,105 +1139,120 @@ function VolunteerTab() {
   );
 }
 
-// ─── Bíblia Tab (sem mudanças) ─────────────────────────────────────────────────
+// ─── IA Pastoral Tab ──────────────────────────────────────────────────────────
 
-function BibleTab() {
-  const todayIndex = new Date().getDay();
-  const dailyVerse = DAILY_VERSES[todayIndex % DAILY_VERSES.length];
-  const [selectedVersion, setSelectedVersion] = useState('ARC');
-  const [selectedBook, setSelectedBook] = useState<string | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
-  const [activeSection, setActiveSection] = useState<'verse' | 'books' | 'version'>('verse');
-  const currentBook = BIBLE_BOOKS.find((b) => b.name === selectedBook);
+const SUGGESTED_QUESTIONS = [
+  'Como posso fortalecer minha fé nos momentos difíceis?',
+  'O que a Bíblia diz sobre ansiedade?',
+  'Como perdoar alguém que me magoou?',
+  'Ore por mim, estou passando por um momento difícil.',
+];
+
+function PastoralTab() {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/teos' }),
+  });
+  const [input, setInput] = useState('');
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const isLoading = status === 'streaming' || status === 'submitted';
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  function submit(text: string) {
+    if (!text.trim() || isLoading) return;
+    sendMessage({ role: 'user', parts: [{ type: 'text', text: text.trim() }] });
+    setInput('');
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {([{ id: 'verse', label: '📖 Versículo' }, { id: 'books', label: '📚 Livros' }, { id: 'version', label: '🔄 Versão' }] as const).map((s) => (
-          <button key={s.id} onClick={() => setActiveSection(s.id)} className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${activeSection === s.id ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      {activeSection === 'verse' && (
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100 space-y-4">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">☀️</span>
-            <div>
-              <p className="font-bold text-amber-800 text-sm">Versículo do Dia</p>
-              <p className="text-xs text-amber-600">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
+    <div className="flex flex-col" style={{ height: 'calc(100dvh - 180px)' }}>
+      {/* messages area */}
+      <div className="flex-1 overflow-y-auto space-y-3 pb-2">
+        {messages.length === 0 && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100 text-center space-y-2">
+              <p className="text-3xl">🙏</p>
+              <p className="font-bold text-indigo-900 text-base">Teos — Assistente Bíblico</p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Estou aqui para estudar a Palavra com você, oferecer orientação espiritual e oração. Como posso ajudá-lo hoje?
+              </p>
+            </div>
+            <p className="text-xs text-slate-400 font-medium px-1">Sugestões:</p>
+            <div className="space-y-2">
+              {SUGGESTED_QUESTIONS.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => submit(q)}
+                  className="w-full text-left bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
+                >
+                  {q}
+                </button>
+              ))}
             </div>
           </div>
-          <blockquote className="text-slate-800 text-base leading-relaxed italic">"{dailyVerse.text}"</blockquote>
-          <p className="text-amber-700 font-bold text-sm">— {dailyVerse.reference}</p>
-          <span className="inline-block text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">{dailyVerse.theme}</span>
-        </div>
-      )}
+        )}
 
-      {activeSection === 'books' && (
-        <div className="space-y-3">
-          {selectedBook && currentBook ? (
-            <div className="space-y-3">
-              <button onClick={() => { setSelectedBook(null); setSelectedChapter(null); }} className="text-sm text-indigo-600 font-medium">← Voltar aos Livros</button>
-              {selectedChapter ? (
-                <div className="bg-white rounded-2xl shadow p-5 space-y-3">
-                  <button onClick={() => setSelectedChapter(null)} className="text-sm text-indigo-600 font-medium">← Capítulos de {selectedBook}</button>
-                  <h3 className="font-bold text-slate-800">{selectedBook} — Capítulo {selectedChapter}</h3>
-                  <div className="bg-amber-50 rounded-xl p-4">
-                    <p className="text-sm text-slate-700 leading-relaxed italic">"{selectedBook} {selectedChapter}:1 — No princípio era o Verbo, e o Verbo estava com Deus..."</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <h3 className="font-bold text-slate-800">{selectedBook} — {currentBook.chapters} capítulos</h3>
-                  <div className="grid grid-cols-5 gap-2">
-                    {Array.from({ length: currentBook.chapters }, (_, i) => i + 1).map((ch) => (
-                      <button key={ch} onClick={() => setSelectedChapter(ch)} className="py-2 bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 rounded-lg text-sm font-medium transition-colors">{ch}</button>
-                    ))}
-                  </div>
-                </>
+        {messages.map((m) => (
+          <div
+            key={m.id}
+            className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            {m.role === 'assistant' && (
+              <span className="text-xl mr-2 mt-1 flex-shrink-0">🙏</span>
+            )}
+            <div
+              className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                m.role === 'user'
+                  ? 'bg-indigo-600 text-white rounded-br-sm'
+                  : 'bg-white border border-slate-200 text-slate-800 rounded-bl-sm shadow-sm'
+              }`}
+            >
+              {m.parts.map((part, i) =>
+                part.type === 'text' ? <span key={i}>{part.text}</span> : null
               )}
             </div>
-          ) : (
-            <>
-              <h4 className="font-bold text-slate-600 text-sm">Antigo Testamento</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {BIBLE_BOOKS.filter((b) => b.testament === 'AT').map((book) => (
-                  <button key={book.name} onClick={() => setSelectedBook(book.name)} className="text-left bg-white border border-slate-100 rounded-xl px-3 py-2 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
-                    <p className="text-sm font-medium text-slate-800">{book.name}</p>
-                    <p className="text-xs text-slate-400">{book.chapters} cap.</p>
-                  </button>
-                ))}
-              </div>
-              <h4 className="font-bold text-slate-600 text-sm mt-2">Novo Testamento</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {BIBLE_BOOKS.filter((b) => b.testament === 'NT').map((book) => (
-                  <button key={book.name} onClick={() => setSelectedBook(book.name)} className="text-left bg-white border border-slate-100 rounded-xl px-3 py-2 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
-                    <p className="text-sm font-medium text-slate-800">{book.name}</p>
-                    <p className="text-xs text-slate-400">{book.chapters} cap.</p>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      )}
+          </div>
+        ))}
 
-      {activeSection === 'version' && (
-        <div className="space-y-2">
-          <p className="text-sm text-slate-600 font-medium mb-3">Versão da Bíblia:</p>
-          {BIBLE_VERSIONS.map((v) => (
-            <button key={v.id} onClick={() => setSelectedVersion(v.id)} className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${selectedVersion === v.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-indigo-300'}`}>
-              <div>
-                <p className="font-bold text-slate-800 text-sm">{v.id}</p>
-                <p className="text-xs text-slate-500">{v.name}</p>
+        {isLoading && (
+          <div className="flex justify-start">
+            <span className="text-xl mr-2 mt-1">🙏</span>
+            <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+              <div className="flex gap-1 items-center">
+                <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              {selectedVersion === v.id && <span className="text-indigo-600 text-lg">✓</span>}
-            </button>
-          ))}
-        </div>
-      )}
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* input */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); submit(input); }}
+        className="flex gap-2 pt-3 border-t border-slate-200"
+      >
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(input); } }}
+          placeholder="Escreva sua pergunta ou pedido de oração..."
+          disabled={isLoading}
+          className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={isLoading || !input.trim()}
+          className="bg-indigo-600 text-white rounded-xl p-2.5 hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+        >
+          <Send size={18} />
+        </button>
+      </form>
     </div>
   );
 }
@@ -848,17 +1260,17 @@ function BibleTab() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'celulas',       label: '🏠 Células' },
-  { id: 'churches',     label: '⛪ Igrejas' },
+  { id: 'celulas',       label: '🏠 Grupos' },
+  { id: 'churches',     label: '🏛️ Comunidades' },
   { id: 'prayer',       label: '🙏 Oração' },
   { id: 'testimonials', label: '🙌 Testemunhos' },
   { id: 'volunteer',    label: '🤝 Voluntário' },
-  { id: 'bible',        label: '📖 Bíblia' },
+  { id: 'pastoral',     label: '🤖 Pastoral' },
 ] as const;
 
 type TabId = typeof TABS[number]['id'];
 
-export default function IgrejaPage() {
+export default function ComunidadePage() {
   const { data: session } = useSession();
   const myId = session?.user?.id ?? '';
   const [activeTab, setActiveTab] = useState<TabId>('celulas');
@@ -883,11 +1295,11 @@ export default function IgrejaPage() {
 
       <div className="px-4 py-4">
         {activeTab === 'celulas'       && <CelulasTab />}
-        {activeTab === 'churches'      && <ChurchesTab />}
+        {activeTab === 'churches'      && <CommunitiesTab myId={myId} />}
         {activeTab === 'prayer'        && <PrayerTab />}
         {activeTab === 'testimonials'  && <TestimonialsTab myId={myId} />}
         {activeTab === 'volunteer'     && <VolunteerTab />}
-        {activeTab === 'bible'         && <BibleTab />}
+        {activeTab === 'pastoral'      && <PastoralTab />}
       </div>
 
       <BottomNav />

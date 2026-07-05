@@ -1,7 +1,20 @@
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import { CityLinkHeader } from '@/components/citylink-header';
+import { auth } from '@/app/(auth)/auth';
+import { getUserPrivacySettings } from '@/lib/db/queries';
 
-export default function CityLinkLayout({ children }: { children: React.ReactNode }) {
+export default async function CityLinkLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+
+  // Apenas usuários regulares precisam passar pelo onboarding
+  if (session?.user?.type === 'regular') {
+    const privacy = await getUserPrivacySettings(session.user.id);
+    if (!privacy?.consentDataProcessing) {
+      redirect('/onboarding');
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen bg-slate-50">
       <CityLinkHeader />

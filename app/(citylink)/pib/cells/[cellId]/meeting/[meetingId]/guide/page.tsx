@@ -3,6 +3,39 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+
+// Mapeia nome do livro → abreviação usada no leitor bíblico
+const BOOK_MAP: Record<string, string> = {
+  'gênesis': 'gn', 'êxodo': 'ex', 'levítico': 'lv', 'números': 'nm',
+  'deuteronômio': 'dt', 'josué': 'js', 'juízes': 'jz', 'rute': 'rt',
+  '1 samuel': '1sm', '2 samuel': '2sm', '1 reis': '1rs', '2 reis': '2rs',
+  '1 crônicas': '1cr', '2 crônicas': '2cr', 'esdras': 'ed', 'neemias': 'ne',
+  'ester': 'et', 'jó': 'jó', 'salmos': 'sl', 'provérbios': 'pv',
+  'eclesiastes': 'ec', 'cânticos': 'ct', 'isaías': 'is', 'jeremias': 'jr',
+  'lamentações': 'lm', 'ezequiel': 'ez', 'daniel': 'dn', 'oséias': 'os',
+  'joel': 'jl', 'amós': 'am', 'obadias': 'ob', 'jonas': 'jn', 'miquéias': 'mq',
+  'naum': 'na', 'habacuque': 'hc', 'sofonias': 'sf', 'ageu': 'ag',
+  'zacarias': 'zc', 'malaquias': 'ml', 'mateus': 'mt', 'marcos': 'mc',
+  'lucas': 'lc', 'joão': 'jo', 'atos': 'at', 'romanos': 'rm',
+  '1 coríntios': '1co', '2 coríntios': '2co', 'gálatas': 'gl', 'efésios': 'ef',
+  'filipenses': 'fp', 'colossenses': 'cl', '1 tessalonicenses': '1ts',
+  '2 tessalonicenses': '2ts', '1 timóteo': '1tm', '2 timóteo': '2tm',
+  'tito': 'tt', 'filemom': 'fm', 'hebreus': 'hb', 'tiago': 'tg',
+  '1 pedro': '1pe', '2 pedro': '2pe', '1 joão': '1jo', '2 joão': '2jo',
+  '3 joão': '3jo', 'judas': 'jd', 'apocalipse': 'ap',
+};
+
+function parseBiblePassageUrl(passage: string): string | null {
+  if (!passage) return null;
+  // Ex: "João 15:1-17" | "Mateus 5" | "Salmos 23:1"
+  const match = passage.match(/^(.+?)\s+(\d+)/i);
+  if (!match) return null;
+  const bookName = match[1].trim().toLowerCase();
+  const chapter = parseInt(match[2], 10);
+  const abbrev = BOOK_MAP[bookName];
+  if (!abbrev || isNaN(chapter)) return null;
+  return `/bible/read/${abbrev}/${chapter}`;
+}
 import { BottomNav } from '@/components/citylink-bottom-nav';
 import type { CellGuideDetail, YoutubeLink } from '@/lib/types';
 
@@ -137,7 +170,16 @@ export default function GuidePage() {
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
           {/* Cabeçalho do roteiro */}
           <div className="bg-indigo-700 text-white rounded-2xl p-5">
-            <p className="text-indigo-200 text-sm">{guide.biblePassage}</p>
+            {guide.biblePassage && (() => {
+              const url = parseBiblePassageUrl(guide.biblePassage);
+              return url ? (
+                <Link href={url} className="text-indigo-200 text-sm underline underline-offset-2 hover:text-white transition-colors">
+                  📖 {guide.biblePassage}
+                </Link>
+              ) : (
+                <p className="text-indigo-200 text-sm">📖 {guide.biblePassage}</p>
+              );
+            })()}
             <h2 className="text-xl font-bold mt-1">{guide.title}</h2>
             {guide.theme && <p className="text-indigo-200 text-sm mt-1">{guide.theme}</p>}
             {guide.generatedByAI && (

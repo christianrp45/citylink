@@ -19,6 +19,25 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: "https://citylink-rosy.vercel.app",
+    siteName: "CityLink",
+    title: "CityLink — Conectando cristãos pela proximidade",
+    description: "Encontre amigos, grupos e comunidades cristãs perto de você.",
+    images: [{ url: "/images/demo-thumbnail.png", width: 1200, height: 630, alt: "CityLink" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CityLink",
+    description: "Encontre amigos, grupos e comunidades cristãs perto de você.",
+    images: ["/images/demo-thumbnail.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport = {

@@ -24,6 +24,9 @@ export const user = pgTable("User", {
   availabilityStatus: varchar("availabilityStatus", {
     enum: ["mesa-posta", "requer-aviso", "offline"],
   }).default("mesa-posta"),
+  accountType: varchar("accountType", {
+    enum: ["individual", "institution"],
+  }).notNull().default("individual"),
   lat: varchar("lat", { length: 20 }),
   lng: varchar("lng", { length: 20 }),
   updatedAt: timestamp("updatedAt").defaultNow(),
@@ -322,7 +325,7 @@ export const visitRequest = pgTable("VisitRequest", {
     .references(() => user.id),
   message: text("message"),
   status: varchar("status", {
-    enum: ["pending", "accepted", "declined"],
+    enum: ["pending", "accepted", "declined", "postponed"],
   })
     .notNull()
     .default("pending"),
@@ -340,6 +343,8 @@ export const cell = pgTable("Cell", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name").notNull(),
   description: text("description"),
+  // Associação opcional a uma comunidade — null = célula independente
+  communityId: uuid("communityId").references(() => community.id),
   leaderId: uuid("leaderId")
     .notNull()
     .references(() => user.id),
@@ -643,3 +648,220 @@ export const volunteerEnrollment = pgTable(
 );
 
 export type VolunteerEnrollment = InferSelectModel<typeof volunteerEnrollment>;
+
+// ============================================================
+// CITYLINK — ETAPA 8: COMUNIDADES, PRIVACIDADE E LGPD
+// ============================================================
+
+export const community = pgTable("Community", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  slug: varchar("slug", { length: 100 }).unique(),
+  type: varchar("type", {
+    enum: ["church", "company", "family", "friends", "neighborhood", "other"],
+  }).notNull().default("other"),
+  description: text("description"),
+  avatar: text("avatar"),
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  country: varchar("country", { length: 50 }).default("BR"),
+  phone: varchar("phone", { length: 30 }),
+  website: text("website"),
+  isPublic: boolean("isPublic").notNull().default(true),
+  requireApproval: boolean("requireApproval").notNull().default(false),
+  adminUserId: uuid("adminUserId")
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type Community = InferSelectModel<typeof community>;
+
+export const communityMember = pgTable(
+  "CommunityMember",
+  {
+    communityId: uuid("communityId")
+      .notNull()
+      .references(() => community.id),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    role: varchar("role", {
+      enum: ["owner", "admin", "moderator", "member"],
+    }).notNull().default("member"),
+    joinedAt: timestamp("joinedAt").notNull().defaultNow(),
+    approvedAt: timestamp("approvedAt"),
+    canPost: boolean("canPost").notNull().default(true),
+    canInvite: boolean("canInvite").notNull().default(false),
+    canManageEvents: boolean("canManageEvents").notNull().default(false),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.communityId, table.userId] }),
+  })
+);
+
+export type CommunityMember = InferSelectModel<typeof communityMember>;
+
+// ── Privacidade e LGPD ────────────────────────────────────────
+
+export const userPrivacySettings = pgTable("UserPrivacySettings", {
+  userId: uuid("userId")
+    .primaryKey()
+    .notNull()
+    .references(() => user.id),
+  // Consentimentos obrigatórios e opcionais (LGPD art. 7 e 8)
+  consentDataProcessing: boolean("consentDataProcessing").notNull().default(false),
+  consentDataProcessingAt: timestamp("consentDataProcessingAt"),
+  consentLocation: boolean("consentLocation").notNull().default(false),
+  consentLocationAt: timestamp("consentLocationAt"),
+  consentProximityAlerts: boolean("consentProximityAlerts").notNull().default(false),
+  consentProximityAlertsAt: timestamp("consentProximityAlertsAt"),
+  consentVisitRequests: boolean("consentVisitRequests").notNull().default(false),
+  consentVisitRequestsAt: timestamp("consentVisitRequestsAt"),
+  consentProfileVisible: boolean("consentProfileVisible").notNull().default(false),
+  consentProfileVisibleAt: timestamp("consentProfileVisibleAt"),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserPrivacySettings = InferSelectModel<typeof userPrivacySettings>;
+
+export const userVisibilityConfig = pgTable("UserVisibilityConfig", {
+  userId: uuid("userId")
+    .primaryKey()
+    .notNull()
+    .references(() => user.id),
+  // Quem pode ver minha localização no mapa
+  locationVisibleTo: varchar("locationVisibleTo", {
+    enum: ["nobody", "friends", "my_community", "all"],
+  }).notNull().default("friends"),
+  // Quem pode me enviar pedido de visita
+  visitRequestFrom: varchar("visitRequestFrom", {
+    enum: ["nobody", "friends", "my_community", "all"],
+  }).notNull().default("friends"),
+  // Quem pode me enviar mensagem
+  chatFrom: varchar("chatFrom", {
+    enum: ["nobody", "friends", "my_community", "all"],
+  }).notNull().default("friends"),
+  // Quem vê meu perfil completo
+  profileVisibleTo: varchar("profileVisibleTo", {
+    enum: ["nobody", "friends", "my_community", "all"],
+  }).notNull().default("my_community"),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserVisibilityConfig = InferSelectModel<typeof userVisibilityConfig>;
+
+export const userProximityConfig = pgTable("UserProximityConfig", {
+  userId: uuid("userId")
+    .primaryKey()
+    .notNull()
+    .references(() => user.id),
+  isActive: boolean("isActive").notNull().default(false),
+  // Raio em metros para detecção de proximidade
+  radiusMeters: integer("radiusMeters").notNull().default(500),
+  // Contexto geográfico em que os alertas ficam ativos
+  activeWhen: varchar("activeWhen", {
+    enum: ["same_city", "same_state", "same_country", "always", "never"],
+  }).notNull().default("same_city"),
+  // LGPD: localização expira automaticamente após N horas
+  locationExpiresHours: integer("locationExpiresHours").notNull().default(6),
+  lastLocationAt: timestamp("lastLocationAt"),
+  // Quem me notifica quando estou perto
+  notifyWhenFriendNear: boolean("notifyWhenFriendNear").notNull().default(true),
+  notifyWhenCellMemberNear: boolean("notifyWhenCellMemberNear").notNull().default(true),
+  notifyWhenCommunityNear: boolean("notifyWhenCommunityNear").notNull().default(false),
+  // Cooldown: evita spam entre o mesmo par de usuários
+  cooldownMinutes: integer("cooldownMinutes").notNull().default(60),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserProximityConfig = InferSelectModel<typeof userProximityConfig>;
+
+export const proximityAlert = pgTable("ProximityAlert", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  nearUserId: uuid("nearUserId")
+    .notNull()
+    .references(() => user.id),
+  distanceMeters: integer("distanceMeters").notNull(),
+  relationContext: varchar("relationContext", {
+    enum: ["friend", "cell_member", "community_member"],
+  }).notNull(),
+  sentAt: timestamp("sentAt").notNull().defaultNow(),
+  // LGPD: TTL automático — dado excluído após expiração
+  expiresAt: timestamp("expiresAt").notNull(),
+});
+
+export type ProximityAlert = InferSelectModel<typeof proximityAlert>;
+
+// ConsentLog — tabela de auditoria LGPD (INSERT ONLY, nunca atualizar)
+export const consentLog = pgTable("ConsentLog", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  module: varchar("module", {
+    enum: ["data_processing", "location", "proximity", "visit_requests", "profile", "chat"],
+  }).notNull(),
+  action: varchar("action", {
+    enum: ["granted", "revoked"],
+  }).notNull(),
+  // Anonimizado conforme LGPD: apenas primeiros 3 octetos do IP
+  ipAddress: varchar("ipAddress", { length: 20 }),
+  userAgent: text("userAgent"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type ConsentLog = InferSelectModel<typeof consentLog>;
+
+// BibleHighlight — destaques e notas pessoais em versículos
+export const bibleHighlight = pgTable("BibleHighlight", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  book: varchar("book", { length: 10 }).notNull(),   // abbrev: "jo", "rm", "sl"
+  chapter: integer("chapter").notNull(),
+  verse: integer("verse").notNull(),
+  color: varchar("color", {
+    enum: ["yellow", "green", "pink", "blue"],
+  })
+    .notNull()
+    .default("yellow"),
+  note: text("note"),
+  version: varchar("version", { length: 10 }).notNull().default("nvi"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type BibleHighlight = InferSelectModel<typeof bibleHighlight>;
+
+// HospitalityWindow — "Mesa Posta" com hora marcada (Janelas de Hospitalidade)
+export const hospitalityWindow = pgTable("HospitalityWindow", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  startsAt: timestamp("startsAt").notNull(),
+  endsAt: timestamp("endsAt").notNull(),
+  radiusMeters: integer("radiusMeters").notNull().default(5000),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type HospitalityWindow = InferSelectModel<typeof hospitalityWindow>;
+
+// ReadingPlanProgress — progresso do usuário em planos de leitura bíblica
+export const readingPlanProgress = pgTable("ReadingPlanProgress", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId").notNull().references(() => user.id),
+  planSlug: varchar("planSlug", { length: 100 }).notNull(),
+  completedDays: json("completedDays").notNull().$type<number[]>().default([]),
+  startedAt: timestamp("startedAt").notNull().defaultNow(),
+  lastReadAt: timestamp("lastReadAt"),
+});
+
+export type ReadingPlanProgress = InferSelectModel<typeof readingPlanProgress>;

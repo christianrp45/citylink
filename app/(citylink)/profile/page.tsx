@@ -1,12 +1,31 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X } from 'lucide-react';
+import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { BottomNav } from '@/components/citylink-bottom-nav';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 type AvailabilityStatus = 'mesa-posta' | 'requer-aviso' | 'offline';
+
+type ProximityConfig = {
+  isActive: boolean | null;
+  radiusMeters: number | null;
+  activeWhen: string | null;
+  locationExpiresHours: number | null;
+  cooldownMinutes: number | null;
+  notifyWhenFriendNear: boolean | null;
+  notifyWhenCellMemberNear: boolean | null;
+  notifyWhenCommunityNear: boolean | null;
+};
+
+type PrivacySettings = {
+  consentDataProcessing: boolean | null;
+  consentLocation: boolean | null;
+  consentProximityAlerts: boolean | null;
+  consentVisitRequests: boolean | null;
+  consentProfileVisible: boolean | null;
+};
 
 type PendingVisit = {
   id: string;
@@ -16,6 +35,18 @@ type PendingVisit = {
   fromUserName: string | null;
   fromUserAvatar: string | null;
   fromUserProfession: string | null;
+};
+
+type AcceptedVisit = {
+  id: string;
+  status: string;
+  message: string | null;
+  createdAt: string;
+  respondedAt: string | null;
+  toUserId: string;
+  toUserName: string | null;
+  toUserAvatar: string | null;
+  toUserProfession: string | null;
 };
 
 type UserProfile = {
@@ -108,7 +139,15 @@ export default function ProfilePage() {
   const [savingStatus, setSavingStatus] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [pendingVisits, setPendingVisits] = useState<PendingVisit[]>([]);
+  const [acceptedVisits, setAcceptedVisits] = useState<AcceptedVisit[]>([]);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [privacy, setPrivacy] = useState<PrivacySettings | null>(null);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [proximity, setProximity] = useState<ProximityConfig | null>(null);
+  const [proximityOpen, setProximityOpen] = useState(false);
+  const [savingProximity, setSavingProximity] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Carregar perfil do banco
@@ -123,14 +162,90 @@ export default function ProfilePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Carregar visitas pendentes
+  // Carregar visitas pendentes e confirmadas
   useEffect(() => {
     apiFetch('/api/visits/pending')
       .then((data: PendingVisit[]) => setPendingVisits(data))
       .catch(() => {});
+    apiFetch('/api/visits/accepted')
+      .then((data: AcceptedVisit[]) => setAcceptedVisits(data))
+      .catch(() => {});
   }, []);
 
-  async function handleRespond(requestId: string, decision: 'accepted' | 'declined') {
+  // Carregar configurações de privacidade e proximidade
+  useEffect(() => {
+    apiFetch('/api/users/privacy')
+      .then((data: PrivacySettings) => setPrivacy(data))
+      .catch(() => {});
+    apiFetch('/api/users/proximity-config')
+      .then((data: ProximityConfig) => setProximity(data))
+      .catch(() => {});
+  }, []);
+
+  async function handlePrivacyToggle(key: keyof PrivacySettings) {
+    if (!privacy) return;
+    const newValue = !privacy[key];
+    setPrivacy(prev => prev ? { ...prev, [key]: newValue } : prev);
+    setSavingPrivacy(true);
+    try {
+      await apiFetch('/api/users/privacy', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: newValue }),
+      });
+    } catch {
+      // reverte
+      setPrivacy(prev => prev ? { ...prev, [key]: !newValue } : prev);
+    } finally {
+      setSavingPrivacy(false);
+    }
+  }
+
+  async function handleExportData() {
+    const res = await fetch('/api/users/export');
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'meus-dados-citylink.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleProximityChange(patch: Partial<ProximityConfig>) {
+    setProximity(prev => prev ? { ...prev, ...patch } : prev);
+    setSavingProximity(true);
+    try {
+      const updated = await apiFetch('/api/users/proximity-config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      setProximity(updated);
+    } catch {
+      // reverte
+      setProximity(prev => prev ? { ...prev, ...Object.fromEntries(Object.keys(patch).map(k => [k, (proximity as Record<string, unknown>)?.[k]])) } : prev);
+    } finally {
+      setSavingProximity(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      'Tem certeza? Esta ação é irreversível. Todos os seus dados serão apagados permanentemente.'
+    );
+    if (!confirmed) return;
+    setDeletingAccount(true);
+    try {
+      await apiFetch('/api/users/delete-account', { method: 'DELETE' });
+      await signOut({ callbackUrl: '/login' });
+    } catch {
+      setDeletingAccount(false);
+    }
+  }
+
+  async function handleRespond(requestId: string, decision: 'accepted' | 'declined' | 'postponed') {
     setRespondingId(requestId);
     try {
       await apiFetch('/api/visits/respond', {
@@ -420,7 +535,7 @@ export default function ProfilePage() {
                     {visit.message && (
                       <p className="text-xs text-slate-500 mt-0.5 italic">"{visit.message}"</p>
                     )}
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex gap-2 mt-2 flex-wrap">
                       <button
                         onClick={() => handleRespond(visit.id, 'accepted')}
                         disabled={isResponding}
@@ -428,6 +543,14 @@ export default function ProfilePage() {
                       >
                         {isResponding ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                         Aceitar
+                      </button>
+                      <button
+                        onClick={() => handleRespond(visit.id, 'postponed')}
+                        disabled={isResponding}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-200 transition-colors disabled:opacity-50"
+                      >
+                        <Clock size={11} />
+                        30 min
                       </button>
                       <button
                         onClick={() => handleRespond(visit.id, 'declined')}
@@ -445,8 +568,219 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* Visitas confirmadas (enviadas por mim e aceitas) */}
+        {acceptedVisits.length > 0 && (
+          <div className="bg-white rounded-2xl border border-green-100 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle size={15} className="text-green-500" />
+              <h3 className="font-bold text-slate-800">
+                Visitas confirmadas ({acceptedVisits.length})
+              </h3>
+            </div>
+            {acceptedVisits.map((visit) => {
+              const name = visit.toUserName ?? 'Alguém';
+              const avatar =
+                visit.toUserAvatar ??
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10b981&color=fff`;
+              return (
+                <div key={visit.id} className="flex items-center gap-3 py-2 border-t border-slate-50 first:border-0 first:pt-0">
+                  <img src={avatar} alt={name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800">{name}</p>
+                    {visit.toUserProfession && (
+                      <p className="text-xs text-slate-400">{visit.toUserProfession}</p>
+                    )}
+                    <p className="text-xs text-green-600 font-medium mt-0.5">✅ Visita aceita — pode ir!</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Notificações Push */}
         <PushToggle />
+
+        {/* Alertas de Proximidade */}
+        <div className="rounded-2xl border border-slate-100 overflow-hidden">
+          <button
+            onClick={() => setProximityOpen(o => !o)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-white"
+          >
+            <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+              <MapPin size={16} className="text-purple-500" />
+              Alertas de Proximidade
+              {savingProximity && <Loader2 size={12} className="animate-spin text-slate-400" />}
+              {proximity?.isActive && (
+                <span className="text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full font-semibold">Ativo</span>
+              )}
+            </div>
+            {proximityOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+          </button>
+
+          {proximityOpen && (
+            <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 space-y-4">
+              {/* Toggle principal */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">Ativar módulo</p>
+                  <p className="text-xs text-slate-400">Receber alertas quando amigos estiverem perto</p>
+                </div>
+                <button
+                  onClick={() => handleProximityChange({ isActive: !proximity?.isActive })}
+                  disabled={savingProximity}
+                  className={`relative w-12 h-7 rounded-full transition-colors disabled:opacity-50 ${proximity?.isActive ? 'bg-purple-500' : 'bg-slate-200'}`}
+                >
+                  <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${proximity?.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {proximity?.isActive && (
+                <>
+                  {/* Raio */}
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-2">Raio de alerta</p>
+                    <div className="grid grid-cols-5 gap-1">
+                      {[100, 300, 500, 1000, 5000].map(r => (
+                        <button
+                          key={r}
+                          onClick={() => handleProximityChange({ radiusMeters: r })}
+                          disabled={savingProximity}
+                          className={`py-1.5 rounded-lg text-xs font-semibold transition-colors ${proximity.radiusMeters === r ? 'bg-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}
+                        >
+                          {r < 1000 ? `${r}m` : `${r / 1000}km`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Cooldown */}
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-2">Intervalo mínimo entre alertas</p>
+                    <div className="grid grid-cols-4 gap-1">
+                      {[15, 30, 60, 120].map(m => (
+                        <button
+                          key={m}
+                          onClick={() => handleProximityChange({ cooldownMinutes: m })}
+                          disabled={savingProximity}
+                          className={`py-1.5 rounded-lg text-xs font-semibold transition-colors ${proximity.cooldownMinutes === m ? 'bg-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}
+                        >
+                          {m < 60 ? `${m}min` : `${m / 60}h`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Expiração de localização */}
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-2">Dados de localização expiram após</p>
+                    <div className="grid grid-cols-3 gap-1">
+                      {[1, 6, 24].map(h => (
+                        <button
+                          key={h}
+                          onClick={() => handleProximityChange({ locationExpiresHours: h })}
+                          disabled={savingProximity}
+                          className={`py-1.5 rounded-lg text-xs font-semibold transition-colors ${proximity.locationExpiresHours === h ? 'bg-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}
+                        >
+                          {h === 1 ? '1 hora' : `${h}h`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Notificar quando */}
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-2">Notificar quando estiver perto de</p>
+                    {[
+                      { key: 'notifyWhenFriendNear' as keyof ProximityConfig, label: 'Amigos' },
+                      { key: 'notifyWhenCellMemberNear' as keyof ProximityConfig, label: 'Membros da célula' },
+                      { key: 'notifyWhenCommunityNear' as keyof ProximityConfig, label: 'Membros da comunidade' },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="flex items-center justify-between py-1.5">
+                        <span className="text-sm text-slate-600">{label}</span>
+                        <button
+                          onClick={() => handleProximityChange({ [key]: !proximity[key] })}
+                          disabled={savingProximity}
+                          className={`relative w-9 h-5 rounded-full transition-colors disabled:opacity-50 ${proximity[key] ? 'bg-purple-500' : 'bg-slate-200'}`}
+                        >
+                          <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${proximity[key] ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Privacidade e Dados */}
+        <div className="rounded-2xl border border-slate-100 overflow-hidden">
+          <button
+            onClick={() => setPrivacyOpen(o => !o)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-white"
+          >
+            <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+              <Shield size={16} className="text-blue-500" />
+              Privacidade e Dados
+              {savingPrivacy && <Loader2 size={12} className="animate-spin text-slate-400" />}
+            </div>
+            {privacyOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+          </button>
+
+          {privacyOpen && (
+            <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 space-y-3">
+              {/* Consentimentos */}
+              {[
+                { key: 'consentLocation' as keyof PrivacySettings, label: 'Apareço no mapa' },
+                { key: 'consentProximityAlerts' as keyof PrivacySettings, label: 'Alertas de proximidade' },
+                { key: 'consentVisitRequests' as keyof PrivacySettings, label: 'Receber pedidos de visita' },
+                { key: 'consentProfileVisible' as keyof PrivacySettings, label: 'Perfil visível na comunidade' },
+              ].map(({ key, label }) => (
+                <div key={key} className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">{label}</span>
+                  <button
+                    onClick={() => handlePrivacyToggle(key)}
+                    disabled={savingPrivacy}
+                    className={`relative w-10 h-6 rounded-full transition-colors disabled:opacity-50 ${
+                      privacy?.[key] ? 'bg-blue-500' : 'bg-slate-200'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        privacy?.[key] ? 'translate-x-4' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              ))}
+
+              <div className="pt-2 space-y-2">
+                {/* Exportar dados */}
+                <button
+                  onClick={handleExportData}
+                  className="w-full flex items-center gap-2 py-2 px-3 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                  <Download size={14} className="text-blue-500" />
+                  Exportar meus dados (LGPD art. 18)
+                </button>
+
+                {/* Deletar conta */}
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount}
+                  className="w-full flex items-center gap-2 py-2 px-3 rounded-xl bg-white border border-red-200 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  {deletingAccount
+                    ? <Loader2 size={14} className="animate-spin" />
+                    : <Trash2 size={14} />
+                  }
+                  Excluir minha conta e dados
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Sair */}
         <button

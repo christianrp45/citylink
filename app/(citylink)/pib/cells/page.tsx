@@ -43,7 +43,7 @@ export default function CellsDirectoryPage() {
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <Link href="/pib" className="text-gray-500 hover:text-gray-700">←</Link>
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-indigo-900">Diretório de Células</h1>
+            <h1 className="text-xl font-bold text-indigo-900">Grupos Pequenos</h1>
           </div>
           <Link
             href="/pib/cells/new"
@@ -91,7 +91,7 @@ export default function CellsDirectoryPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-4xl mb-3">🔍</p>
-            <p className="text-gray-500">Nenhuma célula encontrada</p>
+            <p className="text-gray-500">Nenhum grupo encontrado</p>
           </div>
         ) : (
           filtered.map((c) => (

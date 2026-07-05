@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Navigation, Users, AlertTriangle, HandHeart, X, Loader2, MessageCircle } from 'lucide-react';
+import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock } from 'lucide-react';
 import { BottomNav } from '@/components/citylink-bottom-nav';
 import VisitRequestModal from '@/components/visit-request-modal';
 
@@ -47,6 +47,21 @@ function toModalUser(u: NearbyUser) {
   };
 }
 
+type HospitalityWindow = {
+  id: string;
+  title: string;
+  description: string | null;
+  startsAt: string;
+  endsAt: string;
+  radiusMeters: number;
+  userId: string;
+  hostName: string | null;
+  hostAvatar: string | null;
+  hostProfession: string | null;
+  hostLat: string | null;
+  hostLng: string | null;
+};
+
 const MOCK_ALERTS = [
   {
     id: 'a1',
@@ -74,7 +89,17 @@ export default function MapPage() {
   const [selectedAlert, setSelectedAlert] = useState<typeof MOCK_ALERTS[0] | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [leaflet, setLeaflet] = useState<any>(null);
+  const [available, setAvailable] = useState(false);
+  const [settingAvailable, setSettingAvailable] = useState(false);
+  const [acceptedVisit, setAcceptedVisit] = useState<{ toUserName: string | null } | null>(null);
+  const [hospitalityWindows, setHospitalityWindows] = useState<HospitalityWindow[]>([]);
+  const [selectedWindow, setSelectedWindow] = useState<HospitalityWindow | null>(null);
+  const [myWindow, setMyWindow] = useState<HospitalityWindow | null>(null);
+  const [showCreateWindow, setShowCreateWindow] = useState(false);
+  const [windowForm, setWindowForm] = useState({ title: '', description: '', hours: 3 });
+  const [savingWindow, setSavingWindow] = useState(false);
   const locationSaved = useRef(false);
+  const seenAcceptedIds = useRef<Set<string>>(new Set());
 
   // Salvar localização no banco e buscar usuários próximos
   const onLocationObtained = useCallback(async (loc: { lat: number; lng: number }) => {
@@ -107,6 +132,39 @@ export default function MapPage() {
     }
   }, []);
 
+  const handleSetAvailable = useCallback(async () => {
+    if (settingAvailable) return;
+    const next = !available;
+    setAvailable(next);
+    setSettingAvailable(true);
+    try {
+      await Promise.all([
+        fetch('/api/users/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ availabilityStatus: next ? 'mesa-posta' : 'requer-aviso' }),
+        }),
+        fetch('/api/users/proximity-config', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive: next }),
+        }),
+      ]);
+      // Refresh localização para que o cron pegue posição atualizada
+      if (next && userLoc) {
+        fetch('/api/users/location', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userLoc),
+        }).catch(() => {});
+      }
+    } catch {
+      setAvailable(!next); // rollback on error
+    } finally {
+      setSettingAvailable(false);
+    }
+  }, [available, settingAvailable, userLoc]);
+
   // Centralizar no usuário atual (sem novo fetch de geoloc)
   const centerOnMe = useCallback(() => {
     if (userLoc) {
@@ -129,10 +187,102 @@ export default function MapPage() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => onLocationObtained({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {} // sem localização: só mostra o mapa vazio
+        () => {}
       );
     }
+
+    // Buscar janelas de hospitalidade ativas
+    function loadWindows() {
+      fetch('/api/hospitality/active')
+        .then((r) => r.json())
+        .then((list: HospitalityWindow[]) => setHospitalityWindows(Array.isArray(list) ? list : []))
+        .catch(() => {});
+    }
+    // Buscar minha janela ativa
+    function loadMyWindow() {
+      fetch('/api/hospitality')
+        .then((r) => r.json())
+        .then((w: HospitalityWindow | null) => setMyWindow(w))
+        .catch(() => {});
+    }
+    loadWindows();
+    loadMyWindow();
+    const windowInterval = setInterval(loadWindows, 60_000);
+
+    // Poll visitas aceitas a cada 30s para mostrar banner
+
+    function checkAccepted() {
+      fetch('/api/visits/accepted')
+        .then((r) => r.json())
+        .then((list: Array<{ id: string; toUserName: string | null }>) => {
+          const newest = list.find((v) => !seenAcceptedIds.current.has(v.id));
+          if (newest) {
+            seenAcceptedIds.current.add(newest.id);
+            setAcceptedVisit({ toUserName: newest.toUserName });
+          }
+        })
+        .catch(() => {});
+    }
+    checkAccepted();
+    const interval = setInterval(checkAccepted, 30_000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(windowInterval);
+    };
   }, [onLocationObtained]);
+
+  async function handleCreateWindow() {
+    if (!windowForm.title.trim()) return;
+    setSavingWindow(true);
+    const now = new Date();
+    const endsAt = new Date(now.getTime() + windowForm.hours * 60 * 60 * 1000);
+    try {
+      const res = await fetch('/api/hospitality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: windowForm.title,
+          description: windowForm.description || undefined,
+          startsAt: now.toISOString(),
+          endsAt: endsAt.toISOString(),
+        }),
+      });
+      if (res.ok) {
+        const created: HospitalityWindow = await res.json();
+        setMyWindow(created);
+        setHospitalityWindows((prev) => [...prev, created]);
+        setShowCreateWindow(false);
+        setWindowForm({ title: '', description: '', hours: 3 });
+      }
+    } finally {
+      setSavingWindow(false);
+    }
+  }
+
+  async function handleCancelWindow() {
+    if (!myWindow) return;
+    await fetch(`/api/hospitality/${myWindow.id}`, { method: 'DELETE' });
+    setMyWindow(null);
+    setHospitalityWindows((prev) => prev.filter((w) => w.id !== myWindow.id));
+  }
+
+  function hospitalityIcon(w: HospitalityWindow) {
+    if (!leaflet) return undefined;
+    const avatarSrc =
+      w.hostAvatar ??
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(w.hostName ?? 'H')}&background=6366f1&color=fff&size=40`;
+    return leaflet.divIcon({
+      className: '',
+      html: `<div style="position:relative;width:52px;height:52px">
+        <div style="position:absolute;inset:0;border-radius:50%;background:rgba(99,102,241,0.25);animation:pulse 1.5s ease-out infinite"></div>
+        <img src="${avatarSrc}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:3px solid #6366f1;position:absolute;top:6px;left:6px"/>
+        <div style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#6366f1;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:9px">🏠</div>
+        <style>@keyframes pulse{0%{transform:scale(1);opacity:.6}70%{transform:scale(1.6);opacity:0}100%{transform:scale(1.6);opacity:0}}</style>
+      </div>`,
+      iconSize: [52, 52],
+      iconAnchor: [26, 26],
+    });
+  }
 
   function userIcon(u: NearbyUser) {
     if (!leaflet) return undefined;
@@ -206,6 +356,17 @@ export default function MapPage() {
               </>
             )}
             {leaflet &&
+              hospitalityWindows
+                .filter((w) => w.hostLat && w.hostLng)
+                .map((w) => (
+                  <Marker
+                    key={w.id}
+                    position={[parseFloat(w.hostLat!), parseFloat(w.hostLng!)]}
+                    icon={hospitalityIcon(w)}
+                    eventHandlers={{ click: () => setSelectedWindow(w) }}
+                  />
+                ))}
+            {leaflet &&
               MOCK_ALERTS.map((a) => (
                 <Marker
                   key={a.id}
@@ -258,6 +419,48 @@ export default function MapPage() {
 
       {/* Painel inferior */}
       <div className="bg-white border-t border-slate-200 px-4 pt-3 pb-20 flex-shrink-0">
+        {/* Botão disponibilidade */}
+        <button
+          onClick={handleSetAvailable}
+          disabled={settingAvailable}
+          className={`w-full flex items-center justify-center gap-2 mb-3 py-2.5 rounded-xl font-semibold text-sm transition-colors ${
+            available
+              ? 'bg-green-500 text-white hover:bg-green-600'
+              : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+          }`}
+        >
+          {settingAvailable ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : available ? (
+            <Zap size={16} className="fill-white" />
+          ) : (
+            <Zap size={16} />
+          )}
+          {available ? 'Disponível agora (Mesa Posta)' : 'Estou disponível agora'}
+        </button>
+
+        {/* Botão janela de hospitalidade */}
+        {myWindow ? (
+          <div className="w-full flex items-center gap-2 mb-3 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2">
+            <Home size={14} className="text-indigo-600 flex-shrink-0" />
+            <p className="text-xs font-semibold text-indigo-700 flex-1 truncate">🏠 {myWindow.title}</p>
+            <button
+              onClick={handleCancelWindow}
+              className="text-xs text-red-400 hover:text-red-600 font-medium"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowCreateWindow(true)}
+            className="w-full flex items-center justify-center gap-2 mb-3 py-2 rounded-xl text-sm font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
+          >
+            <Home size={16} />
+            Criar Janela de Hospitalidade
+          </button>
+        )}
+
         {MOCK_ALERTS.length > 0 && (
           <button
             onClick={() => setSelectedAlert(MOCK_ALERTS[0])}
@@ -321,6 +524,22 @@ export default function MapPage() {
         </div>
       </div>
 
+      {/* Banner: visita aceita */}
+      {acceptedVisit && (
+        <div className="absolute top-4 left-4 right-4 z-[1500] bg-green-500 text-white rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
+          <CheckCircle size={20} className="flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold leading-tight">Visita aceita! ✅</p>
+            <p className="text-xs opacity-90">
+              {acceptedVisit.toUserName ?? 'Alguém'} confirmou sua visita. Pode ir!
+            </p>
+          </div>
+          <button onClick={() => setAcceptedVisit(null)} className="opacity-70 hover:opacity-100">
+            <X size={18} />
+          </button>
+        </div>
+      )}
+
       {selectedUser && (
         <VisitRequestModal user={selectedUser} onClose={() => setSelectedUser(null)} />
       )}
@@ -361,6 +580,101 @@ export default function MapPage() {
               className="w-full py-3 bg-amber-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-amber-600"
             >
               <HandHeart size={18} /> Posso Ajudar!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom sheet: janela de hospitalidade selecionada */}
+      {selectedWindow && (
+        <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => setSelectedWindow(null)}>
+          <div className="w-full bg-white rounded-t-3xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-bold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full flex items-center gap-1">
+                <Home size={12} /> Janela de Hospitalidade
+              </span>
+              <button onClick={() => setSelectedWindow(null)} className="text-slate-400"><X size={20} /></button>
+            </div>
+            <div className="flex items-center gap-3 mb-3">
+              <img
+                src={selectedWindow.hostAvatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedWindow.hostName ?? 'H')}&background=6366f1&color=fff`}
+                alt={selectedWindow.hostName ?? 'Host'}
+                className="w-12 h-12 rounded-full object-cover border-2 border-indigo-300"
+              />
+              <div>
+                <p className="font-bold text-slate-800">{selectedWindow.hostName ?? 'Alguém'}</p>
+                {selectedWindow.hostProfession && (
+                  <p className="text-xs text-slate-400">{selectedWindow.hostProfession}</p>
+                )}
+              </div>
+            </div>
+            <h3 className="font-bold text-slate-800 text-base mb-1">{selectedWindow.title}</h3>
+            {selectedWindow.description && (
+              <p className="text-sm text-slate-600 mb-2">{selectedWindow.description}</p>
+            )}
+            <div className="flex items-center gap-1 text-xs text-slate-400 mb-5">
+              <Clock size={11} />
+              até {new Date(selectedWindow.endsAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </div>
+            <button
+              onClick={() => { setSelectedUser(null); setSelectedWindow(null); router.push(`/chat?with=${selectedWindow.userId}`); }}
+              className="w-full py-3 bg-indigo-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700"
+            >
+              <MessageCircle size={18} /> Estou indo!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom sheet: criar janela de hospitalidade */}
+      {showCreateWindow && (
+        <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => setShowCreateWindow(false)}>
+          <div className="w-full bg-white rounded-t-3xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <Home size={18} className="text-indigo-600" /> Janela de Hospitalidade
+              </h3>
+              <button onClick={() => setShowCreateWindow(false)} className="text-slate-400"><X size={20} /></button>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">Avise seus amigos que estão bem-vindos agora.</p>
+            <input
+              value={windowForm.title}
+              onChange={(e) => setWindowForm((f) => ({ ...f, title: e.target.value }))}
+              placeholder="Ex: Churrasco hoje 🍖 — todos bem-vindos!"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm mb-3 outline-none focus:ring-2 focus:ring-indigo-300"
+            />
+            <textarea
+              value={windowForm.description}
+              onChange={(e) => setWindowForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Detalhes opcionais…"
+              rows={2}
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm mb-3 outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+            />
+            <div className="mb-4">
+              <p className="text-xs text-slate-500 mb-2">Duração da janela</p>
+              <div className="flex gap-2">
+                {[1, 2, 3, 6].map((h) => (
+                  <button
+                    key={h}
+                    onClick={() => setWindowForm((f) => ({ ...f, hours: h }))}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+                      windowForm.hours === h
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    {h}h
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              onClick={handleCreateWindow}
+              disabled={savingWindow || !windowForm.title.trim()}
+              className="w-full py-3 bg-indigo-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {savingWindow ? <Loader2 size={16} className="animate-spin" /> : <Home size={16} />}
+              Abrir Janela
             </button>
           </div>
         </div>

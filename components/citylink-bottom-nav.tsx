@@ -3,15 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { MapPin, Users, Calendar, MessageCircle, User, Church } from 'lucide-react';
+import { MapPin, Users, BookOpen, MessageCircle, User, Building2 } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { href: '/map',       label: 'Mapa',    icon: MapPin },
-  { href: '/community', label: 'Amigos',  icon: Users },
-  { href: '/events',    label: 'Eventos', icon: Calendar },
-  { href: '/chat',      label: 'Chat',    icon: MessageCircle },
-  { href: '/pib',       label: 'Igreja',  icon: Church },
-  { href: '/profile',   label: 'Perfil',  icon: User },
+  { href: '/map',       label: 'Mapa',       icon: MapPin },
+  { href: '/community', label: 'Amigos',     icon: Users },
+  { href: '/bible',     label: 'Bíblia',     icon: BookOpen },
+  { href: '/chat',      label: 'Chat',       icon: MessageCircle },
+  { href: '/pib',       label: 'Grupos',     icon: Building2 },
+  { href: '/profile',   label: 'Perfil',     icon: User },
 ];
 
 export function BottomNav() {
