@@ -2,6 +2,7 @@
 
 import { Bell, ChevronLeft } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import { EmetisLogo } from './emetis-icon';
 
 const ROOT_PATHS = ['/map', '/community', '/bible', '/chat', '/pib', '/profile', '/businesses', '/events'];
 
@@ -28,12 +29,7 @@ export function CityLinkHeader() {
             <span className="text-sm font-medium">Voltar</span>
           </button>
         ) : (
-          <>
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-              <span className="text-blue-600 font-bold text-sm">E</span>
-            </div>
-            <span className="font-bold text-lg tracking-tight">Emetis</span>
-          </>
+          <EmetisLogo iconSize={26} variant="white" />
         )}
       </div>
       <button className="relative p-2 rounded-full hover:bg-blue-700 transition-colors">
