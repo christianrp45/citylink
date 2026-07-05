@@ -99,6 +99,7 @@ export default function MapPage() {
   const [windowForm, setWindowForm] = useState({ title: '', description: '', hours: 3 });
   const [savingWindow, setSavingWindow] = useState(false);
   const locationSaved = useRef(false);
+  const [activeSavedLoc, setActiveSavedLoc] = useState<{ lat: number; lng: number } | null>(null);
   const seenAcceptedIds = useRef<Set<string>>(new Set());
 
   // Salvar localização no banco e buscar usuários próximos
@@ -152,12 +153,13 @@ export default function MapPage() {
       ]);
 
       if (next) {
-        // Atualizar localização para que o cron pegue posição atualizada
-        if (userLoc) {
+        // Broadcast: usa local salvo ativo (se configurado), senão usa GPS
+        const broadcastLoc = activeSavedLoc ?? userLoc;
+        if (broadcastLoc) {
           fetch('/api/users/location', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userLoc),
+            body: JSON.stringify(broadcastLoc),
           }).catch(() => {});
         }
         // Criar janela de hospitalidade automaticamente (se ainda não houver)
@@ -192,7 +194,7 @@ export default function MapPage() {
     } finally {
       setSettingAvailable(false);
     }
-  }, [available, settingAvailable, userLoc, myWindow]);
+  }, [available, settingAvailable, userLoc, myWindow, activeSavedLoc]);
 
   // Centralizar no usuário atual (sem novo fetch de geoloc)
   const centerOnMe = useCallback(() => {
@@ -213,28 +215,22 @@ export default function MapPage() {
       setMapReady(true);
     });
 
-    // Tentar localização salva ativa primeiro; fallback para GPS
+    // GPS sempre roda para posição real em tempo real
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => onLocationObtained({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
+      );
+    }
+
+    // Carregar local salvo ativo (usado só no broadcast "Estou disponível", não no mapa)
     fetch('/api/users/locations')
       .then((r) => r.ok ? r.json() : [])
       .then((locs: Array<{ lat: string; lng: string; isActive: boolean }>) => {
         const active = locs.find((l) => l.isActive);
-        if (active) {
-          onLocationObtained({ lat: parseFloat(active.lat), lng: parseFloat(active.lng) });
-        } else if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => onLocationObtained({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            () => {}
-          );
-        }
+        if (active) setActiveSavedLoc({ lat: parseFloat(active.lat), lng: parseFloat(active.lng) });
       })
-      .catch(() => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => onLocationObtained({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            () => {}
-          );
-        }
-      });
+      .catch(() => {});
 
     // Buscar janelas de hospitalidade ativas
     function loadWindows() {
