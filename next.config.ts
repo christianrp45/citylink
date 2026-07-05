@@ -9,7 +9,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
+  cacheComponents: false,
   images: {
     remotePatterns: [
       {
