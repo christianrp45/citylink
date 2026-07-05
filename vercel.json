@@ -6,7 +6,7 @@
   "crons": [
     {
       "path": "/api/cron/proximity",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }
