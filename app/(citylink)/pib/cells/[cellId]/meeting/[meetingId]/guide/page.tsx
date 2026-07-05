@@ -98,7 +98,6 @@ export default function GuidePage() {
   const [saving, setSaving] = useState(false);
   const [newYtTitle, setNewYtTitle] = useState('');
   const [newYtUrl, setNewYtUrl] = useState('');
-  const [showSermonInput, setShowSermonInput] = useState(false);
 
   useEffect(() => {
     if (!meetingId) return;
@@ -427,8 +426,27 @@ export default function GuidePage() {
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
 
         {/* Geração por IA */}
-        <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">✨ Gerar com IA (padrão PIB Curitiba)</p>
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-3">
+          <div>
+            <p className="text-sm font-bold text-indigo-900">✨ Gerar Roteiro com IA</p>
+            <p className="text-xs text-indigo-600 mt-0.5">Preencha o texto base da pregação para a IA criar o roteiro completo no padrão PIB Curitiba.</p>
+          </div>
+
+          {/* Texto base — campo principal */}
+          <div>
+            <label className="block text-xs font-bold text-indigo-700 uppercase tracking-wide mb-1">
+              Texto / Versículo Base <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              placeholder="Cole aqui o versículo, trecho bíblico ou texto da pregação que será a base do estudo.&#10;&#10;Ex: Daniel 4:28-37 — &quot;Doze meses depois, enquanto caminhava no terraço do palácio real da Babilônia, o rei exclamou...&quot;&#10;&#10;Ou cole a transcrição completa da pregação."
+              value={form.sermonContent}
+              onChange={(e) => setForm((f) => ({ ...f, sermonContent: e.target.value }))}
+              rows={6}
+              className="w-full px-3 py-2 border border-indigo-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white resize-none"
+            />
+          </div>
+
+          {/* Referência + Tema */}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className={labelCls}>Passagem Bíblica</label>
@@ -443,6 +461,8 @@ export default function GuidePage() {
                 className={inputCls} />
             </div>
           </div>
+
+          {/* Título + Pregador */}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className={labelCls}>Título da Pregação</label>
@@ -458,24 +478,13 @@ export default function GuidePage() {
             </div>
           </div>
 
-          <button type="button" onClick={() => setShowSermonInput(!showSermonInput)}
-            className="text-xs text-indigo-600 underline">
-            {showSermonInput ? '▲ Ocultar' : '▼ Colar pregação completa (texto/transcrição)'}
-          </button>
-          {showSermonInput && (
-            <textarea
-              placeholder="Cole aqui o texto ou transcrição completa da pregação. A IA adaptará para o formato de célula da PIB Curitiba."
-              value={form.sermonContent}
-              onChange={(e) => setForm((f) => ({ ...f, sermonContent: e.target.value }))}
-              rows={8}
-              className={textareaCls}
-            />
-          )}
-
           <button onClick={handleGenerate} disabled={generating || (!form.biblePassage && !form.sermonContent)}
-            className="w-full py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-40">
-            {generating ? '✨ Gerando roteiro com IA...' : '✨ Gerar roteiro no formato PIB Curitiba'}
+            className="w-full py-3 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition disabled:opacity-40">
+            {generating ? '✨ Gerando roteiro com IA...' : '✨ Gerar Roteiro'}
           </button>
+          {!form.biblePassage && !form.sermonContent && (
+            <p className="text-xs text-center text-indigo-400">Preencha o texto base ou a passagem bíblica para gerar</p>
+          )}
         </div>
 
         {/* PARA O LÍDER */}
