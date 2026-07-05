@@ -18,9 +18,7 @@ export default function Page() {
 
   const [state, formAction] = useActionState<LoginActionState, FormData>(
     login,
-    {
-      status: "idle",
-    }
+    { status: "idle" }
   );
 
   const { update: updateSession } = useSession();
@@ -28,15 +26,9 @@ export default function Page() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
     if (state.status === "failed") {
-      toast({
-        type: "error",
-        description: "Invalid credentials!",
-      });
+      toast({ type: "error", description: "E-mail ou senha incorretos." });
     } else if (state.status === "invalid_data") {
-      toast({
-        type: "error",
-        description: "Failed validating your submission!",
-      });
+      toast({ type: "error", description: "Preencha os campos corretamente." });
     } else if (state.status === "success") {
       setIsSuccessful(true);
       updateSession();
@@ -50,25 +42,29 @@ export default function Page() {
   };
 
   return (
-    <div className="flex h-dvh w-screen items-start justify-center bg-background pt-12 md:items-center md:pt-0">
-      <div className="flex w-full max-w-md flex-col gap-12 overflow-hidden rounded-2xl">
-        <div className="flex flex-col items-center justify-center gap-2 px-4 text-center sm:px-16">
-          <h3 className="font-semibold text-xl dark:text-zinc-50">Sign In</h3>
-          <p className="text-gray-500 text-sm dark:text-zinc-400">
-            Use your email and password to sign in
+    <div className="flex min-h-dvh w-screen items-start justify-center bg-gradient-to-b from-blue-50 to-white pt-12 md:items-center md:pt-0">
+      <div className="flex w-full max-w-md flex-col gap-8 overflow-hidden rounded-2xl px-4 pb-10">
+        {/* Header */}
+        <div className="flex flex-col items-center gap-2 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-2xl shadow-md">
+            🤝
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800">Entrar no Emetis</h1>
+          <p className="text-sm text-slate-500">
+            Use seu e-mail e senha para acessar
           </p>
         </div>
+
         <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
-          <p className="mt-4 text-center text-gray-600 text-sm dark:text-zinc-400">
-            {"Don't have an account? "}
+          <SubmitButton isSuccessful={isSuccessful}>Entrar</SubmitButton>
+          <p className="mt-4 text-center text-sm text-slate-500">
+            Não tem uma conta?{" "}
             <Link
-              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+              className="font-semibold text-blue-600 hover:underline"
               href="/register"
             >
-              Sign up
+              Criar conta grátis
             </Link>
-            {" for free."}
           </p>
         </AuthForm>
       </div>

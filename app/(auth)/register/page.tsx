@@ -11,6 +11,7 @@ import { type RegisterActionState, register } from "../actions";
 export default function Page() {
   const router = useRouter();
   const [isSuccessful, setIsSuccessful] = useState(false);
+  const [accountType, setAccountType] = useState<"individual" | "institution">("individual");
 
   const [state, formAction] = useActionState<RegisterActionState, FormData>(
     register,
@@ -37,7 +38,7 @@ export default function Page() {
 
   return (
     <div className="flex min-h-dvh w-screen items-start justify-center bg-gradient-to-b from-blue-50 to-white pt-10 md:items-center md:pt-0">
-      <div className="flex w-full max-w-md flex-col gap-8 overflow-hidden rounded-2xl px-4 pb-10">
+      <div className="flex w-full max-w-md flex-col gap-6 overflow-hidden rounded-2xl px-4 pb-10">
         {/* Header */}
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-2xl shadow-md">
@@ -45,19 +46,53 @@ export default function Page() {
           </div>
           <h1 className="text-2xl font-bold text-slate-800">Criar conta</h1>
           <p className="text-sm text-slate-500">
-            Entre para a comunidade CityLink
+            Entre para a comunidade Emetis
           </p>
+        </div>
+
+        {/* Seletor de tipo de conta */}
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm font-medium text-slate-700">Tipo de conta</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setAccountType("individual")}
+              className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors ${
+                accountType === "individual"
+                  ? "border-blue-500 bg-blue-50 text-blue-700"
+                  : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+              }`}
+            >
+              <span className="text-xl">👤</span>
+              Pessoa
+              <span className="text-[10px] font-normal text-slate-400">Membro, cristão</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAccountType("institution")}
+              className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors ${
+                accountType === "institution"
+                  ? "border-blue-500 bg-blue-50 text-blue-700"
+                  : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+              }`}
+            >
+              <span className="text-xl">🏛️</span>
+              Instituição
+              <span className="text-[10px] font-normal text-slate-400">Igreja, ministério</span>
+            </button>
+          </div>
         </div>
 
         {/* Form */}
         <form action={formAction} className="flex flex-col gap-4">
-          {/* Nome completo */}
+          {/* Campo oculto com tipo de conta */}
+          <input type="hidden" name="accountType" value={accountType} />
+
+          {/* Nome */}
           <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="name"
-              className="text-sm font-medium text-slate-700"
-            >
-              Nome completo <span className="text-red-500">*</span>
+            <label htmlFor="name" className="text-sm font-medium text-slate-700">
+              {accountType === "institution" ? "Nome da instituição" : "Nome completo"}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               id="name"
@@ -65,17 +100,14 @@ export default function Page() {
               type="text"
               required
               autoFocus
-              placeholder="Ex: João Silva"
+              placeholder={accountType === "institution" ? "Ex: Igreja Batista Central" : "Ex: João Silva"}
               className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
           {/* E-mail */}
           <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="email" className="text-sm font-medium text-slate-700">
               E-mail <span className="text-red-500">*</span>
             </label>
             <input
@@ -91,10 +123,7 @@ export default function Page() {
 
           {/* Senha */}
           <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="password" className="text-sm font-medium text-slate-700">
               Senha <span className="text-red-500">*</span>
             </label>
             <input
@@ -108,31 +137,27 @@ export default function Page() {
             />
           </div>
 
-          {/* Profissão */}
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="profession"
-              className="text-sm font-medium text-slate-700"
-            >
-              Profissão{" "}
-              <span className="text-slate-400 font-normal">(opcional)</span>
-            </label>
-            <input
-              id="profession"
-              name="profession"
-              type="text"
-              placeholder="Ex: Eletricista, Designer, Pastor..."
-              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
+          {/* Profissão (só para pessoa) */}
+          {accountType === "individual" && (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="profession" className="text-sm font-medium text-slate-700">
+                Profissão{" "}
+                <span className="text-slate-400 font-normal">(opcional)</span>
+              </label>
+              <input
+                id="profession"
+                name="profession"
+                type="text"
+                placeholder="Ex: Eletricista, Designer, Pastor..."
+                className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          )}
 
           {/* Telefone */}
           <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="phone"
-              className="text-sm font-medium text-slate-700"
-            >
-              Telefone / WhatsApp{" "}
+            <label htmlFor="phone" className="text-sm font-medium text-slate-700">
+              {accountType === "institution" ? "Telefone de contato" : "Telefone / WhatsApp"}{" "}
               <span className="text-slate-400 font-normal">(opcional)</span>
             </label>
             <input
@@ -150,10 +175,7 @@ export default function Page() {
 
           <p className="text-center text-sm text-slate-500">
             Já tem uma conta?{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-blue-600 hover:underline"
-            >
+            <Link href="/login" className="font-semibold text-blue-600 hover:underline">
               Entrar
             </Link>
           </p>

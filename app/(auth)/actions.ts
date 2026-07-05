@@ -17,6 +17,7 @@ const registerFormSchema = z.object({
   name: z.string().min(2),
   phone: z.string().optional(),
   profession: z.string().optional(),
+  accountType: z.enum(["individual", "institution"]).default("individual"),
 });
 
 export type LoginActionState = {
@@ -70,6 +71,7 @@ export const register = async (
       name: formData.get("name"),
       phone: formData.get("phone") || undefined,
       profession: formData.get("profession") || undefined,
+      accountType: formData.get("accountType") || "individual",
     });
 
     const [existingUser] = await getUser(validatedData.email);
@@ -83,7 +85,8 @@ export const register = async (
       validatedData.password,
       validatedData.name,
       validatedData.phone,
-      validatedData.profession
+      validatedData.profession,
+      validatedData.accountType
     );
 
     await signIn("credentials", {

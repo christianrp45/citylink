@@ -98,14 +98,15 @@ export async function createUser(
   password: string,
   name?: string,
   phone?: string,
-  profession?: string
+  profession?: string,
+  accountType: "individual" | "institution" = "individual"
 ) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
     return await db
       .insert(user)
-      .values({ email, password: hashedPassword, name, phone, profession });
+      .values({ email, password: hashedPassword, name, phone, profession, accountType });
   } catch (_error) {
     throw new ChatbotError("bad_request:database", "Failed to create user");
   }

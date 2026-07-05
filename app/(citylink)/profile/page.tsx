@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { BottomNav } from '@/components/citylink-bottom-nav';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
@@ -148,6 +149,8 @@ function PushToggle() {
 }
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
+  const isGuest = session?.user?.type === 'guest';
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<AvailabilityStatus>('mesa-posta');
@@ -458,6 +461,30 @@ export default function ProfilePage() {
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50 pb-24">
+
+      {/* Banner visitante */}
+      {isGuest && (
+        <div className="bg-amber-500 px-4 py-3 flex items-center justify-between gap-3">
+          <p className="text-white text-sm font-medium leading-snug">
+            Você está como <strong>visitante</strong>. Crie uma conta para salvar seus dados.
+          </p>
+          <div className="flex gap-2 flex-shrink-0">
+            <Link
+              href="/register"
+              className="bg-white text-amber-600 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-amber-50 transition-colors"
+            >
+              Criar conta
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-amber-700 transition-colors"
+            >
+              Entrar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-blue-600 pt-6 pb-16 px-4">
         <div className="flex items-center gap-4">
