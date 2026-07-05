@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { EmetisIcon } from "@/components/emetis-icon";
 import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
 import { SubmitButton } from "@/components/submit-button";
@@ -37,13 +38,11 @@ export default function Page() {
   }, [state.status]);
 
   return (
-    <div className="flex min-h-dvh w-screen items-start justify-center bg-gradient-to-b from-blue-50 to-white pt-10 md:items-center md:pt-0">
+    <div className="flex min-h-dvh w-screen items-start justify-center bg-gradient-to-b from-slate-50 to-white pt-10 md:items-center md:pt-0">
       <div className="flex w-full max-w-md flex-col gap-6 overflow-hidden rounded-2xl px-4 pb-10">
         {/* Header */}
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-2xl shadow-md">
-            🤝
-          </div>
+          <EmetisIcon size={52} variant="blue" />
           <h1 className="text-2xl font-bold text-slate-800">Criar conta</h1>
           <p className="text-sm text-slate-500">
             Entre para a comunidade Emetis

@@ -46,6 +46,26 @@
   --sidebar-accent-foreground: hsl(240 5.9% 10%);
   --sidebar-border: hsl(220 13% 91%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  /* ── Emetis Brand ──────────────────────────────────────── */
+  --em-50:  #EFF6FF;
+  --em-100: #DBEAFE;
+  --em-200: #BFDBFE;
+  --em-300: #93C5FD;
+  --em-400: #60A5FA;
+  --em-500: #3B82F6;
+  --em-600: #2563EB;
+  --em-700: #1D4ED8;
+  --em-800: #1E40AF;
+  --em-900: #1E3A8A;
+  --em-gold-400: #FBBF24;
+  --em-gold-500: #F59E0B;
+  --em-gold-600: #D97706;
+  --em-success:  #10B981;
+  --em-error:    #EF4444;
+  --em-shadow-header: 0 4px 24px rgba(30,64,175,0.30);
+  --em-shadow-nav:    0 -2px 16px rgba(15,23,42,0.08);
+  --em-shadow-btn:    0 2px 8px rgba(37,99,235,0.28);
+  --em-shadow-card:   0 2px 12px rgba(15,23,42,0.07);
   /* border radius unit */
   --radius: 0.5rem;
   --sidebar: hsl(0 0% 98%);
@@ -90,8 +110,8 @@
 
 /* define theme */
 @theme {
-  --font-sans: var(--font-geist);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-brand);
+  --font-mono: ui-monospace, monospace;
 
   --breakpoint-toast-mobile: 600px;
 

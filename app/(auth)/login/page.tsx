@@ -9,6 +9,7 @@ import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
 import { type LoginActionState, login } from "../actions";
+import { EmetisIcon } from "@/components/emetis-icon";
 
 export default function Page() {
   const router = useRouter();
@@ -42,13 +43,11 @@ export default function Page() {
   };
 
   return (
-    <div className="flex min-h-dvh w-screen items-start justify-center bg-gradient-to-b from-blue-50 to-white pt-12 md:items-center md:pt-0">
+    <div className="flex min-h-dvh w-screen items-start justify-center bg-gradient-to-b from-slate-50 to-white pt-12 md:items-center md:pt-0">
       <div className="flex w-full max-w-md flex-col gap-8 overflow-hidden rounded-2xl px-4 pb-10">
         {/* Header */}
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-2xl shadow-md">
-            🤝
-          </div>
+          <EmetisIcon size={52} variant="blue" />
           <h1 className="text-2xl font-bold text-slate-800">Entrar no Emetis</h1>
           <p className="text-sm text-slate-500">
             Use seu e-mail e senha para acessar
