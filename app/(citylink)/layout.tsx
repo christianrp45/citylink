@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { CityLinkHeader } from '@/components/citylink-header';
 import { auth } from '@/app/(auth)/auth';
 import { getUserPrivacySettings } from '@/lib/db/queries';
 
-export const dynamic = 'force-dynamic';
-
 export default async function CityLinkLayout({ children }: { children: React.ReactNode }) {
+  await connection();
   const session = await auth();
 
   // Apenas usuários regulares precisam passar pelo onboarding
