@@ -364,6 +364,36 @@ function CommunitiesTab({ myId }: { myId: string }) {
     isPublic: true, requireApproval: false,
   });
   const [saving, setSaving] = useState(false);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
+
+  async function generateInvite() {
+    if (!selected) return;
+    setInviteLoading(true);
+    try {
+      const res = await fetch('/api/invite/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'community', targetId: selected.id, role: 'member', expiresInDays: 7 }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setInviteCode(data.code);
+      }
+    } finally {
+      setInviteLoading(false);
+    }
+  }
+
+  function copyInviteLink() {
+    if (!inviteCode) return;
+    const url = `${window.location.origin}/join/${inviteCode}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setInviteCopied(true);
+      setTimeout(() => setInviteCopied(false), 2000);
+    });
+  }
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -373,6 +403,8 @@ function CommunitiesTab({ myId }: { myId: string }) {
 
   async function loadDetail(community: CommunityItem) {
     setSelected(community);
+    setInviteCode(null);
+    setInviteCopied(false);
     setDetailLoading(true);
     try {
       const [detRes, pendRes] = await Promise.all([
@@ -388,7 +420,6 @@ function CommunitiesTab({ myId }: { myId: string }) {
   }
 
   const isMember = detail?.members.some(m => m.userId === myId) ?? false;
-  const isPending = selected?.requireApproval && !isMember;
 
   async function handleJoinLeave() {
     if (!selected) return;
@@ -519,6 +550,35 @@ function CommunitiesTab({ myId }: { myId: string }) {
               {joining ? <Loader2 size={16} className="animate-spin" /> : null}
               {isMember ? 'Sair da comunidade' : selected.requireApproval ? 'Solicitar entrada' : 'Entrar na comunidade'}
             </button>
+          )}
+
+          {/* Botão Convidar — apenas para admin */}
+          {isAdmin && (
+            <div className="space-y-2">
+              {!inviteCode ? (
+                <button
+                  onClick={generateInvite}
+                  disabled={inviteLoading}
+                  className="w-full py-2.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-60"
+                >
+                  {inviteLoading ? <Loader2 size={14} className="animate-spin" /> : '🔗'}
+                  {inviteLoading ? 'Gerando...' : 'Gerar link de convite'}
+                </button>
+              ) : (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 space-y-2">
+                  <p className="text-xs font-semibold text-emerald-700">Link de convite (7 dias)</p>
+                  <p className="text-xs font-mono text-emerald-800 bg-white rounded-lg px-2 py-1.5 border border-emerald-100 truncate">
+                    {typeof window !== 'undefined' ? `${window.location.origin}/join/${inviteCode}` : `/join/${inviteCode}`}
+                  </p>
+                  <button
+                    onClick={copyInviteLink}
+                    className="w-full py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                  >
+                    {inviteCopied ? '✓ Copiado!' : 'Copiar link'}
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
