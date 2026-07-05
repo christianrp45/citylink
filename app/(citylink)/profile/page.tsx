@@ -156,6 +156,9 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editBio, setEditBio] = useState('');
   const [savingBio, setSavingBio] = useState(false);
+  const [isEditingInfo, setIsEditingInfo] = useState(false);
+  const [editInfo, setEditInfo] = useState({ name: '', phone: '', profession: '' });
+  const [savingInfo, setSavingInfo] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [pendingVisits, setPendingVisits] = useState<PendingVisit[]>([]);
@@ -423,6 +426,26 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleSaveInfo() {
+    setSavingInfo(true);
+    try {
+      const updated = await apiFetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editInfo.name.trim() || undefined,
+          phone: editInfo.phone.trim() || undefined,
+          profession: editInfo.profession.trim() || undefined,
+        }),
+      });
+      setProfile((prev) => prev ? { ...prev, ...updated } : prev);
+      setIsEditingInfo(false);
+    } catch {
+    } finally {
+      setSavingInfo(false);
+    }
+  }
+
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -633,28 +656,113 @@ export default function ProfilePage() {
 
         {/* Informações */}
         <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
-          <h3 className="font-bold text-slate-800">Informações</h3>
-          <div className="flex items-center gap-3 text-sm text-slate-600">
-            <Mail size={15} className="text-slate-400 flex-shrink-0" />
-            <span>{profile?.email}</span>
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-slate-800">Informações</h3>
+            {!isEditingInfo && (
+              <button
+                onClick={() => {
+                  setEditInfo({
+                    name: profile?.name ?? '',
+                    phone: profile?.phone ?? '',
+                    profession: profile?.profession ?? '',
+                  });
+                  setIsEditingInfo(true);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              >
+                <Edit2 size={15} />
+              </button>
+            )}
           </div>
-          {profile?.phone && (
-            <div className="flex items-center gap-3 text-sm text-slate-600">
-              <Phone size={15} className="text-slate-400 flex-shrink-0" />
-              <span>{profile.phone}</span>
-            </div>
-          )}
-          {profile?.profession && (
-            <div className="flex items-center gap-3 text-sm text-slate-600">
-              <Users size={15} className="text-slate-400 flex-shrink-0" />
-              <span>{profile.profession}</span>
-            </div>
-          )}
-          {(profile?.lat && profile?.lng) && (
-            <div className="flex items-center gap-3 text-sm text-slate-600">
-              <MapPin size={15} className="text-slate-400 flex-shrink-0" />
-              <span>Localização registrada</span>
-            </div>
+
+          {isEditingInfo ? (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Users size={14} className="text-slate-400 flex-shrink-0" />
+                  <input
+                    value={editInfo.name}
+                    onChange={(e) => setEditInfo((p) => ({ ...p, name: e.target.value }))}
+                    placeholder="Seu nome completo"
+                    className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone size={14} className="text-slate-400 flex-shrink-0" />
+                  <input
+                    value={editInfo.phone}
+                    onChange={(e) => setEditInfo((p) => ({ ...p, phone: e.target.value }))}
+                    placeholder="WhatsApp (ex: 41 99999-9999)"
+                    type="tel"
+                    className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Briefcase size={14} className="text-slate-400 flex-shrink-0" />
+                  <input
+                    value={editInfo.profession}
+                    onChange={(e) => setEditInfo((p) => ({ ...p, profession: e.target.value }))}
+                    placeholder="Profissão ou ministério"
+                    className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setIsEditingInfo(false)}
+                  className="flex-1 py-2 border border-slate-200 rounded-xl text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveInfo}
+                  disabled={savingInfo}
+                  className="flex-1 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+                >
+                  {savingInfo && <Loader2 size={13} className="animate-spin" />}
+                  Salvar
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 text-sm text-slate-600">
+                <Mail size={15} className="text-slate-400 flex-shrink-0" />
+                <span>{profile?.email}</span>
+              </div>
+              {profile?.phone ? (
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <Phone size={15} className="text-slate-400 flex-shrink-0" />
+                  <span>{profile.phone}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditInfo({ name: profile?.name ?? '', phone: '', profession: profile?.profession ?? '' }); setIsEditingInfo(true); }}
+                  className="flex items-center gap-2 text-xs text-blue-500 hover:text-blue-700"
+                >
+                  <Phone size={13} /> Adicionar telefone
+                </button>
+              )}
+              {profile?.profession ? (
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <Briefcase size={15} className="text-slate-400 flex-shrink-0" />
+                  <span>{profile.profession}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditInfo({ name: profile?.name ?? '', phone: profile?.phone ?? '', profession: '' }); setIsEditingInfo(true); }}
+                  className="flex items-center gap-2 text-xs text-blue-500 hover:text-blue-700"
+                >
+                  <Briefcase size={13} /> Adicionar profissão
+                </button>
+              )}
+              {(profile?.lat && profile?.lng) && (
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <MapPin size={15} className="text-slate-400 flex-shrink-0" />
+                  <span>Localização registrada</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
