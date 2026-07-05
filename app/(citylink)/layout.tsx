@@ -4,6 +4,8 @@ import { CityLinkHeader } from '@/components/citylink-header';
 import { auth } from '@/app/(auth)/auth';
 import { getUserPrivacySettings } from '@/lib/db/queries';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CityLinkLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
