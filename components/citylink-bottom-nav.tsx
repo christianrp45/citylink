@@ -3,15 +3,24 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { MapPin, Users, BookOpen, MessageCircle, User, Building2 } from 'lucide-react';
+import {
+  IconMap,
+  IconCommunity,
+  IconBible,
+  IconChat,
+  IconGroups,
+  IconProfile,
+} from '@/components/emetis-icons';
 
-const NAV_ITEMS = [
-  { href: '/map',       label: 'Mapa',    icon: MapPin },
-  { href: '/community', label: 'Amigos',  icon: Users },
-  { href: '/bible',     label: 'Bíblia',  icon: BookOpen },
-  { href: '/chat',      label: 'Chat',    icon: MessageCircle },
-  { href: '/pib',       label: 'Grupos',  icon: Building2 },
-  { href: '/profile',   label: 'Perfil',  icon: User },
+type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; filled?: boolean; className?: string }>;
+
+const NAV_ITEMS: { href: string; label: string; icon: NavIcon }[] = [
+  { href: '/map',       label: 'Mapa',    icon: IconMap },
+  { href: '/community', label: 'Amigos',  icon: IconCommunity },
+  { href: '/bible',     label: 'Bíblia',  icon: IconBible },
+  { href: '/chat',      label: 'Chat',    icon: IconChat },
+  { href: '/pib',       label: 'Grupos',  icon: IconGroups },
+  { href: '/profile',   label: 'Perfil',  icon: IconProfile },
 ];
 
 export function BottomNav() {
@@ -55,6 +64,7 @@ export function BottomNav() {
                 <Icon
                   size={22}
                   strokeWidth={isActive ? 2.2 : 1.7}
+                  filled={isActive}
                   className={isActive ? '' : 'text-slate-400'}
                 />
                 {badge > 0 && (
