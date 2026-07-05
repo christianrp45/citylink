@@ -235,12 +235,22 @@ export async function upsertGuide(data: {
   meetingId: string;
   title: string;
   biblePassage?: string;
+  sermonTitle?: string;
+  preacher?: string;
   theme?: string;
+  leaderNote?: string;
+  icebreakerTitle?: string;
   icebreaker?: string;
+  youtubeLinks?: { title: string; url: string }[];
+  introduction?: string;
+  studyPoints?: { title: string; bibleRef: string; content: string; discussionQuestion: string }[];
+  conclusion?: string;
+  evangelism?: string;
+  evangelismStory?: string;
+  evangelismChallenge?: string;
   studyQuestions?: string[];
   application?: string;
   prayer?: string;
-  youtubeLinks?: { title: string; url: string }[];
   isPublished?: boolean;
   generatedByAI?: boolean;
 }) {

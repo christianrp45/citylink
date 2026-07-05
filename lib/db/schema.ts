@@ -412,6 +412,13 @@ export const cellMeeting = pgTable("CellMeeting", {
 
 export type CellMeeting = InferSelectModel<typeof cellMeeting>;
 
+export type StudyPoint = {
+  title: string;
+  bibleRef: string;
+  content: string;
+  discussionQuestion: string;
+};
+
 export const cellGuide = pgTable("CellGuide", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   meetingId: uuid("meetingId")
@@ -419,14 +426,29 @@ export const cellGuide = pgTable("CellGuide", {
     .references(() => cellMeeting.id),
   title: text("title").notNull(),
   biblePassage: varchar("biblePassage", { length: 100 }),
+  sermonTitle: text("sermonTitle"),
+  preacher: text("preacher"),
   theme: text("theme"),
+  // PARA O LÍDER
+  leaderNote: text("leaderNote"),
+  // QUEBRANDO O GELO
+  icebreakerTitle: text("icebreakerTitle"),
   icebreaker: text("icebreaker"),
+  // EXALTAÇÃO
+  youtubeLinks: json("youtubeLinks").$type<{ title: string; url: string }[]>(),
+  // O QUE APRENDEMOS ESSA SEMANA?
+  introduction: text("introduction"),
+  studyPoints: json("studyPoints").$type<StudyPoint[]>(),
+  // CONCLUSÃO E CHECAGEM
+  conclusion: text("conclusion"),
+  // EVANGELISMO
+  evangelism: text("evangelism"),
+  evangelismStory: text("evangelismStory"),
+  evangelismChallenge: text("evangelismChallenge"),
+  // legado (backward compat)
   studyQuestions: json("studyQuestions").$type<string[]>(),
   application: text("application"),
   prayer: text("prayer"),
-  youtubeLinks: json("youtubeLinks").$type<
-    { title: string; url: string }[]
-  >(),
   isPublished: boolean("isPublished").notNull().default(false),
   publishedAt: timestamp("publishedAt"),
   generatedByAI: boolean("generatedByAI").notNull().default(false),

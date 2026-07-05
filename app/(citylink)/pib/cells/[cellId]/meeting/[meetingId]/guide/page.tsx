@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { BottomNav } from '@/components/citylink-bottom-nav';
+import type { CellGuideDetail, StudyPoint, YoutubeLink } from '@/lib/types';
 
 // Mapeia nome do livro → abreviação usada no leitor bíblico
 const BOOK_MAP: Record<string, string> = {
@@ -27,7 +29,6 @@ const BOOK_MAP: Record<string, string> = {
 
 function parseBiblePassageUrl(passage: string): string | null {
   if (!passage) return null;
-  // Ex: "João 15:1-17" | "Mateus 5" | "Salmos 23:1"
   const match = passage.match(/^(.+?)\s+(\d+)/i);
   if (!match) return null;
   const bookName = match[1].trim().toLowerCase();
@@ -36,30 +37,58 @@ function parseBiblePassageUrl(passage: string): string | null {
   if (!abbrev || isNaN(chapter)) return null;
   return `/bible/read/${abbrev}/${chapter}`;
 }
-import { BottomNav } from '@/components/citylink-bottom-nav';
-import type { CellGuideDetail, YoutubeLink } from '@/lib/types';
+
+const EMPTY_POINT: StudyPoint = { title: '', bibleRef: '', content: '', discussionQuestion: '' };
 
 type GuideForm = {
   title: string;
   biblePassage: string;
+  sermonTitle: string;
+  preacher: string;
   theme: string;
+  leaderNote: string;
+  icebreakerTitle: string;
   icebreaker: string;
-  studyQuestions: string[];
-  application: string;
-  prayer: string;
   youtubeLinks: YoutubeLink[];
+  introduction: string;
+  studyPoints: StudyPoint[];
+  conclusion: string;
+  conclusionQuestion: string;
+  leaderTip: string;
+  evangelism: string;
+  evangelismStory: string;
+  evangelismChallenge: string;
+  sermonContent: string;
 };
 
 const EMPTY_FORM: GuideForm = {
   title: '',
   biblePassage: '',
+  sermonTitle: '',
+  preacher: '',
   theme: '',
+  leaderNote: '',
+  icebreakerTitle: '',
   icebreaker: '',
-  studyQuestions: ['', '', '', ''],
-  application: '',
-  prayer: '',
   youtubeLinks: [],
+  introduction: '',
+  studyPoints: [{ ...EMPTY_POINT }, { ...EMPTY_POINT }, { ...EMPTY_POINT }],
+  conclusion: '',
+  conclusionQuestion: '',
+  leaderTip: '',
+  evangelism: '',
+  evangelismStory: '',
+  evangelismChallenge: '',
+  sermonContent: '',
 };
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="bg-gray-900 text-white text-center text-xs font-bold tracking-widest uppercase py-2 px-4 rounded-lg">
+      {label}
+    </div>
+  );
+}
 
 export default function GuidePage() {
   const { cellId, meetingId } = useParams<{ cellId: string; meetingId: string }>();
@@ -70,51 +99,80 @@ export default function GuidePage() {
   const [saving, setSaving] = useState(false);
   const [newYtTitle, setNewYtTitle] = useState('');
   const [newYtUrl, setNewYtUrl] = useState('');
+  const [showSermonInput, setShowSermonInput] = useState(false);
 
   useEffect(() => {
     if (!meetingId) return;
     fetch(`/api/pib/meetings/${meetingId}/guide`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
+      .then((data: CellGuideDetail | null) => {
         if (data) {
           setGuide(data);
           setForm({
             title: data.title ?? '',
             biblePassage: data.biblePassage ?? '',
+            sermonTitle: data.sermonTitle ?? '',
+            preacher: data.preacher ?? '',
             theme: data.theme ?? '',
+            leaderNote: data.leaderNote ?? '',
+            icebreakerTitle: data.icebreakerTitle ?? '',
             icebreaker: data.icebreaker ?? '',
-            studyQuestions: data.studyQuestions?.length ? data.studyQuestions : ['', '', '', ''],
-            application: data.application ?? '',
-            prayer: data.prayer ?? '',
             youtubeLinks: data.youtubeLinks ?? [],
+            introduction: data.introduction ?? '',
+            studyPoints: data.studyPoints?.length
+              ? data.studyPoints
+              : [{ ...EMPTY_POINT }, { ...EMPTY_POINT }, { ...EMPTY_POINT }],
+            conclusion: data.conclusion ?? '',
+            conclusionQuestion: '',
+            leaderTip: '',
+            evangelism: data.evangelism ?? '',
+            evangelismStory: data.evangelismStory ?? '',
+            evangelismChallenge: data.evangelismChallenge ?? '',
+            sermonContent: '',
           });
         } else {
-          setEditing(true); // sem roteiro, abre editor
+          setEditing(true);
         }
       });
   }, [meetingId]);
 
   const handleGenerate = async () => {
-    if (!form.biblePassage) {
-      alert('Informe a passagem bíblica antes de gerar com IA');
+    if (!form.biblePassage && !form.sermonContent) {
+      alert('Informe a passagem bíblica ou cole o conteúdo da pregação');
       return;
     }
     setGenerating(true);
     const res = await fetch('/api/pib/ai/generate-guide', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ biblePassage: form.biblePassage, theme: form.theme }),
+      body: JSON.stringify({
+        biblePassage: form.biblePassage,
+        sermonTitle: form.sermonTitle,
+        preacher: form.preacher,
+        theme: form.theme,
+        sermonContent: form.sermonContent,
+      }),
     });
     const data = await res.json();
     if (res.ok) {
       setForm((f) => ({
         ...f,
         title: data.title ?? f.title,
+        biblePassage: data.biblePassage ?? f.biblePassage,
+        sermonTitle: data.sermonTitle ?? f.sermonTitle,
+        preacher: data.preacher ?? f.preacher,
         theme: data.theme ?? f.theme,
+        leaderNote: data.leaderNote ?? f.leaderNote,
+        icebreakerTitle: data.icebreakerTitle ?? f.icebreakerTitle,
         icebreaker: data.icebreaker ?? f.icebreaker,
-        studyQuestions: data.studyQuestions ?? f.studyQuestions,
-        application: data.application ?? f.application,
-        prayer: data.prayer ?? f.prayer,
+        introduction: data.introduction ?? f.introduction,
+        studyPoints: data.studyPoints?.length ? data.studyPoints : f.studyPoints,
+        conclusion: data.conclusion ?? f.conclusion,
+        conclusionQuestion: data.conclusionQuestion ?? f.conclusionQuestion,
+        leaderTip: data.leaderTip ?? f.leaderTip,
+        evangelism: data.evangelism ?? f.evangelism,
+        evangelismStory: data.evangelismStory ?? f.evangelismStory,
+        evangelismChallenge: data.evangelismChallenge ?? f.evangelismChallenge,
       }));
     } else {
       alert(data.error ?? 'Erro ao gerar roteiro');
@@ -127,7 +185,25 @@ export default function GuidePage() {
     const res = await fetch(`/api/pib/meetings/${meetingId}/guide`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, isPublished: publish }),
+      body: JSON.stringify({
+        title: form.title || form.sermonTitle || 'Roteiro',
+        biblePassage: form.biblePassage,
+        sermonTitle: form.sermonTitle,
+        preacher: form.preacher,
+        theme: form.theme,
+        leaderNote: form.leaderNote,
+        icebreakerTitle: form.icebreakerTitle,
+        icebreaker: form.icebreaker,
+        youtubeLinks: form.youtubeLinks,
+        introduction: form.introduction,
+        studyPoints: form.studyPoints,
+        conclusion: form.conclusion,
+        evangelism: form.evangelism,
+        evangelismStory: form.evangelismStory,
+        evangelismChallenge: form.evangelismChallenge,
+        isPublished: publish,
+        generatedByAI: guide?.generatedByAI ?? false,
+      }),
     });
     const data = await res.json();
     if (res.ok) {
@@ -153,104 +229,166 @@ export default function GuidePage() {
     setForm((f) => ({ ...f, youtubeLinks: f.youtubeLinks.filter((_, idx) => idx !== i) }));
   };
 
+  const setPoint = (i: number, field: keyof StudyPoint, value: string) => {
+    setForm((f) => {
+      const pts = [...f.studyPoints];
+      pts[i] = { ...pts[i], [field]: value };
+      return { ...f, studyPoints: pts };
+    });
+  };
+
   // ── VISUALIZAÇÃO ──────────────────────────────────────────────
   if (guide && !editing) {
+    const passageUrl = guide.biblePassage ? parseBiblePassageUrl(guide.biblePassage) : null;
+
     return (
-      <div className="h-full overflow-y-auto bg-gray-50 pb-24">
+      <div className="h-full overflow-y-auto bg-gray-100 pb-24">
+        {/* Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-          <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-            <Link href={`/pib/cells/${cellId}`} className="text-gray-500 hover:text-gray-700">←</Link>
-            <h1 className="text-lg font-bold text-indigo-900 flex-1 text-center">📖 Roteiro</h1>
-            <button onClick={() => setEditing(true)} className="text-sm text-indigo-600 font-medium hover:underline">
-              Editar
-            </button>
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <Link href={`/pib/cells/${cellId}`} className="text-gray-500 hover:text-gray-700 text-lg">←</Link>
+            <div className="text-center">
+              <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Roteiro de Célula</p>
+              <p className="text-sm font-bold text-gray-900">{guide.sermonTitle || guide.title}</p>
+            </div>
+            <button onClick={() => setEditing(true)} className="text-sm text-indigo-600 font-medium">Editar</button>
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
-          {/* Cabeçalho do roteiro */}
-          <div className="bg-indigo-700 text-white rounded-2xl p-5">
-            {guide.biblePassage && (() => {
-              const url = parseBiblePassageUrl(guide.biblePassage);
-              return url ? (
-                <Link href={url} className="text-indigo-200 text-sm underline underline-offset-2 hover:text-white transition-colors">
+        <div className="max-w-2xl mx-auto px-4 py-4 space-y-3">
+          {/* Cabeçalho: título + pregação */}
+          <div className="bg-gray-900 text-white rounded-2xl p-5">
+            <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Roteiro de Célula</p>
+            {guide.sermonTitle && <h2 className="text-lg font-bold">{guide.sermonTitle}</h2>}
+            {guide.preacher && <p className="text-gray-300 text-sm">{guide.preacher}</p>}
+            {guide.biblePassage && (
+              passageUrl ? (
+                <Link href={passageUrl} className="inline-block mt-2 text-indigo-300 text-sm underline underline-offset-2">
                   📖 {guide.biblePassage}
                 </Link>
               ) : (
-                <p className="text-indigo-200 text-sm">📖 {guide.biblePassage}</p>
-              );
-            })()}
-            <h2 className="text-xl font-bold mt-1">{guide.title}</h2>
-            {guide.theme && <p className="text-indigo-200 text-sm mt-1">{guide.theme}</p>}
+                <p className="mt-2 text-indigo-300 text-sm">📖 {guide.biblePassage}</p>
+              )
+            )}
+            {guide.theme && <p className="text-gray-400 text-xs mt-1 italic">{guide.theme}</p>}
             {guide.generatedByAI && (
-              <span className="inline-block mt-2 text-xs px-2 py-0.5 bg-white/20 rounded-full">
-                ✨ Gerado com IA
-              </span>
+              <span className="inline-block mt-2 text-xs px-2 py-0.5 bg-white/20 rounded-full">✨ Gerado com IA</span>
             )}
           </div>
 
-          {/* Músicas */}
+          {/* PARA O LÍDER */}
+          {guide.leaderNote && (
+            <div className="space-y-2">
+              <SectionHeader label="Para o Líder" />
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-gray-800 text-sm leading-relaxed">{guide.leaderNote}</p>
+              </div>
+            </div>
+          )}
+
+          {/* QUEBRANDO O GELO */}
+          {guide.icebreaker && (
+            <div className="space-y-2">
+              <SectionHeader label="Quebrando o Gelo" />
+              <div className="bg-white rounded-xl p-4 border border-gray-200">
+                {guide.icebreakerTitle && (
+                  <p className="font-bold text-gray-900 text-sm mb-1">{guide.icebreakerTitle}</p>
+                )}
+                <p className="text-gray-700 text-sm leading-relaxed">{guide.icebreaker}</p>
+              </div>
+            </div>
+          )}
+
+          {/* EXALTAÇÃO */}
           {guide.youtubeLinks && guide.youtubeLinks.length > 0 && (
-            <section className="bg-white rounded-xl shadow-sm p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">🎵 Louvor</h3>
-              <div className="space-y-2">
+            <div className="space-y-2">
+              <SectionHeader label="Exaltação" />
+              <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-2">
                 {guide.youtubeLinks.map((yt, i) => (
-                  <a
-                    key={i}
-                    href={yt.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition group"
-                  >
-                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-red-600 text-lg">▶</span>
+                  <a key={i} href={yt.url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition group">
+                    <div className="w-7 h-7 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-red-600 text-sm">▶</span>
                     </div>
                     <span className="text-sm text-indigo-600 group-hover:underline truncate">{yt.title}</span>
                   </a>
                 ))}
+                <p className="text-xs text-gray-400 pt-1">Façam orações de exaltação e agradecimento.</p>
               </div>
-            </section>
+            </div>
           )}
 
-          {/* Quebra-gelo */}
-          {guide.icebreaker && (
-            <section className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-amber-400">
-              <h3 className="font-semibold text-gray-900 mb-2">🎲 Quebra-gelo</h3>
-              <p className="text-gray-700 text-sm leading-relaxed">{guide.icebreaker}</p>
-            </section>
-          )}
-
-          {/* Estudo */}
-          {guide.studyQuestions && guide.studyQuestions.length > 0 && (
-            <section className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-indigo-400">
-              <h3 className="font-semibold text-gray-900 mb-3">📚 Estudo</h3>
-              <div className="space-y-3">
-                {guide.studyQuestions.filter(Boolean).map((q, i) => (
-                  <div key={i} className="flex gap-3">
-                    <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                      {i + 1}
-                    </span>
-                    <p className="text-gray-700 text-sm leading-relaxed">{q}</p>
+          {/* O QUE APRENDEMOS */}
+          {(guide.introduction || (guide.studyPoints && guide.studyPoints.length > 0)) && (
+            <div className="space-y-2">
+              <SectionHeader label="O que aprendemos essa semana?" />
+              <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-4">
+                {guide.introduction && (
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm mb-1">INTRODUÇÃO</p>
+                    <p className="text-gray-700 text-sm leading-relaxed">{guide.introduction}</p>
+                  </div>
+                )}
+                {guide.studyPoints?.filter(p => p.title || p.content).map((pt, i) => (
+                  <div key={i} className="border-t border-gray-100 pt-3">
+                    <p className="font-bold text-gray-900 text-sm">{pt.title}</p>
+                    {pt.bibleRef && (
+                      <p className="text-indigo-600 text-xs mb-1">{pt.bibleRef}</p>
+                    )}
+                    <p className="text-gray-700 text-sm leading-relaxed mb-2">{pt.content}</p>
+                    {pt.discussionQuestion && (
+                      <p className="font-bold text-gray-800 text-sm">• {pt.discussionQuestion}</p>
+                    )}
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
           )}
 
-          {/* Aplicação */}
-          {guide.application && (
-            <section className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-emerald-400">
-              <h3 className="font-semibold text-gray-900 mb-2">✅ Desafio da Semana</h3>
-              <p className="text-gray-700 text-sm leading-relaxed">{guide.application}</p>
-            </section>
+          {/* CONCLUSÃO E CHECAGEM */}
+          {guide.conclusion && (
+            <div className="space-y-2">
+              <SectionHeader label="Conclusão e Checagem" />
+              <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-3">
+                <p className="text-gray-700 text-sm leading-relaxed">{guide.conclusion}</p>
+                <p className="font-bold text-gray-800 text-sm">
+                  • Qual dos pontos mais te chamou atenção? Qual passo prático você tomará em relação a isso?
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  Dica para o líder: Divida a célula em micro-grupos (2-5) e deixe que abram seus corações. Encerrem em oração e/ou com um louvor.
+                </p>
+              </div>
+            </div>
           )}
 
-          {/* Oração */}
-          {guide.prayer && (
-            <section className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-violet-400">
-              <h3 className="font-semibold text-gray-900 mb-2">🙏 Oração Final</h3>
-              <p className="text-gray-700 text-sm leading-relaxed">{guide.prayer}</p>
-            </section>
+          {/* EVANGELISMO */}
+          {(guide.evangelism || guide.evangelismStory || guide.evangelismChallenge) && (
+            <div className="space-y-2">
+              <SectionHeader label="Evangelismo" />
+              <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-3">
+                {guide.evangelism && (
+                  <div className="space-y-1">
+                    <p className="text-gray-700 text-sm leading-relaxed">
+                      <span className="underline">Se houver não crentes:</span> faça um breve momento de testemunho e apelo para entrega da vida a Jesus.
+                    </p>
+                    <p className="text-gray-700 text-sm leading-relaxed">
+                      <span className="underline">Se todos já forem crentes:</span> {guide.evangelism}
+                    </p>
+                  </div>
+                )}
+                {guide.evangelismStory && (
+                  <p className="text-gray-700 text-sm leading-relaxed border-t border-gray-100 pt-3">
+                    🌎 {guide.evangelismStory}
+                  </p>
+                )}
+                {guide.evangelismChallenge && (
+                  <p className="text-sm">
+                    <span className="font-bold">Desafio da semana:</span>{' '}
+                    <span className="text-gray-700">{guide.evangelismChallenge}</span>
+                  </p>
+                )}
+              </div>
+            </div>
           )}
 
           {!guide.isPublished && (
@@ -263,197 +401,206 @@ export default function GuidePage() {
             </button>
           )}
         </div>
-
         <BottomNav />
       </div>
     );
   }
 
   // ── EDITOR ────────────────────────────────────────────────────
+  const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400";
+  const textareaCls = `${inputCls} resize-none`;
+  const labelCls = "block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1";
+
   return (
     <div className="h-full overflow-y-auto bg-gray-50 pb-24">
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <button onClick={() => guide && setEditing(false)} className="text-gray-500 hover:text-gray-700">←</button>
-          <h1 className="text-lg font-bold text-indigo-900 flex-1 text-center">
+          <h1 className="text-base font-bold text-indigo-900 flex-1 text-center">
             {guide ? 'Editar Roteiro' : 'Novo Roteiro'}
           </h1>
-          <button
-            onClick={() => handleSave(false)}
-            disabled={saving}
-            className="text-sm text-indigo-600 font-medium hover:underline disabled:opacity-50"
-          >
+          <button onClick={() => handleSave(false)} disabled={saving}
+            className="text-sm text-indigo-600 font-medium disabled:opacity-50">
             {saving ? 'Salvando...' : 'Salvar'}
           </button>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
-        {/* Passagem + geração por IA */}
+      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+
+        {/* Geração por IA */}
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-              Passagem Bíblica *
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: João 15:1-17"
-              value={form.biblePassage}
-              onChange={(e) => setForm((f) => ({ ...f, biblePassage: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">✨ Gerar com IA (padrão PIB Curitiba)</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className={labelCls}>Passagem Bíblica</label>
+              <input type="text" placeholder="Ex: Daniel 4:28-34" value={form.biblePassage}
+                onChange={(e) => setForm((f) => ({ ...f, biblePassage: e.target.value }))}
+                className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Tema (opcional)</label>
+              <input type="text" placeholder="Ex: Orgulho" value={form.theme}
+                onChange={(e) => setForm((f) => ({ ...f, theme: e.target.value }))}
+                className={inputCls} />
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-              Tema (opcional)
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: Permanecer em Cristo"
-              value={form.theme}
-              onChange={(e) => setForm((f) => ({ ...f, theme: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className={labelCls}>Título da Pregação</label>
+              <input type="text" placeholder="Ex: Nem Parece Errado" value={form.sermonTitle}
+                onChange={(e) => setForm((f) => ({ ...f, sermonTitle: e.target.value }))}
+                className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Pregador(a)</label>
+              <input type="text" placeholder="Ex: Pr. Alexandre Budal" value={form.preacher}
+                onChange={(e) => setForm((f) => ({ ...f, preacher: e.target.value }))}
+                className={inputCls} />
+            </div>
           </div>
-          <button
-            onClick={handleGenerate}
-            disabled={generating || !form.biblePassage}
-            className="w-full py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-40"
-          >
-            {generating ? '✨ Gerando roteiro com IA...' : '✨ Gerar roteiro com IA'}
+
+          <button type="button" onClick={() => setShowSermonInput(!showSermonInput)}
+            className="text-xs text-indigo-600 underline">
+            {showSermonInput ? '▲ Ocultar' : '▼ Colar pregação completa (texto/transcrição)'}
+          </button>
+          {showSermonInput && (
+            <textarea
+              placeholder="Cole aqui o texto ou transcrição completa da pregação. A IA adaptará para o formato de célula da PIB Curitiba."
+              value={form.sermonContent}
+              onChange={(e) => setForm((f) => ({ ...f, sermonContent: e.target.value }))}
+              rows={8}
+              className={textareaCls}
+            />
+          )}
+
+          <button onClick={handleGenerate} disabled={generating || (!form.biblePassage && !form.sermonContent)}
+            className="w-full py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-40">
+            {generating ? '✨ Gerando roteiro com IA...' : '✨ Gerar roteiro no formato PIB Curitiba'}
           </button>
         </div>
 
-        {/* Título */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            Título do Encontro
-          </label>
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
+        {/* PARA O LÍDER */}
+        <div className="bg-white rounded-xl shadow-sm p-4 space-y-2">
+          <SectionHeader label="Para o Líder" />
+          <textarea value={form.leaderNote} rows={3}
+            placeholder="Mensagem de encorajamento e reflexão para o líder sobre discipulado..."
+            onChange={(e) => setForm((f) => ({ ...f, leaderNote: e.target.value }))}
+            className={textareaCls} />
         </div>
 
-        {/* Músicas YouTube */}
+        {/* QUEBRANDO O GELO */}
+        <div className="bg-white rounded-xl shadow-sm p-4 space-y-2">
+          <SectionHeader label="Quebrando o Gelo" />
+          <div>
+            <label className={labelCls}>Nome/Tema do Quebra-gelo</label>
+            <input type="text" placeholder="Ex: Soft Skill Aleatória" value={form.icebreakerTitle}
+              onChange={(e) => setForm((f) => ({ ...f, icebreakerTitle: e.target.value }))}
+              className={inputCls} />
+          </div>
+          <textarea value={form.icebreaker} rows={3}
+            placeholder="Descreva a dinâmica ou pergunta leve para começar..."
+            onChange={(e) => setForm((f) => ({ ...f, icebreaker: e.target.value }))}
+            className={textareaCls} />
+        </div>
+
+        {/* EXALTAÇÃO */}
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-gray-700">🎵 Músicas (links do YouTube)</h3>
+          <SectionHeader label="Exaltação" />
           {form.youtubeLinks.map((yt, i) => (
             <div key={i} className="flex items-center gap-2 text-sm">
               <span className="flex-1 text-indigo-600 truncate">{yt.title}</span>
-              <button onClick={() => removeYoutubeLink(i)} className="text-red-400 hover:text-red-600 text-xs">
-                Remover
-              </button>
+              <button onClick={() => removeYoutubeLink(i)} className="text-red-400 hover:text-red-600 text-xs">Remover</button>
             </div>
           ))}
           <div className="space-y-2">
-            <input
-              type="text"
-              placeholder="Nome da música"
-              value={newYtTitle}
-              onChange={(e) => setNewYtTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
+            <input type="text" placeholder="Nome da música" value={newYtTitle}
+              onChange={(e) => setNewYtTitle(e.target.value)} className={inputCls} />
             <div className="flex gap-2">
-              <input
-                type="url"
-                placeholder="https://youtube.com/watch?v=..."
-                value={newYtUrl}
-                onChange={(e) => setNewYtUrl(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-              <button
-                onClick={addYoutubeLink}
-                disabled={!newYtUrl}
-                className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition disabled:opacity-40"
-              >
+              <input type="url" placeholder="https://youtube.com/watch?v=..." value={newYtUrl}
+                onChange={(e) => setNewYtUrl(e.target.value)} className={`flex-1 ${inputCls}`} />
+              <button onClick={addYoutubeLink} disabled={!newYtUrl}
+                className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition disabled:opacity-40">
                 + Add
               </button>
             </div>
           </div>
         </div>
 
-        {/* Quebra-gelo */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            🎲 Quebra-gelo
-          </label>
-          <textarea
-            value={form.icebreaker}
-            onChange={(e) => setForm((f) => ({ ...f, icebreaker: e.target.value }))}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
-          />
-        </div>
-
-        {/* Perguntas */}
+        {/* O QUE APRENDEMOS */}
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">📚 Perguntas de Estudo</h3>
-          {form.studyQuestions.map((q, i) => (
-            <div key={i} className="flex gap-2">
-              <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-1.5">
-                {i + 1}
-              </span>
-              <textarea
-                value={q}
-                onChange={(e) => {
-                  const qs = [...form.studyQuestions];
-                  qs[i] = e.target.value;
-                  setForm((f) => ({ ...f, studyQuestions: qs }));
-                }}
-                rows={2}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
-              />
+          <SectionHeader label="O que aprendemos essa semana?" />
+          <div>
+            <label className={labelCls}>Introdução</label>
+            <textarea value={form.introduction} rows={3}
+              placeholder="Parágrafo introdutório que apresenta o tema da pregação..."
+              onChange={(e) => setForm((f) => ({ ...f, introduction: e.target.value }))}
+              className={textareaCls} />
+          </div>
+          {form.studyPoints.map((pt, i) => (
+            <div key={i} className="border border-gray-100 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-bold text-indigo-700 uppercase">Ponto {i + 1}</p>
+              <input type="text" placeholder={`Título (ex: 1) O Pecado do Olhar Distorcido...)`}
+                value={pt.title} onChange={(e) => setPoint(i, 'title', e.target.value)} className={inputCls} />
+              <input type="text" placeholder="Referência bíblica (ex: Fp 2:3-4)"
+                value={pt.bibleRef} onChange={(e) => setPoint(i, 'bibleRef', e.target.value)} className={inputCls} />
+              <textarea placeholder="Desenvolvimento do ponto (3-4 linhas)..." rows={3}
+                value={pt.content} onChange={(e) => setPoint(i, 'content', e.target.value)} className={textareaCls} />
+              <textarea placeholder="Pergunta de discussão para o grupo..." rows={2}
+                value={pt.discussionQuestion} onChange={(e) => setPoint(i, 'discussionQuestion', e.target.value)} className={textareaCls} />
             </div>
           ))}
         </div>
 
-        {/* Aplicação */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            ✅ Desafio da Semana
-          </label>
-          <textarea
-            value={form.application}
-            onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
-          />
+        {/* CONCLUSÃO */}
+        <div className="bg-white rounded-xl shadow-sm p-4 space-y-2">
+          <SectionHeader label="Conclusão e Checagem" />
+          <textarea value={form.conclusion} rows={4}
+            placeholder="Parágrafo de conclusão que amarra os pontos e convida à transformação..."
+            onChange={(e) => setForm((f) => ({ ...f, conclusion: e.target.value }))}
+            className={textareaCls} />
+          <p className="text-xs text-gray-400 italic">
+            A pergunta de checagem padrão será incluída automaticamente: "Qual dos pontos mais te chamou atenção? Qual passo prático você tomará?"
+          </p>
         </div>
 
-        {/* Oração */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            🙏 Sugestão de Oração Final
-          </label>
-          <textarea
-            value={form.prayer}
-            onChange={(e) => setForm((f) => ({ ...f, prayer: e.target.value }))}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
-          />
+        {/* EVANGELISMO */}
+        <div className="bg-white rounded-xl shadow-sm p-4 space-y-2">
+          <SectionHeader label="Evangelismo" />
+          <div>
+            <label className={labelCls}>Orientação (para crentes)</label>
+            <textarea value={form.evangelism} rows={2}
+              placeholder="Comunique a visão de multiplicação do Reino, de fazer discípulos..."
+              onChange={(e) => setForm((f) => ({ ...f, evangelism: e.target.value }))}
+              className={textareaCls} />
+          </div>
+          <div>
+            <label className={labelCls}>História Inspiradora</label>
+            <textarea value={form.evangelismStory} rows={3}
+              placeholder="Título e história inspiradora sobre evangelismo ou missões..."
+              onChange={(e) => setForm((f) => ({ ...f, evangelismStory: e.target.value }))}
+              className={textareaCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Desafio da Semana</label>
+            <textarea value={form.evangelismChallenge} rows={2}
+              placeholder="Desafio prático relacionado a evangelismo ou servir..."
+              onChange={(e) => setForm((f) => ({ ...f, evangelismChallenge: e.target.value }))}
+              className={textareaCls} />
+          </div>
         </div>
 
         <div className="flex gap-3">
-          <button
-            onClick={() => handleSave(false)}
-            disabled={saving || !form.title}
-            className="flex-1 py-3 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition disabled:opacity-40"
-          >
+          <button onClick={() => handleSave(false)} disabled={saving}
+            className="flex-1 py-3 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition disabled:opacity-40">
             Salvar rascunho
           </button>
-          <button
-            onClick={() => handleSave(true)}
-            disabled={saving || !form.title}
-            className="flex-1 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition disabled:opacity-40"
-          >
+          <button onClick={() => handleSave(true)} disabled={saving}
+            className="flex-1 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition disabled:opacity-40">
             📢 Publicar
           </button>
         </div>
       </div>
-
       <BottomNav />
     </div>
   );

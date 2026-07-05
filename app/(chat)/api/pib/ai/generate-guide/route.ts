@@ -8,39 +8,90 @@ export async function POST(request: Request) {
     return Response.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const { biblePassage, theme } = await request.json();
+  const { biblePassage, sermonTitle, preacher, theme, sermonContent } =
+    await request.json();
 
-  if (!biblePassage) {
+  if (!biblePassage && !sermonContent) {
     return Response.json(
-      { error: "Passagem bíblica é obrigatória" },
+      { error: "Informe a passagem bíblica ou o conteúdo da pregação" },
       { status: 400 }
     );
   }
 
-  const prompt = `Você é um assistente pastoral brasileiro experiente e acolhedor.
-Crie um roteiro completo de célula cristã baseado na passagem: ${biblePassage}
-${theme ? `Tema sugerido: ${theme}` : ""}
+  const baseInfo = [
+    sermonTitle && `Título da pregação: ${sermonTitle}`,
+    preacher && `Pregador(a): ${preacher}`,
+    biblePassage && `Passagem bíblica principal: ${biblePassage}`,
+    theme && `Tema: ${theme}`,
+    sermonContent &&
+      `Conteúdo/texto da pregação para adaptar:\n---\n${sermonContent}\n---`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const prompt = `Você é especialista em roteiros de células no formato da PIB Curitiba (Primeira Igreja Batista de Curitiba). Crie um roteiro completo seguindo EXATAMENTE a estrutura abaixo.
+
+${baseInfo}
 
 Responda APENAS com JSON válido, sem texto adicional, seguindo exatamente este schema:
+
 {
-  "title": "título criativo e convidativo para o encontro",
-  "theme": "tema central em uma frase",
-  "icebreaker": "dinâmica ou pergunta leve para os primeiros 10 minutos, que quebre o gelo sem pressão espiritual",
-  "studyQuestions": [
-    "primeira pergunta de reflexão sobre a passagem",
-    "segunda pergunta conectando a passagem à vida prática",
-    "terceira pergunta sobre aplicação pessoal",
-    "quarta pergunta para compartilhamento em grupo"
+  "title": "título criativo do encontro (baseado na pregação/passagem)",
+  "biblePassage": "passagem bíblica principal (ex: Daniel 4:28-34)",
+  "sermonTitle": "título exato da pregação",
+  "preacher": "nome do pregador(a)",
+  "theme": "tema central em uma frase curta",
+
+  "leaderNote": "Mensagem de 2-3 linhas para o líder refletir sobre discipulado, formação de novos líderes ou saúde da célula, conectada ao tema da semana.",
+
+  "icebreakerTitle": "Nome criativo/temático para o quebra-gelo (ex: 'Soft Skill Aleatória', 'Memória de Infância', 'Confissão Inusitada')",
+  "icebreaker": "Descrição da dinâmica ou pergunta leve para quebrar o gelo. Deve ser descontraída, sem pressão espiritual, e conectada indiretamente ao tema.",
+
+  "youtubeLinks": [
+    { "title": "Nome da música de louvor 1", "url": "" },
+    { "title": "Nome da música de louvor 2", "url": "" },
+    { "title": "Nome da música de louvor 3", "url": "" }
   ],
-  "application": "desafio específico e prático para a semana, que qualquer pessoa consiga fazer",
-  "prayer": "sugestão de como encerrar o encontro em oração, incluindo os temas a interceder"
+
+  "introduction": "Parágrafo de introdução que apresenta o tema central da pregação de forma envolvente, contextualizando para o grupo.",
+
+  "studyPoints": [
+    {
+      "title": "1) Título do Ponto 1: Subtítulo explicativo",
+      "bibleRef": "Referência bíblica do ponto 1 (ex: Fp 2:3-4)",
+      "content": "Desenvolvimento do ponto em 3-4 linhas. Explique o princípio bíblico, conecte com a vida real e seja claro e aplicável.",
+      "discussionQuestion": "Pergunta de discussão em negrito — deve gerar conversa real e pessoal sobre este ponto específico."
+    },
+    {
+      "title": "2) Título do Ponto 2: Subtítulo explicativo",
+      "bibleRef": "Referência bíblica do ponto 2",
+      "content": "Desenvolvimento do ponto em 3-4 linhas.",
+      "discussionQuestion": "Pergunta de discussão que conecta a verdade bíblica à vida prática."
+    },
+    {
+      "title": "3) Título do Ponto 3: Subtítulo explicativo",
+      "bibleRef": "Referência bíblica do ponto 3",
+      "content": "Desenvolvimento do ponto em 3-4 linhas.",
+      "discussionQuestion": "Pergunta de discussão que leva à aplicação e mudança de vida."
+    }
+  ],
+
+  "conclusion": "Parágrafo de conclusão que amarra os 3 pontos, reafirma a verdade central e convida à transformação.",
+  "conclusionQuestion": "Pergunta final de checagem e aplicação prática: 'Qual dos pontos mais te chamou atenção? Qual passo prático você tomará esta semana?'",
+  "leaderTip": "Dica pastoral para o líder conduzir o momento de conclusão (ex: dividir em micro-grupos de 2-5 pessoas, distribuir líderes em formação, encerrar em oração ou louvor).",
+
+  "evangelism": "Orientação para o líder: se houver não crentes, como fazer o apelo; se todos forem crentes, como comunicar a visão de multiplicação e orar pelos perdidos.",
+  "evangelismStory": "Título e texto de uma história inspiradora real (ou fictícia verossímil) sobre evangelismo, missões ou impacto do Reino — conectada ao tema da semana. 2-3 linhas.",
+  "evangelismChallenge": "Desafio específico da semana relacionado a evangelismo, missões ou servir a comunidade."
 }
 
-Diretrizes:
-- Linguagem: português brasileiro natural, caloroso e sem jargão religioso excessivo
-- Foco em aplicação diária, não em teologia abstrata
-- As perguntas devem gerar conversa real, não respostas decoradas
-- Duração total sugerida: 90 minutos`;
+Diretrizes importantes:
+- Linguagem: português brasileiro natural, caloroso, sem jargão excessivo
+- Se 'sermonContent' foi fornecido, adapte fielmente o conteúdo da pregação para os 3 pontos de estudo
+- Os 3 pontos devem seguir a estrutura: título + ref bíblica + desenvolvimento + pergunta de discussão
+- As perguntas de discussão devem ser pessoais e gerar conversa real, não respostas teóricas
+- O quebrando-gelo deve ser leve e descontraído
+- Os links do YouTube ficam vazios (o líder preencherá)`;
 
   try {
     const { text } = await generateText({
@@ -48,7 +99,6 @@ Diretrizes:
       prompt,
     });
 
-    // extrair JSON da resposta
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return Response.json(

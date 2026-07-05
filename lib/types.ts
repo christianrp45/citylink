@@ -184,17 +184,41 @@ export type CellMeetingWithGuide = {
   createdAt: string;
 };
 
+export type StudyPoint = {
+  title: string;
+  bibleRef: string;
+  content: string;
+  discussionQuestion: string;
+};
+
 export type CellGuideDetail = {
   id: string;
   meetingId: string;
   title: string;
-  biblePassage?: string;       // ex: "João 15:1-17"
+  biblePassage?: string;
+  sermonTitle?: string;
+  preacher?: string;
   theme?: string;
+  // PARA O LÍDER
+  leaderNote?: string;
+  // QUEBRANDO O GELO
+  icebreakerTitle?: string;
   icebreaker?: string;
-  studyQuestions?: string[];
-  application?: string;        // desafio da semana
-  prayer?: string;
+  // EXALTAÇÃO
   youtubeLinks?: YoutubeLink[];
+  // O QUE APRENDEMOS ESSA SEMANA?
+  introduction?: string;
+  studyPoints?: StudyPoint[];
+  // CONCLUSÃO E CHECAGEM
+  conclusion?: string;
+  // EVANGELISMO
+  evangelism?: string;
+  evangelismStory?: string;
+  evangelismChallenge?: string;
+  // legado
+  studyQuestions?: string[];
+  application?: string;
+  prayer?: string;
   isPublished: boolean;
   publishedAt?: string;
   generatedByAI: boolean;
