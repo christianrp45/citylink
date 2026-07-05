@@ -7,14 +7,14 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://citylink-rosy.vercel.app"),
-  title: "CityLink",
+  metadataBase: new URL("https://app.emetis.com.br"),
+  title: "Emetis",
   description: "Conectando cristãos pela proximidade",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "CityLink",
+    title: "Emetis",
   },
   formatDetection: {
     telephone: false,
@@ -22,15 +22,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://citylink-rosy.vercel.app",
-    siteName: "CityLink",
-    title: "CityLink — Conectando cristãos pela proximidade",
+    url: "https://app.emetis.com.br",
+    siteName: "Emetis",
+    title: "Emetis — Conectando cristãos pela proximidade",
     description: "Encontre amigos, grupos e comunidades cristãs perto de você.",
-    images: [{ url: "/images/demo-thumbnail.png", width: 1200, height: 630, alt: "CityLink" }],
+    images: [{ url: "/images/demo-thumbnail.png", width: 1200, height: 630, alt: "Emetis" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CityLink",
+    title: "Emetis",
     description: "Encontre amigos, grupos e comunidades cristãs perto de você.",
     images: ["/images/demo-thumbnail.png"],
   },

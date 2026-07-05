@@ -1,6 +1,6 @@
 {
-  "name": "CityLink",
-  "short_name": "CityLink",
+  "name": "Emetis",
+  "short_name": "Emetis",
   "description": "Conectando cristãos pela proximidade",
   "start_url": "/map",
   "display": "standalone",
