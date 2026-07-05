@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { BottomNav } from '@/components/citylink-bottom-nav';
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -12,6 +13,7 @@ type CellDetail = {
   name: string;
   description?: string;
   leaderId: string;
+  coLeaderId?: string;
   leaderName: string;
   neighborhood?: string;
   address?: string;
@@ -32,10 +34,16 @@ type CellDetail = {
 
 export default function CellDetailPage() {
   const { cellId } = useParams<{ cellId: string }>();
+  const { data: session } = useSession();
   const [cell, setCell] = useState<CellDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [joinMsg, setJoinMsg] = useState('');
+
+  // Estado do modal de convite
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
 
   useEffect(() => {
     if (!cellId) return;
@@ -52,6 +60,38 @@ export default function CellDetailPage() {
     setJoinMsg(data.message ?? data.error ?? '');
     setJoining(false);
   };
+
+  const handleGenerateInvite = async () => {
+    setInviteLoading(true);
+    try {
+      const res = await fetch('/api/invite/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'cell', targetId: cellId }),
+      });
+      const data = await res.json();
+      if (data.code) {
+        setInviteCode(data.code);
+      }
+    } catch {
+      // silencioso — o líder verá o botão ainda ativo
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleCopyInvite = () => {
+    if (!inviteCode) return;
+    const url = `${window.location.origin}/join/${inviteCode}`;
+    navigator.clipboard.writeText(url);
+    setInviteCopied(true);
+    setTimeout(() => setInviteCopied(false), 2000);
+  };
+
+  const isLeader =
+    session?.user?.id &&
+    cell &&
+    (cell.leaderId === session.user.id || cell.coLeaderId === session.user.id);
 
   if (loading) {
     return (
@@ -167,6 +207,48 @@ export default function CellDetailPage() {
             <p className="font-medium text-gray-800 mt-1 text-sm">Agendar Encontro</p>
           </Link>
         </div>
+
+        {/* Botão Convidar — visível apenas para líder / co-líder */}
+        {isLeader && (
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <p className="text-sm font-semibold text-gray-800 mb-2">Convidar pessoas</p>
+            <p className="text-xs text-gray-500 mb-3">
+              Gere um link de convite para compartilhar via WhatsApp, Instagram ou onde preferir.
+            </p>
+            {!inviteCode ? (
+              <button
+                onClick={handleGenerateInvite}
+                disabled={inviteLoading}
+                className="w-full py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+              >
+                {inviteLoading ? 'Gerando...' : '🔗 Gerar link de convite'}
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                  <span className="font-mono text-sm text-slate-700 flex-1 truncate">
+                    {typeof window !== 'undefined' ? `${window.location.origin}/join/${inviteCode}` : `/join/${inviteCode}`}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCopyInvite}
+                    className="flex-1 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+                  >
+                    {inviteCopied ? '✓ Copiado!' : 'Copiar link'}
+                  </button>
+                  <button
+                    onClick={() => { setInviteCode(null); setInviteCopied(false); }}
+                    className="px-3 py-2 text-gray-500 text-sm rounded-lg hover:bg-gray-100 transition"
+                  >
+                    Novo
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400">Expira em 7 dias</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Participar */}
         {cell.isOpen && (

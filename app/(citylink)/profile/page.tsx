@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle } from 'lucide-react';
+import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { BottomNav } from '@/components/citylink-bottom-nav';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
@@ -17,6 +17,24 @@ type ProximityConfig = {
   notifyWhenFriendNear: boolean | null;
   notifyWhenCellMemberNear: boolean | null;
   notifyWhenCommunityNear: boolean | null;
+};
+
+type FriendWithCircle = {
+  id: string;
+  name: string | null;
+  avatar: string | null;
+  profession: string | null;
+  status: string;
+  circle: 'family' | 'friends';
+};
+
+type SavedLocation = {
+  id: string;
+  label: string;
+  type: 'home' | 'work' | 'church' | 'other';
+  lat: string;
+  lng: string;
+  isActive: boolean;
 };
 
 type PrivacySettings = {
@@ -148,6 +166,17 @@ export default function ProfilePage() {
   const [proximity, setProximity] = useState<ProximityConfig | null>(null);
   const [proximityOpen, setProximityOpen] = useState(false);
   const [savingProximity, setSavingProximity] = useState(false);
+  const [friends, setFriends] = useState<FriendWithCircle[]>([]);
+  const [circlesOpen, setCirclesOpen] = useState(false);
+  const [updatingCircle, setUpdatingCircle] = useState<string | null>(null);
+  const [savedLocations, setSavedLocations] = useState<SavedLocation[]>([]);
+  const [locationsOpen, setLocationsOpen] = useState(false);
+  const [addingLocation, setAddingLocation] = useState(false);
+  const [newLocLabel, setNewLocLabel] = useState('');
+  const [newLocType, setNewLocType] = useState<SavedLocation['type']>('home');
+  const [savingLocation, setSavingLocation] = useState(false);
+  const [togglingLocId, setTogglingLocId] = useState<string | null>(null);
+  const [deletingLocId, setDeletingLocId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Carregar perfil do banco
@@ -180,7 +209,105 @@ export default function ProfilePage() {
     apiFetch('/api/users/proximity-config')
       .then((data: ProximityConfig) => setProximity(data))
       .catch(() => {});
+    apiFetch('/api/friends')
+      .then((data: FriendWithCircle[]) =>
+        setFriends(data.filter((f) => f.status === 'accepted'))
+      )
+      .catch(() => {});
+    apiFetch('/api/users/locations')
+      .then((data: SavedLocation[]) => setSavedLocations(data))
+      .catch(() => {});
   }, []);
+
+  async function handleSaveLocation() {
+    if (!newLocLabel.trim()) return;
+    setSavingLocation(true);
+    try {
+      const pos = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+          reject,
+          { timeout: 10000 }
+        );
+      });
+      const res = await fetch('/api/users/locations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: newLocLabel.trim(),
+          type: newLocType,
+          lat: String(pos.lat),
+          lng: String(pos.lng),
+          setActive: savedLocations.length === 0,
+        }),
+      });
+      if (res.ok) {
+        const created: SavedLocation = await res.json();
+        setSavedLocations((prev) => [created, ...prev]);
+        setNewLocLabel('');
+        setNewLocType('home');
+        setAddingLocation(false);
+      }
+    } catch {
+      alert('Não foi possível obter sua localização. Verifique se o GPS está ativo.');
+    } finally {
+      setSavingLocation(false);
+    }
+  }
+
+  async function handleToggleLocation(loc: SavedLocation) {
+    setTogglingLocId(loc.id);
+    const next = !loc.isActive;
+    try {
+      await fetch(`/api/users/locations/${loc.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: next }),
+      });
+      setSavedLocations((prev) =>
+        prev.map((l) => ({ ...l, isActive: next ? l.id === loc.id : false }))
+      );
+    } catch {
+    } finally {
+      setTogglingLocId(null);
+    }
+  }
+
+  async function handleDeleteLocation(locId: string) {
+    setDeletingLocId(locId);
+    try {
+      await fetch(`/api/users/locations/${locId}`, { method: 'DELETE' });
+      setSavedLocations((prev) => prev.filter((l) => l.id !== locId));
+    } catch {
+    } finally {
+      setDeletingLocId(null);
+    }
+  }
+
+  async function handleCircleChange(friendId: string, circle: 'family' | 'friends') {
+    setUpdatingCircle(friendId);
+    setFriends((prev) =>
+      prev.map((f) => (f.id === friendId ? { ...f, circle } : f))
+    );
+    try {
+      await fetch(`/api/friends/${friendId}/circle`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ circle }),
+      });
+    } catch {
+      // reverte
+      setFriends((prev) =>
+        prev.map((f) =>
+          f.id === friendId
+            ? { ...f, circle: circle === 'family' ? 'friends' : 'family' }
+            : f
+        )
+      );
+    } finally {
+      setUpdatingCircle(null);
+    }
+  }
 
   async function handlePrivacyToggle(key: keyof PrivacySettings) {
     if (!privacy) return;
@@ -600,6 +727,213 @@ export default function ProfilePage() {
 
         {/* Notificações Push */}
         <PushToggle />
+
+        {/* Círculos de Confiança */}
+        <div className="rounded-2xl border border-slate-100 overflow-hidden">
+          <button
+            onClick={() => setCirclesOpen(o => !o)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-white"
+          >
+            <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+              <Heart size={16} className="text-rose-500" />
+              Círculos de Confiança
+              <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold">
+                {friends.filter(f => f.circle === 'family').length} família
+              </span>
+            </div>
+            {circlesOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+          </button>
+
+          {circlesOpen && (
+            <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 space-y-3">
+              <p className="text-xs text-slate-500 leading-relaxed">
+                <strong>Família</strong> vê sua localização exata no mapa.{' '}
+                <strong>Amigos</strong> veem apenas o bairro (~1 km).
+              </p>
+
+              {friends.length === 0 ? (
+                <p className="text-xs text-slate-400 py-2">
+                  Nenhum amigo adicionado ainda.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {friends.map((f) => (
+                    <div key={f.id} className="flex items-center gap-3 bg-white rounded-xl px-3 py-2">
+                      <img
+                        src={f.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(f.name ?? 'U')}&background=e2e8f0&color=475569&size=40`}
+                        alt={f.name ?? 'Amigo'}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-700 truncate">{f.name ?? 'Sem nome'}</p>
+                        {f.profession && (
+                          <p className="text-xs text-slate-400 truncate">{f.profession}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => handleCircleChange(f.id, 'family')}
+                          disabled={updatingCircle === f.id}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                            f.circle === 'family'
+                              ? 'bg-rose-500 text-white'
+                              : 'bg-white border border-slate-200 text-slate-500 hover:border-rose-300'
+                          }`}
+                        >
+                          {updatingCircle === f.id && f.circle !== 'family' ? (
+                            <Loader2 size={10} className="animate-spin" />
+                          ) : '❤️ Família'}
+                        </button>
+                        <button
+                          onClick={() => handleCircleChange(f.id, 'friends')}
+                          disabled={updatingCircle === f.id}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                            f.circle === 'friends'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-white border border-slate-200 text-slate-500 hover:border-blue-300'
+                          }`}
+                        >
+                          {updatingCircle === f.id && f.circle !== 'friends' ? (
+                            <Loader2 size={10} className="animate-spin" />
+                          ) : '👥 Amigo'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Meus Locais */}
+        <div className="rounded-2xl border border-slate-100 overflow-hidden">
+          <button
+            onClick={() => setLocationsOpen(o => !o)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-white"
+          >
+            <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+              <MapPin size={16} className="text-teal-500" />
+              Meus Locais
+              {savedLocations.some((l) => l.isActive) && (
+                <span className="text-[10px] bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded-full font-semibold">
+                  {savedLocations.find((l) => l.isActive)?.label}
+                </span>
+              )}
+            </div>
+            {locationsOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+          </button>
+
+          {locationsOpen && (
+            <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 space-y-3">
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Salve pontos fixos (casa, trabalho, igreja) para usar no mapa sem precisar do GPS a cada vez.
+                O local <strong>ativo</strong> é usado quando você aparece disponível.
+              </p>
+
+              {/* Lista de locais salvos */}
+              {savedLocations.length > 0 && (
+                <div className="space-y-2">
+                  {savedLocations.map((loc) => {
+                    const Icon = loc.type === 'home' ? Home : loc.type === 'work' ? Briefcase : loc.type === 'church' ? Church : MapPin;
+                    const isToggling = togglingLocId === loc.id;
+                    const isDeleting = deletingLocId === loc.id;
+                    return (
+                      <div key={loc.id} className={`flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border ${loc.isActive ? 'border-teal-300' : 'border-transparent'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${loc.isActive ? 'bg-teal-100' : 'bg-slate-100'}`}>
+                          <Icon size={15} className={loc.isActive ? 'text-teal-600' : 'text-slate-400'} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-700 truncate">{loc.label}</p>
+                          <p className="text-xs text-slate-400">
+                            {loc.isActive ? '✅ Ativo no mapa' : `${parseFloat(loc.lat).toFixed(4)}, ${parseFloat(loc.lng).toFixed(4)}`}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => handleToggleLocation(loc)}
+                            disabled={isToggling || isDeleting}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${
+                              loc.isActive
+                                ? 'bg-teal-500 text-white'
+                                : 'bg-white border border-slate-200 text-slate-500 hover:border-teal-300'
+                            }`}
+                          >
+                            {isToggling ? <Loader2 size={10} className="animate-spin" /> : loc.isActive ? 'Ativo' : 'Usar'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLocation(loc.id)}
+                            disabled={isDeleting || isToggling}
+                            className="p-1.5 rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          >
+                            {isDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Formulário para adicionar */}
+              {addingLocation ? (
+                <div className="bg-white rounded-xl border border-slate-200 p-3 space-y-2">
+                  <input
+                    type="text"
+                    value={newLocLabel}
+                    onChange={(e) => setNewLocLabel(e.target.value)}
+                    placeholder="Nome do local (ex: Casa, Igreja)"
+                    maxLength={50}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  />
+                  <div className="grid grid-cols-4 gap-1">
+                    {([
+                      { value: 'home', label: 'Casa', Icon: Home },
+                      { value: 'work', label: 'Trabalho', Icon: Briefcase },
+                      { value: 'church', label: 'Igreja', Icon: Church },
+                      { value: 'other', label: 'Outro', Icon: MapPin },
+                    ] as const).map(({ value, label, Icon }) => (
+                      <button
+                        key={value}
+                        onClick={() => setNewLocType(value)}
+                        className={`flex flex-col items-center gap-0.5 py-2 rounded-lg text-[10px] font-semibold border transition-colors ${
+                          newLocType === value ? 'bg-teal-500 text-white border-teal-500' : 'bg-white text-slate-500 border-slate-200'
+                        }`}
+                      >
+                        <Icon size={14} />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setAddingLocation(false); setNewLocLabel(''); }}
+                      className="flex-1 py-2 border border-slate-200 rounded-lg text-xs text-slate-500 hover:bg-slate-50 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSaveLocation}
+                      disabled={savingLocation || !newLocLabel.trim()}
+                      className="flex-1 py-2 bg-teal-500 text-white rounded-lg text-xs font-semibold hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                    >
+                      {savingLocation ? <Loader2 size={12} className="animate-spin" /> : null}
+                      {savingLocation ? 'Capturando GPS…' : 'Salvar posição atual'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setAddingLocation(true)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-teal-300 text-teal-600 rounded-xl text-xs font-semibold hover:bg-teal-50 transition-colors"
+                >
+                  <Plus size={14} />
+                  Adicionar local
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Alertas de Proximidade */}
         <div className="rounded-2xl border border-slate-100 overflow-hidden">

@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { getNearbyUsers } from "@/lib/db/queries";
+import { getNearbyUsers, getFriendCircles } from "@/lib/db/queries";
 
 function haversine(
   a: { lat: number; lng: number },
@@ -14,6 +14,11 @@ function haversine(
       Math.cos((b.lat * Math.PI) / 180) *
       Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+// Arredonda coordenada para grade de ~1km (2 casas decimais)
+function fuzzyCoord(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 export async function GET(request: Request) {
@@ -35,12 +40,14 @@ export async function GET(request: Request) {
     );
   }
 
+  // Buscar círculos de confiança do usuário atual
+  const circles = await getFriendCircles(session.user.id);
+
   const allUsers = await getNearbyUsers(session.user.id);
 
   const nearby = allUsers
     .filter((u) => {
       if (!u.lat || !u.lng) return false;
-      // Não mostrar usuários offline
       if (u.availabilityStatus === "offline") return false;
       const dist = haversine(
         { lat, lng },
@@ -48,13 +55,23 @@ export async function GET(request: Request) {
       );
       return dist <= radius;
     })
-    .map((u) => ({
-      ...u,
-      distance: haversine(
-        { lat, lng },
-        { lat: parseFloat(u.lat!), lng: parseFloat(u.lng!) }
-      ),
-    }))
+    .map((u) => {
+      const circle = circles[u.id]; // 'family' | 'friends' | undefined
+      const exactLat = parseFloat(u.lat!);
+      const exactLng = parseFloat(u.lng!);
+
+      // Família → localização exata. Todos os outros → bairro (~1km)
+      const displayLat = circle === "family" ? exactLat : fuzzyCoord(exactLat);
+      const displayLng = circle === "family" ? exactLng : fuzzyCoord(exactLng);
+
+      return {
+        ...u,
+        lat: String(displayLat),
+        lng: String(displayLng),
+        locationPrecision: circle === "family" ? "exact" : "neighborhood",
+        distance: haversine({ lat, lng }, { lat: exactLat, lng: exactLng }),
+      };
+    })
     .sort((a, b) => a.distance - b.distance);
 
   return Response.json(nearby);

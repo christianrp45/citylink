@@ -45,6 +45,7 @@ import {
   event,
   eventAttendee,
   friendship,
+  inviteCode,
   message,
   prayerGroup,
   prayerGroupMember,
@@ -61,6 +62,8 @@ import {
   testimonialLike,
   type User,
   user,
+  userLocation,
+  type UserLocation,
   userPrivacySettings,
   userProximityConfig,
   userVisibilityConfig,
@@ -777,6 +780,7 @@ export async function getFriends(userId: string) {
         lat: user.lat,
         lng: user.lng,
         status: friendship.status,
+        circle: friendship.circle,
       })
       .from(friendship)
       .innerJoin(user, eq(user.id, friendship.friendId))
@@ -786,6 +790,26 @@ export async function getFriends(userId: string) {
   } catch (_error) {
     throw new ChatbotError("bad_request:database", "Failed to get friends");
   }
+}
+
+// Retorna mapa friendId → circle para uso no /api/users/nearby
+export async function getFriendCircles(userId: string): Promise<Record<string, "family" | "friends">> {
+  const rows = await db
+    .select({ friendId: friendship.friendId, circle: friendship.circle })
+    .from(friendship)
+    .where(and(eq(friendship.userId, userId), eq(friendship.status, "accepted")));
+  return Object.fromEntries(rows.map((r) => [r.friendId, (r.circle ?? "friends") as "family" | "friends"]));
+}
+
+export async function updateFriendCircle(
+  userId: string,
+  friendId: string,
+  circle: "family" | "friends"
+) {
+  await db
+    .update(friendship)
+    .set({ circle })
+    .where(and(eq(friendship.userId, userId), eq(friendship.friendId, friendId)));
 }
 
 export async function getFriendshipStatus(userId: string, otherUserId: string) {
@@ -1257,6 +1281,11 @@ export async function getAllPushSubscriptionsForUsers(userIds: string[]) {
 
 export async function getChurches() {
   return db.select().from(church).orderBy(asc(church.name));
+}
+
+export async function getChurchById(id: string) {
+  const [row] = await db.select().from(church).where(eq(church.id, id));
+  return row ?? null;
 }
 
 export async function createChurch(data: {
@@ -2254,4 +2283,221 @@ export async function getAcceptedFriendIds(userId: string) {
       and(eq(friendship.userId, userId), eq(friendship.status, "accepted"))
     );
   return rows.map((r) => r.friendId);
+}
+
+// ============================================================
+// INVITE CODES — Sistema de Vínculo com Código de Convite
+// ============================================================
+
+function randomInviteCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 7 }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
+}
+
+export async function generateInviteCode({
+  type,
+  targetId,
+  createdBy,
+  role = "member",
+  maxUses,
+  expiresInDays = 7,
+}: {
+  type: "church" | "cell" | "community";
+  targetId: string;
+  createdBy: string;
+  role?: string;
+  maxUses?: number;
+  expiresInDays?: number | null;
+}) {
+  const code = randomInviteCode();
+  const expiresAt =
+    expiresInDays != null
+      ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+      : null;
+
+  const [row] = await db
+    .insert(inviteCode)
+    .values({
+      code,
+      type,
+      targetId,
+      createdBy,
+      role: role as "member" | "leader" | "co-leader" | "visitor" | "admin" | "moderator",
+      maxUses: maxUses ?? null,
+      expiresAt: expiresAt ?? undefined,
+    })
+    .returning();
+  return row;
+}
+
+export async function getInviteCode(code: string) {
+  const [row] = await db
+    .select()
+    .from(inviteCode)
+    .where(eq(inviteCode.code, code.toUpperCase()));
+  return row ?? null;
+}
+
+export async function useInviteCode(code: string, userId: string) {
+  const invite = await getInviteCode(code);
+  if (!invite) return { error: "Código não encontrado" } as const;
+
+  const now = new Date();
+  if (invite.expiresAt && invite.expiresAt < now) {
+    return { error: "Código expirado" } as const;
+  }
+  if (invite.maxUses != null && invite.usedCount >= invite.maxUses) {
+    return { error: "Código já atingiu o limite de usos" } as const;
+  }
+
+  // Aplicar vínculo conforme o tipo
+  if (invite.type === "cell") {
+    await db
+      .insert(cellMember)
+      .values({
+        cellId: invite.targetId,
+        userId,
+        role: (invite.role as "member" | "leader" | "co-leader" | "visitor") ?? "member",
+      })
+      .onConflictDoNothing();
+  } else if (invite.type === "community") {
+    await db
+      .insert(communityMember)
+      .values({
+        communityId: invite.targetId,
+        userId,
+        role: (invite.role as "owner" | "admin" | "moderator" | "member") ?? "member",
+        approvedAt: new Date(),
+      })
+      .onConflictDoNothing();
+  } else if (invite.type === "church") {
+    await db
+      .update(user)
+      .set({ primaryChurchId: invite.targetId })
+      .where(eq(user.id, userId));
+  }
+
+  // Incrementar usedCount
+  await db
+    .update(inviteCode)
+    .set({ usedCount: invite.usedCount + 1 })
+    .where(eq(inviteCode.id, invite.id));
+
+  return { success: true, type: invite.type, targetId: invite.targetId } as const;
+}
+
+export async function revokeInviteCode(code: string, requesterId: string) {
+  const invite = await getInviteCode(code);
+  if (!invite) return false;
+  if (invite.createdBy !== requesterId) return false;
+
+  await db.delete(inviteCode).where(eq(inviteCode.id, invite.id));
+  return true;
+}
+
+export async function getInvitesByTarget(
+  type: "church" | "cell" | "community",
+  targetId: string
+) {
+  return db
+    .select()
+    .from(inviteCode)
+    .where(
+      and(eq(inviteCode.type, type), eq(inviteCode.targetId, targetId))
+    )
+    .orderBy(desc(inviteCode.createdAt));
+}
+
+// ─── UserLocation queries ──────────────────────────────────────────────────────
+
+export async function getUserLocations(userId: string): Promise<UserLocation[]> {
+  return db
+    .select()
+    .from(userLocation)
+    .where(eq(userLocation.userId, userId))
+    .orderBy(desc(userLocation.createdAt));
+}
+
+export async function addUserLocation(
+  userId: string,
+  data: {
+    label: string;
+    type: "home" | "work" | "church" | "other";
+    lat: string;
+    lng: string;
+    setActive?: boolean;
+  }
+): Promise<UserLocation> {
+  if (data.setActive) {
+    // Desativar todos os anteriores
+    await db
+      .update(userLocation)
+      .set({ isActive: false })
+      .where(eq(userLocation.userId, userId));
+  }
+
+  const [created] = await db
+    .insert(userLocation)
+    .values({
+      userId,
+      label: data.label,
+      type: data.type,
+      lat: data.lat,
+      lng: data.lng,
+      isActive: data.setActive ?? false,
+    })
+    .returning();
+
+  return created;
+}
+
+export async function setActiveUserLocation(
+  userId: string,
+  locationId: string
+): Promise<boolean> {
+  // Desativar todos
+  await db
+    .update(userLocation)
+    .set({ isActive: false })
+    .where(eq(userLocation.userId, userId));
+
+  // Ativar o escolhido
+  const result = await db
+    .update(userLocation)
+    .set({ isActive: true })
+    .where(and(eq(userLocation.id, locationId), eq(userLocation.userId, userId)))
+    .returning();
+
+  return result.length > 0;
+}
+
+export async function deactivateAllUserLocations(userId: string) {
+  await db
+    .update(userLocation)
+    .set({ isActive: false })
+    .where(eq(userLocation.userId, userId));
+}
+
+export async function deleteUserLocation(
+  userId: string,
+  locationId: string
+): Promise<boolean> {
+  const result = await db
+    .delete(userLocation)
+    .where(and(eq(userLocation.id, locationId), eq(userLocation.userId, userId)))
+    .returning();
+  return result.length > 0;
+}
+
+export async function getActiveUserLocation(
+  userId: string
+): Promise<UserLocation | null> {
+  const [loc] = await db
+    .select()
+    .from(userLocation)
+    .where(and(eq(userLocation.userId, userId), eq(userLocation.isActive, true)))
+    .limit(1);
+  return loc ?? null;
 }

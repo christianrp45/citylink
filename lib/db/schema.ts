@@ -29,6 +29,7 @@ export const user = pgTable("User", {
   }).notNull().default("individual"),
   lat: varchar("lat", { length: 20 }),
   lng: varchar("lng", { length: 20 }),
+  primaryChurchId: uuid("primaryChurchId"),
   updatedAt: timestamp("updatedAt").defaultNow(),
 });
 
@@ -202,6 +203,12 @@ export const friendship = pgTable(
     })
       .notNull()
       .default("pending"),
+    // Círculo de Confiança: 'family' vê localização exata, 'friends' vê apenas bairro
+    circle: varchar("circle", {
+      enum: ["family", "friends"],
+    })
+      .notNull()
+      .default("friends"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (table) => ({
@@ -887,3 +894,48 @@ export const readingPlanProgress = pgTable("ReadingPlanProgress", {
 });
 
 export type ReadingPlanProgress = InferSelectModel<typeof readingPlanProgress>;
+
+// ============================================================
+// CITYLINK — SISTEMA DE VÍNCULOS: CONVITES
+// ============================================================
+
+export const inviteCode = pgTable("InviteCode", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  code: varchar("code", { length: 10 }).notNull().unique(),
+  // 'church' | 'cell' | 'community'
+  type: varchar("type", {
+    enum: ["church", "cell", "community"],
+  }).notNull(),
+  targetId: uuid("targetId").notNull(),
+  createdBy: uuid("createdBy")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  // role que o convidado receberá ao entrar
+  role: varchar("role", {
+    enum: ["member", "leader", "co-leader", "visitor", "admin", "moderator"],
+  }).notNull().default("member"),
+  maxUses: integer("maxUses"),          // null = ilimitado
+  usedCount: integer("usedCount").notNull().default(0),
+  expiresAt: timestamp("expiresAt"),    // null = não expira
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type InviteCode = InferSelectModel<typeof inviteCode>;
+
+// ─── UserLocation ──────────────────────────────────────────────────────────────
+export const userLocation = pgTable("UserLocation", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  label: varchar("label", { length: 50 }).notNull(),
+  type: varchar("type", {
+    enum: ["home", "work", "church", "other"],
+  }).notNull().default("other"),
+  lat: varchar("lat", { length: 20 }).notNull(),
+  lng: varchar("lng", { length: 20 }).notNull(),
+  isActive: boolean("isActive").notNull().default(false),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type UserLocation = InferSelectModel<typeof userLocation>;
