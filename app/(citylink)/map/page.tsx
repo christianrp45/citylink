@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock } from 'lucide-react';
+import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar } from 'lucide-react';
+import Link from 'next/link';
 import VisitRequestModal from '@/components/visit-request-modal';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
@@ -61,21 +62,29 @@ type HospitalityWindow = {
   hostLng: string | null;
 };
 
-const MOCK_ALERTS = [
-  {
-    id: 'a1',
-    userName: 'Carlos Mendes',
-    userAvatar: 'https://i.pravatar.cc/150?img=3',
-    type: 'urgency' as const,
-    description: 'Idosa vizinha passou mal, precisa de ajuda para ir ao hospital.',
-    location: { lat: -25.4300, lng: -49.2750, address: 'Bairro Batel, Curitiba' },
-  },
-];
+type CommunityAlert = {
+  id: string;
+  userId: string;
+  userName: string | null;
+  userAvatar: string | null;
+  type: 'urgency' | 'prayer' | 'practical_help';
+  description: string;
+  lat: string | null;
+  lng: string | null;
+  status: string;
+  createdAt: string;
+};
 
 const ALERT_LABEL: Record<string, string> = {
   urgency: 'Urgência',
   prayer: 'Oração',
   practical_help: 'Ajuda Prática',
+};
+
+const ALERT_COLOR: Record<string, string> = {
+  urgency: '#ef4444',
+  prayer: '#8b5cf6',
+  practical_help: '#f59e0b',
 };
 
 export default function MapPage() {
@@ -85,7 +94,11 @@ export default function MapPage() {
   const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedUser, setSelectedUser] = useState<ReturnType<typeof toModalUser> | null>(null);
-  const [selectedAlert, setSelectedAlert] = useState<typeof MOCK_ALERTS[0] | null>(null);
+  const [alerts, setAlerts] = useState<CommunityAlert[]>([]);
+  const [selectedAlert, setSelectedAlert] = useState<CommunityAlert | null>(null);
+  const [showCreateAlert, setShowCreateAlert] = useState(false);
+  const [alertForm, setAlertForm] = useState({ type: 'urgency' as CommunityAlert['type'], description: '' });
+  const [savingAlert, setSavingAlert] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [leaflet, setLeaflet] = useState<any>(null);
   const [available, setAvailable] = useState(false);
@@ -249,6 +262,16 @@ export default function MapPage() {
     loadMyWindow();
     const windowInterval = setInterval(loadWindows, 60_000);
 
+    // Buscar alertas comunitários
+    function loadAlerts() {
+      fetch('/api/alerts')
+        .then((r) => r.ok ? r.json() : [])
+        .then((list: CommunityAlert[]) => setAlerts(Array.isArray(list) ? list : []))
+        .catch(() => {});
+    }
+    loadAlerts();
+    const alertInterval = setInterval(loadAlerts, 60_000);
+
     // Poll visitas aceitas a cada 30s para mostrar banner
 
     function checkAccepted() {
@@ -268,6 +291,7 @@ export default function MapPage() {
     return () => {
       clearInterval(interval);
       clearInterval(windowInterval);
+      clearInterval(alertInterval);
     };
   }, [onLocationObtained]);
 
@@ -306,6 +330,34 @@ export default function MapPage() {
     setHospitalityWindows((prev) => prev.filter((w) => w.id !== myWindow.id));
   }
 
+  async function handleCreateAlert() {
+    if (!alertForm.description.trim()) return;
+    setSavingAlert(true);
+    try {
+      const body: Record<string, unknown> = {
+        type: alertForm.type,
+        description: alertForm.description,
+      };
+      if (userLoc) {
+        body.lat = String(userLoc.lat);
+        body.lng = String(userLoc.lng);
+      }
+      const res = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const created: CommunityAlert = await res.json();
+        setAlerts((prev) => [created, ...prev]);
+        setAlertForm({ type: 'urgency', description: '' });
+        setShowCreateAlert(false);
+      }
+    } finally {
+      setSavingAlert(false);
+    }
+  }
+
   function hospitalityIcon(w: HospitalityWindow) {
     if (!leaflet) return undefined;
     const avatarSrc =
@@ -341,11 +393,13 @@ export default function MapPage() {
     });
   }
 
-  function alertIcon() {
+  function alertIcon(type: CommunityAlert['type'] = 'urgency') {
     if (!leaflet) return undefined;
+    const color = ALERT_COLOR[type] ?? '#f59e0b';
+    const label = type === 'urgency' ? 'SOS' : type === 'prayer' ? '🙏' : '🤝';
     return leaflet.divIcon({
       className: '',
-      html: '<div style="width:36px;height:36px;background:#f59e0b;border-radius:50%;border:3px solid white;box-shadow:0 0 0 3px rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:white">SOS</div>',
+      html: `<div style="width:36px;height:36px;background:${color};border-radius:50%;border:3px solid white;box-shadow:0 0 0 3px ${color}66;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:white">${label}</div>`,
       iconSize: [36, 36],
       iconAnchor: [18, 18],
     });
@@ -407,11 +461,11 @@ export default function MapPage() {
                   />
                 ))}
             {leaflet &&
-              MOCK_ALERTS.map((a) => (
+              alerts.filter((a) => a.lat && a.lng).map((a) => (
                 <Marker
                   key={a.id}
-                  position={[a.location.lat, a.location.lng]}
-                  icon={alertIcon()}
+                  position={[parseFloat(a.lat!), parseFloat(a.lng!)]}
+                  icon={alertIcon(a.type)}
                   eventHandlers={{ click: () => setSelectedAlert(a) }}
                 />
               ))}
@@ -522,17 +576,34 @@ export default function MapPage() {
           )
         )}
 
-        {MOCK_ALERTS.length > 0 && (
+        {/* Botões: Pedir Ajuda + Eventos + Alertas */}
+        <div className="flex gap-2 mb-3">
           <button
-            onClick={() => setSelectedAlert(MOCK_ALERTS[0])}
-            className="w-full flex items-center gap-2 mb-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"
+            onClick={() => setShowCreateAlert(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
           >
-            <AlertTriangle size={14} className="text-amber-500 flex-shrink-0" />
-            <p className="text-xs font-semibold text-amber-700">
-              {MOCK_ALERTS.length} alerta próximo
-            </p>
+            <Plus size={13} />
+            Pedir Ajuda
           </button>
-        )}
+          <Link
+            href="/events"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
+          >
+            <Calendar size={13} />
+            Eventos
+          </Link>
+          {alerts.length > 0 && (
+            <button
+              onClick={() => setSelectedAlert(alerts[0])}
+              className="flex-1 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"
+            >
+              <AlertTriangle size={13} className="text-amber-500 flex-shrink-0" />
+              <p className="text-xs font-semibold text-amber-700">
+                {alerts.length} {alerts.length === 1 ? 'alerta' : 'alertas'}
+              </p>
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center gap-2 mb-2">
           <Users size={14} className="text-indigo-600" />
@@ -624,13 +695,15 @@ export default function MapPage() {
             </div>
             <div className="flex items-center gap-3 mb-3">
               <img
-                src={selectedAlert.userAvatar}
-                alt={selectedAlert.userName}
+                src={selectedAlert.userAvatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedAlert.userName ?? 'U')}&background=ef4444&color=fff`}
+                alt={selectedAlert.userName ?? 'Usuário'}
                 className="w-12 h-12 rounded-full object-cover border-2 border-amber-300"
               />
               <div>
-                <p className="font-bold text-slate-800">{selectedAlert.userName}</p>
-                <p className="text-xs text-slate-400">{selectedAlert.location.address}</p>
+                <p className="font-bold text-slate-800">{selectedAlert.userName ?? 'Usuário'}</p>
+                <p className="text-xs text-slate-400">
+                  {new Date(selectedAlert.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
             </div>
             <p className="text-sm text-slate-600 leading-relaxed mb-5">
@@ -736,6 +809,61 @@ export default function MapPage() {
             >
               {savingWindow ? <Loader2 size={16} className="animate-spin" /> : <Home size={16} />}
               Abrir Janela
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom sheet: criar alerta comunitário */}
+      {showCreateAlert && (
+        <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => setShowCreateAlert(false)}>
+          <div className="w-full bg-white rounded-t-3xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <AlertTriangle size={18} className="text-red-500" /> Pedir Ajuda
+              </h3>
+              <button onClick={() => setShowCreateAlert(false)} className="text-slate-400"><X size={20} /></button>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">Avise a comunidade que você precisa de ajuda agora.</p>
+
+            {/* Tipo */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {([
+                { value: 'urgency',       label: 'Urgência',   emoji: '🚨' },
+                { value: 'prayer',        label: 'Oração',     emoji: '🙏' },
+                { value: 'practical_help',label: 'Ajuda',      emoji: '🤝' },
+              ] as const).map(({ value, label, emoji }) => (
+                <button
+                  key={value}
+                  onClick={() => setAlertForm((f) => ({ ...f, type: value }))}
+                  className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-semibold transition-colors ${
+                    alertForm.type === value
+                      ? 'bg-red-500 text-white border-red-500'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-red-300'
+                  }`}
+                >
+                  <span className="text-base">{emoji}</span>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Descrição */}
+            <textarea
+              value={alertForm.description}
+              onChange={(e) => setAlertForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Descreva brevemente o que aconteceu ou o que precisa..."
+              rows={3}
+              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm mb-4 outline-none focus:ring-2 focus:ring-red-300 resize-none"
+            />
+
+            <button
+              onClick={handleCreateAlert}
+              disabled={savingAlert || !alertForm.description.trim()}
+              className="w-full py-3 bg-red-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-red-600 disabled:opacity-50"
+            >
+              {savingAlert ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
+              Enviar Alerta
             </button>
           </div>
         </div>
