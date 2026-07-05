@@ -939,3 +939,19 @@ export const userLocation = pgTable("UserLocation", {
 });
 
 export type UserLocation = InferSelectModel<typeof userLocation>;
+
+// ─── BusinessRecommendation ────────────────────────────────────────────────────
+export const businessRecommendation = pgTable("BusinessRecommendation", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  communityId: uuid("communityId")
+    .notNull()
+    .references(() => community.id, { onDelete: "cascade" }),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  comment: text("comment"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type BusinessRecommendation = InferSelectModel<typeof businessRecommendation>;
+

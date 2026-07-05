@@ -176,6 +176,13 @@
       "when": 1783920000000,
       "tag": "0024_user_locations",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1783930000000,
+      "tag": "0025_business_recommendations",
+      "breakpoints": true
     }
   ]
 }

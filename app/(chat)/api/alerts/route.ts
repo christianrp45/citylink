@@ -1,6 +1,28 @@
 import { auth } from '@/app/(auth)/auth';
-import { createAlert, getAlerts } from '@/lib/db/queries';
+import {
+  createAlert,
+  getAlerts,
+  getAcceptedFriendIds,
+  getAllPushSubscriptionsForUsers,
+  deletePushSubscription,
+} from '@/lib/db/queries';
+import { sendPush } from '@/lib/push';
 import { NextRequest } from 'next/server';
+
+const ALERT_PUSH: Record<string, { title: string; body: (desc: string, name: string) => string }> = {
+  urgency: {
+    title: '🚨 Pedido de ajuda urgente',
+    body: (desc, name) => `${name}: ${desc.slice(0, 80)}`,
+  },
+  prayer: {
+    title: '🙏 Pedido de oração',
+    body: (desc, name) => `${name} pede oração: ${desc.slice(0, 70)}`,
+  },
+  practical_help: {
+    title: '🤝 Pedido de ajuda prática',
+    body: (desc, name) => `${name}: ${desc.slice(0, 80)}`,
+  },
+};
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -45,6 +67,26 @@ export async function POST(req: NextRequest) {
     lat,
     lng,
   });
+
+  // Notificar amigos aceitos (fire-and-forget)
+  const senderName = session.user.name ?? session.user.email?.split('@')[0] ?? 'Alguém';
+  const pushCfg = ALERT_PUSH[type];
+  if (pushCfg) {
+    const friendIds = await getAcceptedFriendIds(session.user.id);
+    if (friendIds.length > 0) {
+      const subs = await getAllPushSubscriptionsForUsers(friendIds);
+      await Promise.all(
+        subs.map(async (sub) => {
+          const ok = await sendPush(sub, {
+            title: pushCfg.title,
+            body: pushCfg.body(description, senderName),
+            url: '/map',
+          });
+          if (!ok) await deletePushSubscription(sub.endpoint);
+        })
+      );
+    }
+  }
 
   return Response.json(created, { status: 201 });
 }
