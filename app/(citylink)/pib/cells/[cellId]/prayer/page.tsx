@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 import type { PrayerRequestDetail } from '@/lib/types';
 
 export default function PrayerPage() {
@@ -188,7 +187,6 @@ export default function PrayerPage() {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

@@ -10,7 +10,6 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 
 type EventType = 'social' | 'religious' | 'volunteer' | 'business';
 
@@ -334,7 +333,6 @@ export default function EventsPage() {
         />
       )}
 
-      <BottomNav />
     </div>
   );
 }

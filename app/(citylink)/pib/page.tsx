@@ -6,7 +6,6 @@ import { Loader2, Plus, Send, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -1302,7 +1301,6 @@ export default function ComunidadePage() {
         {activeTab === 'pastoral'      && <PastoralTab />}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

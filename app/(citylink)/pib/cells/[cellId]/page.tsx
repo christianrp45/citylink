@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
@@ -295,7 +294,6 @@ export default function CellDetailPage() {
         </div>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

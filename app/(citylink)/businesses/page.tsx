@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useStore } from '@/lib/store';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 import { mockBusinesses, mockUsers } from '@/lib/mockData';
 
 export default function BusinessPage() {
@@ -182,7 +181,6 @@ export default function BusinessPage() {
         </div>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

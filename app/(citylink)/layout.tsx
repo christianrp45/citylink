@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 import { CityLinkHeader } from '@/components/citylink-header';
+import { BottomNav } from '@/components/citylink-bottom-nav';
 import { auth } from '@/app/(auth)/auth';
 import { getUserPrivacySettings } from '@/lib/db/queries';
 
@@ -25,6 +26,7 @@ export default async function CityLinkLayout({ children }: { children: React.Rea
           {children}
         </Suspense>
       </main>
+      <BottomNav />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, Send, ArrowLeft, Loader2, MessageCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -306,7 +305,6 @@ export default function ChatPage() {
             fetchConversations(); // atualiza badges ao voltar
           }}
         />
-        <BottomNav />
       </>
     );
   }
@@ -402,7 +400,6 @@ export default function ChatPage() {
         })}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

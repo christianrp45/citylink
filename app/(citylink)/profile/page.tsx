@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 type AvailabilityStatus = 'mesa-posta' | 'requer-aviso' | 'offline';
@@ -1153,7 +1152,6 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

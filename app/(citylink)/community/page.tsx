@@ -12,7 +12,6 @@ import {
   UserPlus,
   X,
 } from 'lucide-react';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 import VisitRequestModal from '@/components/visit-request-modal';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -537,7 +536,6 @@ export default function CommunityPage() {
         <AlertModal alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
       )}
 
-      <BottomNav />
     </div>
   );
 }

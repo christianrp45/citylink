@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 import type { CellGuideDetail, StudyPoint, YoutubeLink } from '@/lib/types';
 
 // Mapeia nome do livro → abreviação usada no leitor bíblico
@@ -401,7 +400,6 @@ export default function GuidePage() {
             </button>
           )}
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -601,7 +599,6 @@ export default function GuidePage() {
           </button>
         </div>
       </div>
-      <BottomNav />
     </div>
   );
 }

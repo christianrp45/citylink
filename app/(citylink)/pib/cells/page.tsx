@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 import type { CellSummary, CellTargetAudience } from '@/lib/types';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -141,7 +140,6 @@ export default function CellsDirectoryPage() {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

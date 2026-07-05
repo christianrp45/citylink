@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock } from 'lucide-react';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 import VisitRequestModal from '@/components/visit-request-modal';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
@@ -742,7 +741,6 @@ export default function MapPage() {
         </div>
       )}
 
-      <BottomNav />
     </div>
   );
 }

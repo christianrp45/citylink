@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { BottomNav } from '@/components/citylink-bottom-nav';
 
 export default function NewMeetingPage() {
   const { cellId } = useParams<{ cellId: string }>();
@@ -91,7 +90,6 @@ export default function NewMeetingPage() {
         </div>
       </div>
 
-      <BottomNav />
     </div>
   );
 }
