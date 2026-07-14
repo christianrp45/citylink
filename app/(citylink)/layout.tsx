@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
-import { EmetisHeader } from '@/components/citylink-header';
-import { BottomNav } from '@/components/citylink-bottom-nav';
+import { EmetisHeader } from '@/components/emetis-header';
+import { BottomNav } from '@/components/emetis-bottom-nav';
 import { auth } from '@/app/(auth)/auth';
 import { getUserPrivacySettings } from '@/lib/db/queries';
 

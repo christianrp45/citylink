@@ -56,7 +56,7 @@ export type Attachment = {
   contentType: string;
 };
 
-// ============ CityLink 2.0 - Community Mutual Aid Types ============
+// ============ Emetis 2.0 - Community Mutual Aid Types ============
 
 export type LatLng = {
   lat: number;
