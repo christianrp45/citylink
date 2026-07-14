@@ -28,14 +28,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user?.id) {
     return Response.json({ error: "Não autorizado" }, { status: 401 });
+  }
+  if (session.user.type === "guest") {
+    return Response.json({ error: "Faça login para criar um grupo" }, { status: 403 });
   }
 
   const body = await request.json();
   const { name, description, communityId, neighborhood, address, meetingDay, meetingTime, targetAudience, maxMembers } = body;
 
-  if (!name) {
+  if (!name?.trim()) {
     return Response.json({ error: "Nome do grupo é obrigatório" }, { status: 400 });
   }
 

@@ -147,16 +147,16 @@ function CelulasTab() {
         </div>
       </div>
 
-      {/* Roteiro Manual */}
+      {/* Roteiro Manual (anotações locais) */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-slate-800">📋 Roteiro da Célula</h3>
-          {roteiro && (
-            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Salvo</span>
-          )}
+          <h3 className="font-bold text-slate-800">📋 Anotações Rápidas</h3>
+          {roteiro ? (
+            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">💾 Local</span>
+          ) : null}
         </div>
         <p className="text-sm text-slate-500">
-          Insira manualmente o roteiro da sua reunião de célula.
+          Bloco de notas local para preparar sua reunião. Salvo apenas neste dispositivo — para roteiros completos com IA, use suas células acima.
         </p>
         {roteiro ? (
           <div className="space-y-2">
@@ -224,12 +224,12 @@ function CelulasTab() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
-        <h3 className="font-bold text-slate-800">Guia de Estudo IA</h3>
+        <h3 className="font-bold text-slate-800">Guia de Estudo IA ✨</h3>
         <p className="text-sm text-slate-500">
-          Gere roteiros personalizados para sua célula com inteligência artificial.
+          Gere roteiros completos no padrão PIB com IA. Acesse sua célula, agende uma reunião e clique em "Roteiro" para começar.
         </p>
-        <Link href="/pib/cells/guide" className="block w-full py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-xl text-center hover:bg-amber-600 transition-colors">
-          Gerar Roteiro ✨
+        <Link href="/pib/cells" className="block w-full py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-xl text-center hover:bg-amber-600 transition-colors">
+          Acessar Minhas Células →
         </Link>
       </div>
 

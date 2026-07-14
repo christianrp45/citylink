@@ -28,5 +28,8 @@ export async function GET(
     getCellMemberCount(cellId),
   ]);
 
-  return Response.json({ ...cellData, members, meetings, memberCount });
+  const leaderMember = members.find((m) => m.role === "leader");
+  const leaderName = leaderMember?.userEmail ?? "";
+
+  return Response.json({ ...cellData, members, meetings, memberCount, leaderName });
 }

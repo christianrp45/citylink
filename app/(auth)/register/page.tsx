@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { EmetisIcon } from "@/components/emetis-icon";
 import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
 import { type RegisterActionState, register } from "../actions";
@@ -13,6 +14,7 @@ export default function Page() {
   const router = useRouter();
   const [isSuccessful, setIsSuccessful] = useState(false);
   const [accountType, setAccountType] = useState<"individual" | "institution">("individual");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [state, formAction] = useActionState<RegisterActionState, FormData>(
     register,
@@ -125,15 +127,26 @@ export default function Page() {
             <label htmlFor="password" className="text-sm font-medium text-slate-700">
               Senha <span className="text-red-500">*</span>
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={6}
-              placeholder="Mínimo 6 caracteres"
-              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={6}
+                placeholder="Mínimo 6 caracteres"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-11 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                tabIndex={-1}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           {/* Profissão (só para pessoa) */}

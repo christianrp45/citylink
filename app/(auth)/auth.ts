@@ -2,8 +2,10 @@ import { compare } from "bcrypt-ts";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { DUMMY_PASSWORD } from "@/lib/constants";
-import { createGuestUser, getUser } from "@/lib/db/queries";
+import { createGuestUser, createUser, getUser } from "@/lib/db/queries";
+import { generateUUID } from "@/lib/utils";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular";
@@ -38,6 +40,15 @@ export const {
 } = NextAuth({
   ...authConfig,
   providers: [
+    // Google OAuth — set AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET in your env to enable
+    ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
+      ? [
+          Google({
+            clientId: process.env.AUTH_GOOGLE_ID,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET,
+          }),
+        ]
+      : []),
     Credentials({
       credentials: {},
       async authorize({ email, password }: any) {
@@ -74,12 +85,28 @@ export const {
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.type = user.type;
+    async signIn({ user, account }) {
+      // For Google OAuth: create a DB user on first sign-in
+      if (account?.provider === "google" && user.email) {
+        const existing = await getUser(user.email);
+        if (existing.length === 0) {
+          await createUser(user.email, generateUUID(), user.name ?? undefined);
+        }
       }
-
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      if (user) {
+        if (account?.provider === "google" && user.email) {
+          // Map Google identity to our DB user
+          const [dbUser] = await getUser(user.email);
+          token.id = dbUser?.id ?? (user.id as string);
+          token.type = "regular";
+        } else {
+          token.id = user.id as string;
+          token.type = user.type;
+        }
+      }
       return token;
     },
     session({ session, token }) {
