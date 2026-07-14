@@ -1,21 +1,25 @@
 // GET /api/bible/chapter?book=jo&chapter=3
-// Fonte primária: JSDelivr CDN (thiagobodruk/biblia, NVI)
+// Fonte: JSDelivr CDN (thiagobodruk/biblia, NVI) — arquivo único nvi.json
 // Fallback: raw.githubusercontent.com
 
 import { NextRequest } from "next/server";
 
-// JSDelivr CDN — muito mais rápido e confiável que raw.githubusercontent.com em produção
-const CDN_URL = "https://cdn.jsdelivr.net/gh/thiagobodruk/biblia/json/nvi";
-const FALLBACK_URL = "https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/nvi";
+const CDN_URL = "https://cdn.jsdelivr.net/gh/thiagobodruk/biblia/json/nvi.json";
+const FALLBACK_URL = "https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/nvi.json";
 
-async function fetchBook(book: string): Promise<{ abbrev: string; book: string; chapters: string[][] } | null> {
-  const encoded = encodeURIComponent(book);
+type BibleBook = { abbrev: string; name: string; chapters: string[][] };
 
+// Mapeamento de abreviações usadas no app → abreviações do JSON
+const ABBREV_MAP: Record<string, string> = {
+  at: "atos", // Atos dos Apóstolos
+};
+
+async function fetchBible(): Promise<BibleBook[] | null> {
   // Tenta CDN primeiro
   try {
-    const res = await fetch(`${CDN_URL}/${encoded}.json`, {
+    const res = await fetch(CDN_URL, {
       next: { revalidate: 86_400 },
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(15_000),
     });
     if (res.ok) return res.json();
   } catch {
@@ -24,9 +28,9 @@ async function fetchBook(book: string): Promise<{ abbrev: string; book: string; 
 
   // Fallback: GitHub raw
   try {
-    const res = await fetch(`${FALLBACK_URL}/${encoded}.json`, {
+    const res = await fetch(FALLBACK_URL, {
       next: { revalidate: 86_400 },
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(20_000),
     });
     if (res.ok) return res.json();
   } catch {
@@ -38,10 +42,10 @@ async function fetchBook(book: string): Promise<{ abbrev: string; book: string; 
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
-  const book = searchParams.get("book")?.toLowerCase();
+  const bookParam = searchParams.get("book")?.toLowerCase();
   const chapterStr = searchParams.get("chapter");
 
-  if (!book || !chapterStr) {
+  if (!bookParam || !chapterStr) {
     return Response.json({ error: "book e chapter são obrigatórios" }, { status: 400 });
   }
 
@@ -50,8 +54,15 @@ export async function GET(req: NextRequest) {
     return Response.json({ error: "chapter inválido" }, { status: 400 });
   }
 
-  const data = await fetchBook(book);
+  // Normaliza abreviação (ex: "at" → "atos")
+  const bookAbbrev = ABBREV_MAP[bookParam] ?? bookParam;
 
+  const bible = await fetchBible();
+  if (!bible) {
+    return Response.json({ error: "Bíblia indisponível no momento" }, { status: 503 });
+  }
+
+  const data = bible.find((b) => b.abbrev === bookAbbrev);
   if (!data) {
     return Response.json({ error: "Livro não encontrado. Verifique a abreviação." }, { status: 404 });
   }
@@ -64,7 +75,7 @@ export async function GET(req: NextRequest) {
   return Response.json(
     {
       book: data.abbrev,
-      bookName: data.book,
+      bookName: data.name,
       chapter,
       totalChapters: data.chapters.length,
       verses: chapterVerses.map((text, i) => ({ verse: i + 1, text })),
