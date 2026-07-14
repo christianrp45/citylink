@@ -10,6 +10,11 @@ export default async function EmetisLayout({ children }: { children: React.React
   await connection();
   const session = await auth();
 
+  // Exige autenticação para acessar qualquer página do app
+  if (!session?.user || session.user.type === 'guest') {
+    redirect('/login');
+  }
+
   // Apenas usuários regulares precisam passar pelo onboarding
   if (session?.user?.type === 'regular') {
     const privacy = await getUserPrivacySettings(session.user.id);
