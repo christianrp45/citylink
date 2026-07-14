@@ -150,9 +150,9 @@
 
 ### Prioridade MÉDIA
 
-- [ ] **Push notifications** — notificações reais quando receber visita/alerta (`api/push/subscribe` e hook `use-push-notifications` existem; falta implementar `web-push` no servidor com VAPID keys e envio real)
+- [x] **Push notifications** — `lib/push.ts` com web-push + VAPID keys no Vercel; envio real em visitas, proximidade, hospitalidade e mensagens
 - [ ] **Irmão Indica Irmão** — exibir recomendadores no card de empresa na página de Negócios
-- [ ] **Modo noturno + tamanho de fonte** no leitor bíblico
+- [x] **Modo noturno + tamanho de fonte** no leitor bíblico — botão Aa no header, toggle dark mode, 3 tamanhos (P/M/G), persistido em localStorage
 
 ### Prioridade BAIXA (futuro)
 

@@ -2515,7 +2515,7 @@ export async function getBusinessRecommendations(communityId: string) {
       comment: businessRecommendation.comment,
       createdAt: businessRecommendation.createdAt,
       userName: user.name,
-      userAvatar: user.image,
+      userAvatar: user.avatar,
       userProfession: user.profession,
     })
     .from(businessRecommendation)
