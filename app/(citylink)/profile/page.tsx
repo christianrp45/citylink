@@ -340,7 +340,7 @@ export default function ProfilePage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'meus-dados-citylink.json';
+    a.download = 'meus-dados-emetis.json';
     a.click();
     URL.revokeObjectURL(url);
   }

@@ -87,7 +87,7 @@ type Roteiro = {
   data: string;
 };
 
-const ROTEIRO_KEY = 'citylink_roteiro';
+const ROTEIRO_KEY = 'emetis_roteiro';
 
 function CelulasTab() {
   const [showForm, setShowForm] = useState(false);

@@ -10,7 +10,7 @@ function isRootPage(pathname: string) {
   return ROOT_PATHS.some((p) => pathname === p);
 }
 
-export function CityLinkHeader() {
+export function EmetisHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const showBack = !isRootPage(pathname);

@@ -72,7 +72,7 @@ export async function GET() {
   return new Response(JSON.stringify(exportData, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="citylink-dados-${userId.slice(0, 8)}.json"`,
+      "Content-Disposition": `attachment; filename="emetis-dados-${userId.slice(0, 8)}.json"`,
     },
   });
 }

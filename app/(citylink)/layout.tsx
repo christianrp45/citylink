@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
-import { CityLinkHeader } from '@/components/citylink-header';
+import { EmetisHeader } from '@/components/citylink-header';
 import { BottomNav } from '@/components/citylink-bottom-nav';
 import { auth } from '@/app/(auth)/auth';
 import { getUserPrivacySettings } from '@/lib/db/queries';
 
-export default async function CityLinkLayout({ children }: { children: React.ReactNode }) {
+export default async function EmetisLayout({ children }: { children: React.ReactNode }) {
   await connection();
   const session = await auth();
 
@@ -20,7 +20,7 @@ export default async function CityLinkLayout({ children }: { children: React.Rea
 
   return (
     <div className="flex flex-col h-screen bg-slate-50">
-      <CityLinkHeader />
+      <EmetisHeader />
       <main className="flex-1 overflow-hidden">
         <Suspense fallback={<div className="flex h-full items-center justify-center text-slate-400">Carregando...</div>}>
           {children}

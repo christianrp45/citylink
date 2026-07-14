@@ -111,7 +111,7 @@ export default function OnboardingPage() {
             <Shield className="text-white" size={24} />
           </div>
           <div>
-            <p className="text-blue-200 text-xs uppercase tracking-widest">CityLink</p>
+            <p className="text-blue-200 text-xs uppercase tracking-widest">Emetis</p>
             <h1 className="text-white font-bold text-lg leading-tight">
               Seus dados, seu controle
             </h1>
@@ -189,9 +189,9 @@ function Step1({
         onScroll={onScroll}
       >
         <section>
-          <h3 className="font-semibold text-slate-800 mb-1">1. Sobre o CityLink</h3>
+          <h3 className="font-semibold text-slate-800 mb-1">1. Sobre o Emetis</h3>
           <p>
-            O CityLink é uma plataforma de reconexão física entre pessoas de fé. Nosso
+            O Emetis é uma plataforma de reconexão física entre pessoas de fé. Nosso
             objetivo é facilitar encontros presenciais — visitas, células, orações
             juntas — inspirados em Atos 2:42.
           </p>
@@ -240,7 +240,7 @@ function Step1({
           <h3 className="font-semibold text-slate-800 mb-1">6. Contato</h3>
           <p>
             Dúvidas ou solicitações relacionadas à privacidade:{' '}
-            <strong>privacidade@citylink.app</strong>
+            <strong>privacidade@emetis.com.br</strong>
           </p>
         </section>
 
@@ -481,7 +481,7 @@ function Step3({
             <Loader2 size={18} className="animate-spin" />
           ) : (
             <>
-              Entrar no CityLink <Check size={18} />
+              Entrar no Emetis <Check size={18} />
             </>
           )}
         </button>

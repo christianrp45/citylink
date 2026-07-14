@@ -1,4 +1,4 @@
-export default function CityLinkLoading() {
+export default function EmetisLoading() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-3 pb-24">
       <div className="w-10 h-10 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />

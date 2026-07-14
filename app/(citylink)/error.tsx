@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
-export default function CityLinkError({
+export default function EmetisError({
   error,
   reset,
 }: {
