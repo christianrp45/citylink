@@ -6,7 +6,7 @@ import {
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
 import { teosPrompt, teosWithPassagePrompt } from "@/lib/ai/prompts";
-import { getLanguageModel } from "@/lib/ai/providers";
+import { getFreeModel } from "@/lib/ai/providers";
 import { getMessageCountByUserId } from "@/lib/db/queries";
 
 export const maxDuration = 60;
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
       const result = streamText({
-        model: getLanguageModel("google/gemini-2.5-flash-lite"),
+        model: getFreeModel(),
         system: systemPrompt,
         messages: modelMessages,
       });

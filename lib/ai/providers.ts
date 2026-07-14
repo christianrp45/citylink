@@ -60,3 +60,10 @@ export function getArtifactModel() {
   }
   return gateway.languageModel("anthropic/claude-haiku-4.5");
 }
+
+// Modelo gratuito via gateway para Teos, Pastoral e gerador de roteiro.
+// Usa Llama 3.3 70B do Groq através do Vercel AI Gateway (spec v3 compatível).
+// ID do gateway: groq/llama-3.3-70b-versatile
+export function getFreeModel() {
+  return gateway.languageModel("groq/llama-3.3-70b-versatile");
+}

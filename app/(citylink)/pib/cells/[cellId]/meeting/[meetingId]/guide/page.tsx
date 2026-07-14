@@ -89,6 +89,69 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
+// ─── Parser de texto livre → campos do roteiro ────────────────────────────────
+// Detecta padrões comuns em notas de sermão e preenche os campos automaticamente.
+function parseSermonText(text: string): Partial<GuideForm> {
+  const result: Partial<GuideForm> = {};
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  const get = (keys: string[]) => {
+    for (const key of keys) {
+      const re = new RegExp(`^${key}[:\\-–]?\\s*(.+)`, 'im');
+      const m = text.match(re);
+      if (m) return m[1].trim();
+    }
+    return '';
+  };
+
+  // Campos com rótulo explícito
+  result.title        = get(['título','title','tema do encontro','nome do encontro']) || lines[0] || '';
+  result.sermonTitle  = get(['título da pregação','título do sermão','sermão','pregação']) || result.title;
+  result.preacher     = get(['pregador','pregadora','pr\\.?','pastor','pastora']);
+  result.theme        = get(['tema','assunto','subject']);
+  result.biblePassage = get(['passagem','passage','texto','texto base','referência','ref\\.?']);
+  result.leaderNote   = get(['nota do líder','nota para o líder','para o líder','leaderNote']);
+  result.icebreakerTitle = get(['quebra-gelo','icebreaker','dinâmica']);
+  result.icebreaker   = get(['dinâmica','pergunta inicial']);
+  result.introduction = get(['introdução','intro','contexto']);
+  result.conclusion   = get(['conclusão','conclusao','fechamento','aplicação final']);
+  result.evangelism   = get(['evangelismo','visão missionária','missão']);
+  result.evangelismChallenge = get(['desafio','desafio da semana','missão da semana']);
+
+  // Se não achou passagem com rótulo, tenta regex de referência bíblica
+  if (!result.biblePassage) {
+    const bibleRe = /\b(Gênesis|Êxodo|Levítico|Números|Deuteronômio|Josué|Juízes|Rute|Samuel|Reis|Crônicas|Esdras|Neemias|Ester|Jó|Salmos|Provérbios|Eclesiastes|Cânticos|Isaías|Jeremias|Lamentações|Ezequiel|Daniel|Oséias|Joel|Amós|Obadias|Jonas|Miquéias|Naum|Habacuque|Sofonias|Ageu|Zacarias|Malaquias|Mateus|Marcos|Lucas|João|Atos|Romanos|Coríntios|Gálatas|Efésios|Filipenses|Colossenses|Tessalonicenses|Timóteo|Tito|Filemom|Hebreus|Tiago|Pedro|Judas|Apocalipse)\s+\d+[:\-\d\s,;–]+/i;
+    const m = text.match(bibleRe);
+    if (m) result.biblePassage = m[0].trim().replace(/[,;]$/, '');
+  }
+
+  // Detecta pontos numerados (1. / 2. / I. / •)
+  const pointPatterns = [
+    /^(?:ponto\s*)?(\d+)[.)]\s+(.+)/im,
+    /^(?:[IVX]+)[.)]\s+(.+)/im,
+    /^[•\-\*]\s+(.+)/im,
+  ];
+  const points: Partial<StudyPoint>[] = [];
+  for (const line of lines) {
+    for (const re of pointPatterns) {
+      const m = line.match(re);
+      if (m && points.length < 3) {
+        const title = (m[2] || m[1] || '').trim();
+        if (title.length > 3) { points.push({ title, bibleRef: '', content: '', discussionQuestion: '' }); break; }
+      }
+    }
+    if (points.length === 3) break;
+  }
+  if (points.length > 0) {
+    result.studyPoints = [
+      ...(points as StudyPoint[]),
+      ...Array.from({ length: Math.max(0, 3 - points.length) }, () => ({ ...EMPTY_POINT })),
+    ];
+  }
+
+  return result;
+}
+
 export default function GuidePage() {
   const { cellId, meetingId } = useParams<{ cellId: string; meetingId: string }>();
   const [guide, setGuide] = useState<CellGuideDetail | null>(null);
@@ -98,6 +161,8 @@ export default function GuidePage() {
   const [saving, setSaving] = useState(false);
   const [newYtTitle, setNewYtTitle] = useState('');
   const [newYtUrl, setNewYtUrl] = useState('');
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState('');
 
   useEffect(() => {
     if (!meetingId) return;
@@ -480,10 +545,52 @@ export default function GuidePage() {
 
           <button onClick={handleGenerate} disabled={generating || (!form.biblePassage && !form.sermonContent)}
             className="w-full py-3 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition disabled:opacity-40">
-            {generating ? '✨ Gerando roteiro com IA...' : '✨ Gerar Roteiro'}
+            {generating ? '✨ Gerando roteiro com IA...' : '✨ Gerar Roteiro com IA'}
           </button>
           {!form.biblePassage && !form.sermonContent && (
             <p className="text-xs text-center text-indigo-400">Preencha o texto base ou a passagem bíblica para gerar</p>
+          )}
+        </div>
+
+        {/* Importar texto sem IA */}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowImport((v) => !v)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <div>
+              <p className="text-sm font-bold text-amber-900">📋 Preencher do texto (sem IA)</p>
+              <p className="text-xs text-amber-700 mt-0.5">Cole suas notas e os campos são preenchidos automaticamente.</p>
+            </div>
+            <span className="text-amber-600 text-lg">{showImport ? '▲' : '▼'}</span>
+          </button>
+
+          {showImport && (
+            <div className="space-y-3">
+              <textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                rows={8}
+                placeholder={`Cole aqui suas notas do sermão em qualquer formato. Exemplos de rótulos que o sistema reconhece:\n\nTítulo: A Humildade que Liberta\nPregador: Pr. João\nPassagem: Filipenses 2:1-11\nTema: Humildade\nIntrodução: ...\n1. Primeiro ponto\n2. Segundo ponto\n3. Terceiro ponto\nConclusão: ...`}
+                className="w-full px-3 py-2 border border-amber-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white resize-none font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (!importText.trim()) return;
+                  const parsed = parseSermonText(importText);
+                  setForm((f) => ({ ...f, ...parsed }));
+                  setShowImport(false);
+                  setImportText('');
+                }}
+                disabled={!importText.trim()}
+                className="w-full py-2.5 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition disabled:opacity-40"
+              >
+                📋 Preencher campos do roteiro
+              </button>
+              <p className="text-xs text-amber-600 text-center">Os campos são preenchidos mas você pode editar antes de salvar.</p>
+            </div>
           )}
         </div>
 

@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { getLanguageModel } from "@/lib/ai/providers";
+import { getFreeModel } from "@/lib/ai/providers";
 import { generateText } from "ai";
 
 export async function POST(request: Request) {
@@ -95,7 +95,7 @@ Diretrizes importantes:
 
   try {
     const { text } = await generateText({
-      model: getLanguageModel("google/gemini-2.5-flash-lite"),
+      model: getFreeModel(),
       prompt,
     });
 
