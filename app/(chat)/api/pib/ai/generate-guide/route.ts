@@ -95,7 +95,7 @@ Diretrizes importantes:
 
   try {
     const { text } = await generateText({
-      model: getLanguageModel("chat-model"),
+      model: getLanguageModel("google/gemini-2.5-flash-lite"),
       prompt,
     });
 
