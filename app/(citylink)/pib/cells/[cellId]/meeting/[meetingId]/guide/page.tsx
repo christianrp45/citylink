@@ -493,8 +493,8 @@ export default function GuidePage() {
         {/* Geração por IA */}
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-3">
           <div>
-            <p className="text-sm font-bold text-indigo-900">✨ Gerar Roteiro com IA</p>
-            <p className="text-xs text-indigo-600 mt-0.5">Preencha o texto base da pregação para a IA criar o roteiro completo no padrão PIB Curitiba.</p>
+            <p className="text-sm font-bold text-indigo-900">Teos</p>
+            <p className="text-xs text-indigo-600 mt-0.5">Preencha o texto base da pregação para a IA criar o roteiro completo no padrão Bíblico.</p>
           </div>
 
           {/* Texto base — campo principal */}
@@ -545,7 +545,7 @@ export default function GuidePage() {
 
           <button onClick={handleGenerate} disabled={generating || (!form.biblePassage && !form.sermonContent)}
             className="w-full py-3 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition disabled:opacity-40">
-            {generating ? '✨ Gerando roteiro com IA...' : '✨ Gerar Roteiro com IA'}
+            {generating ? 'Gerando roteiro...' : 'Gerar Roteiro com Teos'}
           </button>
           {!form.biblePassage && !form.sermonContent && (
             <p className="text-xs text-center text-indigo-400">Preencha o texto base ou a passagem bíblica para gerar</p>
