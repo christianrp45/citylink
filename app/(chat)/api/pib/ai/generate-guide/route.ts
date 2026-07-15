@@ -1,5 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { getFreeModel } from "@/lib/ai/providers";
+import { getQuebraGelosParaPrompt } from "@/lib/data/quebra-gelos";
 import { generateText } from "ai";
 
 export async function POST(request: Request) {
@@ -29,6 +30,8 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join("\n");
 
+  const quebraGelosList = getQuebraGelosParaPrompt();
+
   const prompt = `Você é especialista em roteiros de células no formato da PIB Curitiba (Primeira Igreja Batista de Curitiba). Crie um roteiro completo seguindo EXATAMENTE a estrutura abaixo.
 
 ${baseInfo}
@@ -44,8 +47,8 @@ Responda APENAS com JSON válido, sem texto adicional, seguindo exatamente este 
 
   "leaderNote": "Mensagem de 2-3 linhas para o líder refletir sobre discipulado, formação de novos líderes ou saúde da célula, conectada ao tema da semana.",
 
-  "icebreakerTitle": "Nome criativo/temático para o quebra-gelo (ex: 'Soft Skill Aleatória', 'Memória de Infância', 'Confissão Inusitada')",
-  "icebreaker": "Descrição da dinâmica ou pergunta leve para quebrar o gelo. Deve ser descontraída, sem pressão espiritual, e conectada indiretamente ao tema.",
+  "icebreakerTitle": "Nome da dinâmica escolhida ou adaptada (pode referenciar uma da lista ou criar nova)",
+  "icebreaker": "Descrição completa da dinâmica: como conduzir, o que cada um faz, quanto tempo. Deve ser descontraída, sem pressão espiritual, e conectada indiretamente ao tema.",
 
   "youtubeLinks": [
     { "title": "Nome da música de louvor 1", "url": "" },
@@ -90,8 +93,11 @@ Diretrizes importantes:
 - Se 'sermonContent' foi fornecido, adapte fielmente o conteúdo da pregação para os 3 pontos de estudo
 - Os 3 pontos devem seguir a estrutura: título + ref bíblica + desenvolvimento + pergunta de discussão
 - As perguntas de discussão devem ser pessoais e gerar conversa real, não respostas teóricas
-- O quebrando-gelo deve ser leve e descontraído
-- Os links do YouTube ficam vazios (o líder preencherá)`;
+- O quebra-gelo deve ser leve e descontraído; escolha ou adapte uma das dinâmicas abaixo conforme o tema, ou crie uma nova se nenhuma se encaixar bem
+- Os links do YouTube ficam vazios (o líder preencherá)
+
+BANCO DE QUEBRA-GELOS DISPONÍVEIS (escolha o mais adequado ao tema da semana):
+${quebraGelosList}`;
 
   try {
     const { text } = await generateText({
@@ -102,16 +108,27 @@ Diretrizes importantes:
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return Response.json(
-        { error: "IA não retornou formato válido" },
+        { error: "IA não retornou formato válido. Tente novamente." },
         { status: 500 }
       );
     }
 
-    const guide = JSON.parse(jsonMatch[0]);
+    let guide: Record<string, unknown>;
+    try {
+      guide = JSON.parse(jsonMatch[0]);
+    } catch {
+      return Response.json(
+        { error: "Resposta da IA com JSON inválido. Tente novamente." },
+        { status: 500 }
+      );
+    }
+
     return Response.json({ ...guide, generatedByAI: true });
-  } catch {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[generate-guide]", message);
     return Response.json(
-      { error: "Erro ao gerar roteiro com IA" },
+      { error: `Erro ao gerar roteiro: ${message}` },
       { status: 500 }
     );
   }
