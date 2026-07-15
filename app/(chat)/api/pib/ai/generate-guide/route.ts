@@ -105,8 +105,15 @@ ${quebraGelosList}`;
       prompt,
     });
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Remove markdown code fences que alguns modelos adicionam (```json ... ```)
+    const cleaned = text
+      .replace(/^```(?:json)?\s*/m, "")
+      .replace(/\s*```\s*$/m, "")
+      .trim();
+
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error("[generate-guide] resposta sem JSON:", text.slice(0, 300));
       return Response.json(
         { error: "IA não retornou formato válido. Tente novamente." },
         { status: 500 }
@@ -116,7 +123,8 @@ ${quebraGelosList}`;
     let guide: Record<string, unknown>;
     try {
       guide = JSON.parse(jsonMatch[0]);
-    } catch {
+    } catch (parseErr) {
+      console.error("[generate-guide] JSON inválido:", jsonMatch[0].slice(0, 300));
       return Response.json(
         { error: "Resposta da IA com JSON inválido. Tente novamente." },
         { status: 500 }
@@ -126,7 +134,7 @@ ${quebraGelosList}`;
     return Response.json({ ...guide, generatedByAI: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[generate-guide]", message);
+    console.error("[generate-guide] erro:", message);
     return Response.json(
       { error: `Erro ao gerar roteiro: ${message}` },
       { status: 500 }

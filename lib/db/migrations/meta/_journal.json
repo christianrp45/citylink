@@ -183,6 +183,13 @@
       "when": 1783930000000,
       "tag": "0025_business_recommendations",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784000000000,
+      "tag": "0026_cell_entry_mode",
+      "breakpoints": true
     }
   ]
 }

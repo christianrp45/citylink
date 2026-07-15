@@ -369,6 +369,11 @@ export const cell = pgTable("Cell", {
     .default("misto"),
   maxMembers: integer("maxMembers").default(15),
   isOpen: boolean("isOpen").notNull().default(true),
+  // 'open' = qualquer pessoa entra diretamente
+  // 'invite_only' = somente via código de convite (padrão)
+  entryMode: varchar("entryMode", { enum: ["open", "invite_only"] })
+    .notNull()
+    .default("invite_only"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
 

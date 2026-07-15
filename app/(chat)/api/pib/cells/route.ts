@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { name, description, communityId, neighborhood, address, meetingDay, meetingTime, targetAudience, maxMembers } = body;
+  const { name, description, communityId, neighborhood, address, meetingDay, meetingTime, targetAudience, maxMembers, entryMode } = body;
 
   if (!name?.trim()) {
     return Response.json({ error: "Nome do grupo é obrigatório" }, { status: 400 });
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     meetingTime,
     targetAudience: targetAudience ?? "misto",
     maxMembers: maxMembers ?? 15,
+    entryMode: entryMode === "open" ? "open" : "invite_only",
   });
 
   return Response.json(newCell, { status: 201 });

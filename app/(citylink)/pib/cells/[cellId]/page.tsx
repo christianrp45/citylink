@@ -22,6 +22,7 @@ type CellDetail = {
   maxMembers: number;
   memberCount: number;
   isOpen: boolean;
+  entryMode: "open" | "invite_only";
   members: { userId: string; userEmail: string; role: string }[];
   meetings: {
     id: string;
@@ -43,6 +44,9 @@ export default function CellDetailPage() {
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
+
+  // Toggle de entryMode (líder)
+  const [entryModeLoading, setEntryModeLoading] = useState(false);
 
   useEffect(() => {
     if (!cellId) return;
@@ -76,6 +80,24 @@ export default function CellDetailPage() {
       // silencioso — o líder verá o botão ainda ativo
     } finally {
       setInviteLoading(false);
+    }
+  };
+
+  const handleToggleEntryMode = async () => {
+    if (!cell) return;
+    const next = cell.entryMode === "open" ? "invite_only" : "open";
+    setEntryModeLoading(true);
+    try {
+      const res = await fetch(`/api/pib/cells/${cellId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryMode: next }),
+      });
+      if (res.ok) {
+        setCell((prev) => prev ? { ...prev, entryMode: next } : prev);
+      }
+    } finally {
+      setEntryModeLoading(false);
     }
   };
 
@@ -250,10 +272,10 @@ export default function CellDetailPage() {
         )}
 
         {/* Participar */}
-        {cell.isOpen && (
+        {cell.entryMode === "open" ? (
           <div className="bg-white rounded-xl shadow-sm p-4">
             <p className="text-sm text-gray-600 mb-3">
-              Quer participar desta célula?
+              Este grupo está com entrada livre.
             </p>
             {joinMsg ? (
               <p className="text-sm font-medium text-emerald-600">{joinMsg}</p>
@@ -266,6 +288,43 @@ export default function CellDetailPage() {
                 {joining ? 'Entrando...' : '👋 Quero participar desta célula'}
               </button>
             )}
+          </div>
+        ) : (
+          <div className="bg-amber-50 rounded-xl shadow-sm p-4 border border-amber-100">
+            <p className="text-sm font-medium text-amber-800 mb-1">Acesso via convite</p>
+            <p className="text-xs text-amber-700">
+              Este grupo só aceita novos membros por meio de um link de convite.
+              Peça a alguém que já participa para te enviar o link.
+            </p>
+          </div>
+        )}
+
+        {/* Toggle entryMode — apenas para líder */}
+        {isLeader && (
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Modo de entrada</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {cell.entryMode === "open"
+                    ? "Qualquer pessoa pode entrar diretamente"
+                    : "Somente via link de convite"}
+                </p>
+              </div>
+              <button
+                onClick={handleToggleEntryMode}
+                disabled={entryModeLoading}
+                className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+                  cell.entryMode === "open" ? "bg-emerald-500" : "bg-gray-300"
+                } disabled:opacity-50`}
+              >
+                <span
+                  className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+                    cell.entryMode === "open" ? "translate-x-6" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         )}
 

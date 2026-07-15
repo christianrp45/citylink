@@ -25,6 +25,7 @@ export default function NewCellPage() {
   const [meetingTime, setMeetingTime] = useState('');
   const [targetAudience, setTargetAudience] = useState('misto');
   const [maxMembers, setMaxMembers]   = useState(15);
+  const [entryMode, setEntryMode]     = useState<'invite_only' | 'open'>('invite_only');
   const [saving, setSaving]           = useState(false);
   const [error, setError]             = useState('');
 
@@ -47,6 +48,7 @@ export default function NewCellPage() {
           meetingTime: meetingTime || undefined,
           targetAudience,
           maxMembers,
+          entryMode,
         }),
       });
 
@@ -193,6 +195,43 @@ export default function NewCellPage() {
               />
               <span className="text-sm font-bold text-indigo-700 w-12 text-center">{maxMembers} pessoas</span>
             </div>
+          </div>
+        </div>
+
+        {/* Modo de acesso */}
+        <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">🔒 Acesso</p>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setEntryMode('invite_only')}
+              className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl border-2 text-left transition ${
+                entryMode === 'invite_only'
+                  ? 'border-indigo-500 bg-indigo-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <span className="text-xl">🔗</span>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Somente via convite</p>
+                <p className="text-xs text-gray-500">Novos membros entram apenas com link gerado por você ou outro membro.</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setEntryMode('open')}
+              className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl border-2 text-left transition ${
+                entryMode === 'open'
+                  ? 'border-emerald-500 bg-emerald-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <span className="text-xl">🌐</span>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Entrada livre</p>
+                <p className="text-xs text-gray-500">Qualquer pessoa pode entrar diretamente, sem precisar de convite.</p>
+              </div>
+            </button>
           </div>
         </div>
 

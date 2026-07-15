@@ -27,6 +27,7 @@ export async function getCells(filters?: { communityId?: string | null }) {
       targetAudience: cell.targetAudience,
       maxMembers: cell.maxMembers,
       isOpen: cell.isOpen,
+      entryMode: cell.entryMode,
       createdAt: cell.createdAt,
       leaderId: cell.leaderId,
       leaderName: sql<string>`COALESCE(${user.name}, ${user.email})`,
@@ -54,6 +55,7 @@ export async function createCell(data: {
   meetingTime?: string;
   targetAudience?: "jovens" | "casais" | "adultos" | "terceira-idade" | "misto";
   maxMembers?: number;
+  entryMode?: "open" | "invite_only";
 }) {
   const [newCell] = await db.insert(cell).values(data).returning();
 

@@ -103,9 +103,13 @@ export default function CellsDirectoryPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-gray-900 truncate">{c.name}</p>
-                    {!c.isOpen && (
-                      <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">
-                        Fechada
+                    {c.entryMode === "open" ? (
+                      <span className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full">
+                        Entrada livre
+                      </span>
+                    ) : (
+                      <span className="text-xs px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full">
+                        Via convite
                       </span>
                     )}
                   </div>

@@ -17,8 +17,11 @@ export async function POST(
     return Response.json({ error: "Célula não encontrada" }, { status: 404 });
   }
 
-  if (!cellData.isOpen) {
-    return Response.json({ error: "Esta célula não está aceitando novos membros" }, { status: 403 });
+  if (cellData.entryMode === "invite_only") {
+    return Response.json(
+      { error: "Esta célula só aceita novos membros via convite. Peça um link a alguém do grupo." },
+      { status: 403 }
+    );
   }
 
   const currentCount = await getCellMemberCount(cellId);

@@ -158,6 +158,7 @@ export type CellSummary = {
   maxMembers: number;
   memberCount: number;   // calculado
   isOpen: boolean;
+  entryMode: "open" | "invite_only";
   createdAt: string;
 };
 
