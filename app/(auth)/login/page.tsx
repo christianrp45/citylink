@@ -23,7 +23,14 @@ export default function Page() {
     { status: "idle" }
   );
 
-  const { update: updateSession } = useSession();
+  const { data: session, update: updateSession } = useSession();
+
+  // Redireciona usuário já autenticado
+  useEffect(() => {
+    if (session?.user?.type === "regular") {
+      router.push("/");
+    }
+  }, [session, router]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
@@ -34,7 +41,7 @@ export default function Page() {
     } else if (state.status === "success") {
       setIsSuccessful(true);
       updateSession();
-      router.refresh();
+      router.push("/");
     }
   }, [state.status]);
 
