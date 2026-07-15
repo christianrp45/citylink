@@ -166,7 +166,7 @@ export const forgotPassword = async (
       const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
       if (process.env.RESEND_API_KEY) {
-        await fetch("https://api.resend.com/emails", {
+        const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -179,8 +179,14 @@ export const forgotPassword = async (
             html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto"><h2 style="color:#1e3a5f">Redefinir senha</h2><p>Recebemos uma solicitação para redefinir a senha da sua conta Emetis.</p><p>Clique no botão abaixo. O link expira em <strong>1 hora</strong>.</p><a href="${resetUrl}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Redefinir senha</a><p style="color:#64748b;font-size:13px">Se você não solicitou isso, ignore este e-mail.</p></div>`,
           }),
         });
+        const resJson = await res.json();
+        if (!res.ok) {
+          console.error("[forgot-password] Resend error:", JSON.stringify(resJson));
+        } else {
+          console.log("[forgot-password] E-mail enviado:", resJson.id);
+        }
       } else {
-        console.log(`[forgot-password] Reset link for ${email}:\n${resetUrl}`);
+        console.log(`[forgot-password] RESEND_API_KEY não configurado. Reset link:\n${resetUrl}`);
       }
     }
     return { status: "success" };
