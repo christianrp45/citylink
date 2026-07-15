@@ -5,7 +5,7 @@ import { memo } from "react";
 import { useMessages } from "@/hooks/use-messages";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
-import type { UIArtifact } from "./artifact";
+import type { UIArtifact } from "@/lib/artifacts/types";
 import { PreviewMessage, ThinkingMessage } from "./message";
 
 type ArtifactMessagesProps = {

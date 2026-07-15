@@ -5,7 +5,7 @@ import {
   type ConsoleOutput,
   type ConsoleOutputContent,
 } from "@/components/console";
-import { Artifact } from "@/components/create-artifact";
+import { Artifact } from "@/lib/artifacts/types";
 import {
   CopyIcon,
   LogsIcon,

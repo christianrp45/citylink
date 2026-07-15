@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { Artifact } from "@/components/create-artifact";
+import { Artifact } from "@/lib/artifacts/types";
 import { CopyIcon, RedoIcon, UndoIcon } from "@/components/icons";
 import { ImageEditor } from "@/components/image-editor";
 

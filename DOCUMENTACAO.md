@@ -2,7 +2,7 @@ t# CityLink — Documentação do Projeto
 
 ## Visão Geral
 
-CityLink é um aplicativo de proximidade social voltado para comunidades, igrejas, amigos e familiares. A ideia central é resgatar as visitas espontâneas do passado: quando você está passando perto da casa de um amigo, pode solicitar uma visita. Se ele estiver com o modo "Aberto para visitas" ativado, você vai direto sem precisar de confirmação.
+Emetis é um aplicativo de proximidade social voltado para comunidades, igrejas, amigos e familiares. A ideia central é resgatar as visitas espontâneas do passado: quando você está passando perto da casa de um amigo, pode solicitar uma visita. Se ele estiver com o modo "Aberto para visitas" ativado, você vai direto sem precisar de confirmação.
 
 **Deploy:** Vercel  
 **Repositório:** github.com/christianrp45/citylink  

@@ -8,31 +8,11 @@ import {
   deletePushSubscription,
 } from "@/lib/db/queries";
 import { sendPush } from "@/lib/push";
-
-// Haversine em metros
-function haversineMeters(
-  lat1: number, lng1: number,
-  lat2: number, lng2: number
-): number {
-  const R = 6_371_000;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function formatDistance(m: number) {
-  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
-}
+import { haversineMeters, formatDistance } from "@/lib/geo/haversine";
 
 async function notifyPair(
   userId: string,
   nearUserId: string,
-  userName: string | null,
   nearUserName: string | null,
   distanceMeters: number,
   cooldownMinutes: number,
@@ -101,7 +81,7 @@ export async function GET(request: Request) {
       if (dist <= radius1) {
         await notifyPair(
           pair.user1Id, pair.user2Id,
-          pair.user1Name, pair.user2Name,
+          pair.user2Name,
           dist, pair.cooldown1 ?? 60, "friend"
         );
         notified++;
@@ -111,7 +91,7 @@ export async function GET(request: Request) {
       if (dist <= radius2) {
         await notifyPair(
           pair.user2Id, pair.user1Id,
-          pair.user2Name, pair.user1Name,
+          pair.user1Name,
           dist, pair.cooldown2 ?? 60, "friend"
         );
         notified++;
@@ -144,7 +124,7 @@ export async function GET(request: Request) {
       if (dist <= radius1) {
         await notifyPair(
           pair.user1Id, pair.user2Id,
-          pair.user1Name, pair.user2Name,
+          pair.user2Name,
           dist, pair.cooldown1 ?? 60, "community_member"
         );
         notified++;
@@ -153,7 +133,7 @@ export async function GET(request: Request) {
       if (dist <= radius2) {
         await notifyPair(
           pair.user2Id, pair.user1Id,
-          pair.user2Name, pair.user1Name,
+          pair.user1Name,
           dist, pair.cooldown2 ?? 60, "community_member"
         );
         notified++;

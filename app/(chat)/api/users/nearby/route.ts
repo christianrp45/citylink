@@ -1,25 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { getNearbyUsers, getFriendCircles } from "@/lib/db/queries";
-
-function haversine(
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number }
-) {
-  const R = 6371000;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLon = ((b.lng - a.lng) * Math.PI) / 180;
-  const x =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((a.lat * Math.PI) / 180) *
-      Math.cos((b.lat * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
-}
-
-// Arredonda coordenada para grade de ~1km (2 casas decimais)
-function fuzzyCoord(value: number): number {
-  return Math.round(value * 100) / 100;
-}
+import { haversineMeters, fuzzyCoord } from "@/lib/geo/haversine";
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -49,9 +30,9 @@ export async function GET(request: Request) {
     .filter((u) => {
       if (!u.lat || !u.lng) return false;
       if (u.availabilityStatus === "offline") return false;
-      const dist = haversine(
-        { lat, lng },
-        { lat: parseFloat(u.lat), lng: parseFloat(u.lng) }
+      const dist = haversineMeters(
+        lat, lng,
+        parseFloat(u.lat), parseFloat(u.lng)
       );
       return dist <= radius;
     })
@@ -69,7 +50,7 @@ export async function GET(request: Request) {
         lat: String(displayLat),
         lng: String(displayLng),
         locationPrecision: circle === "family" ? "exact" : "neighborhood",
-        distance: haversine({ lat, lng }, { lat: exactLat, lng: exactLng }),
+        distance: haversineMeters(lat, lng, exactLat, exactLng),
       };
     })
     .sort((a, b) => a.distance - b.distance);
