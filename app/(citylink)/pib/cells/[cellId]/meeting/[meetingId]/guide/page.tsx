@@ -158,6 +158,7 @@ export default function GuidePage() {
   const [form, setForm] = useState<GuideForm>(EMPTY_FORM);
   const [editing, setEditing] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState('');
   const [saving, setSaving] = useState(false);
   const [newYtTitle, setNewYtTitle] = useState('');
   const [newYtUrl, setNewYtUrl] = useState('');
@@ -205,6 +206,7 @@ export default function GuidePage() {
       return;
     }
     setGenerating(true);
+    setGenError('');
     const res = await fetch('/api/pib/ai/generate-guide', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -238,7 +240,7 @@ export default function GuidePage() {
         evangelismChallenge: data.evangelismChallenge ?? f.evangelismChallenge,
       }));
     } else {
-      alert(data.error ?? 'Erro ao gerar roteiro');
+      setGenError(data.error ?? 'Erro ao gerar roteiro');
     }
     setGenerating(false);
   };
@@ -547,6 +549,12 @@ export default function GuidePage() {
             className="w-full py-3 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition disabled:opacity-40">
             {generating ? 'Gerando roteiro...' : 'Gerar Roteiro com Teos'}
           </button>
+          {genError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-xs font-semibold text-red-700 mb-1">Erro ao gerar roteiro:</p>
+              <p className="text-xs text-red-600 break-all">{genError}</p>
+            </div>
+          )}
           {!form.biblePassage && !form.sermonContent && (
             <p className="text-xs text-center text-indigo-400">Preencha o texto base ou a passagem bíblica para gerar</p>
           )}
