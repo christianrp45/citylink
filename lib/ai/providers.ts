@@ -1,4 +1,5 @@
 import { gateway } from "@ai-sdk/gateway";
+import { google } from "@ai-sdk/google";
 import {
   customProvider,
   extractReasoningMiddleware,
@@ -61,8 +62,8 @@ export function getArtifactModel() {
   return gateway.languageModel("anthropic/claude-haiku-4.5");
 }
 
-// Modelo gratuito via gateway para Teos, Pastoral e gerador de roteiro.
-// Usa Gemini 2.5 Flash via Vercel AI Gateway (mesma key do getTitleModel).
+// Modelo gratuito para Teos, Pastoral e gerador de roteiro.
+// Usa Gemini 2.0 Flash diretamente via GOOGLE_GENERATIVE_AI_API_KEY.
 export function getFreeModel() {
-  return gateway.languageModel("google/gemini-2.5-flash-lite");
+  return google("gemini-2.0-flash");
 }
