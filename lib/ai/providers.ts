@@ -1,4 +1,5 @@
 import { gateway } from "@ai-sdk/gateway";
+import { google } from "@ai-sdk/google";
 import {
   customProvider,
   extractReasoningMiddleware,
@@ -62,6 +63,7 @@ export function getArtifactModel() {
 }
 
 // Modelo gratuito para Teos, Pastoral e gerador de roteiro.
+// Usa @ai-sdk/google diretamente com GOOGLE_GENERATIVE_AI_API_KEY.
 export function getFreeModel() {
-  return gateway.languageModel("google/gemini-2.5-flash-lite");
+  return google("gemini-2.5-flash-lite");
 }
