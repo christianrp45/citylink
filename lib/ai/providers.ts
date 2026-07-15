@@ -69,5 +69,5 @@ export function getArtifactModel() {
 // enquanto ai@6.x espera LanguageModelV3 — compatíveis em runtime.
 const googleAI = createGoogleGenerativeAI();
 export function getFreeModel() {
-  return googleAI("gemini-2.5-flash-lite") as unknown as LanguageModelV2;
+  return googleAI("gemini-2.0-flash") as unknown as LanguageModelV2;
 }
