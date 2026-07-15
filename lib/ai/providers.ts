@@ -1,5 +1,6 @@
 import { gateway } from "@ai-sdk/gateway";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import type { LanguageModelV2 } from "@ai-sdk/provider";
 import {
   customProvider,
   extractReasoningMiddleware,
@@ -64,6 +65,9 @@ export function getArtifactModel() {
 
 // Modelo gratuito para Teos, Pastoral e gerador de roteiro.
 // Usa @ai-sdk/google diretamente com GOOGLE_GENERATIVE_AI_API_KEY.
+// O cast é necessário pois @ai-sdk/google@4.x exporta LanguageModelV4
+// enquanto ai@6.x espera LanguageModelV3 — compatíveis em runtime.
+const googleAI = createGoogleGenerativeAI();
 export function getFreeModel() {
-  return google("gemini-2.5-flash-lite");
+  return googleAI("gemini-2.5-flash-lite") as unknown as LanguageModelV2;
 }
