@@ -1,7 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { getFreeModel } from "@/lib/ai/providers";
 import { getQuebraGelosParaPrompt } from "@/lib/data/quebra-gelos";
-import { generateText } from "ai";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -99,11 +97,40 @@ Diretrizes importantes:
 BANCO DE QUEBRA-GELOS DISPONÍVEIS (escolha o mais adequado ao tema da semana):
 ${quebraGelosList}`;
 
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!apiKey) {
+    return Response.json({ error: "Chave da API do Google não configurada no servidor." }, { status: 500 });
+  }
+
   try {
-    const { text } = await generateText({
-      model: getFreeModel(),
-      prompt,
-    });
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+        }),
+      }
+    );
+
+    if (!geminiRes.ok) {
+      const errBody = await geminiRes.text();
+      console.error("[generate-guide] Google API error:", geminiRes.status, errBody);
+      return Response.json(
+        { error: `Erro da API Google (${geminiRes.status}): ${errBody.slice(0, 200)}` },
+        { status: 500 }
+      );
+    }
+
+    const geminiData = await geminiRes.json();
+    const text: string = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+    if (!text) {
+      console.error("[generate-guide] Google retornou resposta vazia:", JSON.stringify(geminiData).slice(0, 300));
+      return Response.json({ error: "IA retornou resposta vazia. Tente novamente." }, { status: 500 });
+    }
 
     // Remove markdown code fences que alguns modelos adicionam (```json ... ```)
     const cleaned = text
