@@ -241,7 +241,9 @@ export default function GuidePage() {
           evangelismChallenge: data.evangelismChallenge ?? f.evangelismChallenge,
         }));
       } else {
-        setGenError(data.error ?? 'Erro desconhecido ao gerar roteiro.');
+        const errMsg = data.error ?? 'Erro desconhecido ao gerar roteiro.';
+        setGenError(errMsg);
+        alert(`[DIAGNÓSTICO] Status ${res.status}: ${errMsg}`);
       }
     } catch (e: unknown) {
       const msg = `Erro de rede ou JS: ${e instanceof Error ? e.message : String(e)}`;
