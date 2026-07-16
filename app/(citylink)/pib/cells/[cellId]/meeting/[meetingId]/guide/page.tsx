@@ -207,40 +207,44 @@ export default function GuidePage() {
     }
     setGenerating(true);
     setGenError('');
-    const res = await fetch('/api/pib/ai/generate-guide', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        biblePassage: form.biblePassage,
-        sermonTitle: form.sermonTitle,
-        preacher: form.preacher,
-        theme: form.theme,
-        sermonContent: form.sermonContent,
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setForm((f) => ({
-        ...f,
-        title: data.title ?? f.title,
-        biblePassage: data.biblePassage ?? f.biblePassage,
-        sermonTitle: data.sermonTitle ?? f.sermonTitle,
-        preacher: data.preacher ?? f.preacher,
-        theme: data.theme ?? f.theme,
-        leaderNote: data.leaderNote ?? f.leaderNote,
-        icebreakerTitle: data.icebreakerTitle ?? f.icebreakerTitle,
-        icebreaker: data.icebreaker ?? f.icebreaker,
-        introduction: data.introduction ?? f.introduction,
-        studyPoints: data.studyPoints?.length ? data.studyPoints : f.studyPoints,
-        conclusion: data.conclusion ?? f.conclusion,
-        conclusionQuestion: data.conclusionQuestion ?? f.conclusionQuestion,
-        leaderTip: data.leaderTip ?? f.leaderTip,
-        evangelism: data.evangelism ?? f.evangelism,
-        evangelismStory: data.evangelismStory ?? f.evangelismStory,
-        evangelismChallenge: data.evangelismChallenge ?? f.evangelismChallenge,
-      }));
-    } else {
-      setGenError(data.error ?? 'Erro ao gerar roteiro');
+    try {
+      const res = await fetch('/api/pib/ai/generate-guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          biblePassage: form.biblePassage,
+          sermonTitle: form.sermonTitle,
+          preacher: form.preacher,
+          theme: form.theme,
+          sermonContent: form.sermonContent,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setForm((f) => ({
+          ...f,
+          title: data.title ?? f.title,
+          biblePassage: data.biblePassage ?? f.biblePassage,
+          sermonTitle: data.sermonTitle ?? f.sermonTitle,
+          preacher: data.preacher ?? f.preacher,
+          theme: data.theme ?? f.theme,
+          leaderNote: data.leaderNote ?? f.leaderNote,
+          icebreakerTitle: data.icebreakerTitle ?? f.icebreakerTitle,
+          icebreaker: data.icebreaker ?? f.icebreaker,
+          introduction: data.introduction ?? f.introduction,
+          studyPoints: data.studyPoints?.length ? data.studyPoints : f.studyPoints,
+          conclusion: data.conclusion ?? f.conclusion,
+          conclusionQuestion: data.conclusionQuestion ?? f.conclusionQuestion,
+          leaderTip: data.leaderTip ?? f.leaderTip,
+          evangelism: data.evangelism ?? f.evangelism,
+          evangelismStory: data.evangelismStory ?? f.evangelismStory,
+          evangelismChallenge: data.evangelismChallenge ?? f.evangelismChallenge,
+        }));
+      } else {
+        setGenError(data.error ?? 'Erro desconhecido ao gerar roteiro.');
+      }
+    } catch (e: unknown) {
+      setGenError(`Erro de rede ou JS: ${e instanceof Error ? e.message : String(e)}`);
     }
     setGenerating(false);
   };
