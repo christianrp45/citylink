@@ -244,7 +244,9 @@ export default function GuidePage() {
         setGenError(data.error ?? 'Erro desconhecido ao gerar roteiro.');
       }
     } catch (e: unknown) {
-      setGenError(`Erro de rede ou JS: ${e instanceof Error ? e.message : String(e)}`);
+      const msg = `Erro de rede ou JS: ${e instanceof Error ? e.message : String(e)}`;
+      setGenError(msg);
+      alert(msg);
     }
     setGenerating(false);
   };

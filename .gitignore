@@ -43,5 +43,8 @@ yarn-error.log*
 /blob-report/
 /playwright/*
 
+# Graphify (gerado localmente, não vai para o repositório)
+graphify-out/
+
 .vercel
 .env*.local
