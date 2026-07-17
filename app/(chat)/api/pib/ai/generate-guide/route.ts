@@ -1,6 +1,22 @@
 import { auth } from "@/app/(auth)/auth";
 import { getQuebraGelosParaPrompt } from "@/lib/data/quebra-gelos";
 
+export async function GET() {
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!apiKey) return Response.json({ ok: false, error: "SEM_CHAVE" });
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: "diga OK" }] }], generationConfig: { maxOutputTokens: 5 } }) }
+    );
+    const body = await r.text();
+    return Response.json({ ok: r.ok, status: r.status, key: apiKey.slice(0,6)+"...", body: body.slice(0,300) });
+  } catch(e: unknown) {
+    return Response.json({ ok: false, error: String(e) });
+  }
+}
+
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
