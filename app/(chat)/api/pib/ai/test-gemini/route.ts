@@ -1,11 +1,4 @@
-import { auth } from "@/app/(auth)/auth";
-
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
-    return Response.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) {
     return Response.json({ ok: false, step: "api_key", error: "GOOGLE_GENERATIVE_AI_API_KEY não encontrada" });
