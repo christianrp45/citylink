@@ -30,71 +30,81 @@ export async function POST(request: Request) {
 
   const quebraGelosList = getQuebraGelosParaPrompt();
 
-  const prompt = `Você é especialista em roteiros de células no formato da PIB Curitiba (Primeira Igreja Batista de Curitiba). Crie um roteiro completo seguindo EXATAMENTE a estrutura abaixo.
+  const prompt = `Você é um teólogo e pastor batista experiente, especialista em formação de discípulos no modelo da Convenção Batista Brasileira (CBB). Sua tarefa é criar um roteiro de célula completo, teologicamente sólido e pastoralmente rico, seguindo o formato da PIB Curitiba (Primeira Igreja Batista de Curitiba).
+
+IDENTIDADE TEOLÓGICA — aplique sempre:
+- Autoridade absoluta e suficiência das Sagradas Escrituras (Sola Scriptura)
+- Salvação pela graça soberana de Deus mediante a fé em Jesus Cristo (Sola Gratia, Sola Fide)
+- Centralidade de Cristo em toda a Escritura (Cristo no AT e NT)
+- Visão batista da Igreja: congregacional, composta de crentes regenerados, com dois ordenanças (Batismo e Ceia)
+- Compromisso com a Grande Comissão (Mt 28.18-20): evangelismo, discipulado e multiplicação de células
+- Perspectiva da CBB: vida comunitária, mordomia cristã, família como célula básica da sociedade
+- Uso da Bíblia de Estudo — quando pertinente, mencione o contexto histórico-cultural do texto
 
 ${baseInfo}
 
 Responda APENAS com JSON válido, sem texto adicional, seguindo exatamente este schema:
 
 {
-  "title": "título criativo do encontro (baseado na pregação/passagem)",
-  "biblePassage": "passagem bíblica principal (ex: Daniel 4:28-34)",
-  "sermonTitle": "título exato da pregação",
-  "preacher": "nome do pregador(a)",
-  "theme": "tema central em uma frase curta",
+  "title": "Título criativo e teologicamente significativo do encontro",
+  "biblePassage": "Passagem bíblica principal com referência completa (ex: Romanos 8.28-39)",
+  "sermonTitle": "Título exato da pregação",
+  "preacher": "Nome do pregador(a)",
+  "theme": "Tema central em uma frase — deve revelar a verdade bíblica principal",
 
-  "leaderNote": "Mensagem de 2-3 linhas para o líder refletir sobre discipulado, formação de novos líderes ou saúde da célula, conectada ao tema da semana.",
+  "leaderNote": "Mensagem pastoral de 3-4 linhas EXCLUSIVA para o líder: reflexão sobre o texto em relação ao seu papel de discipulador, saúde espiritual da célula, formação de novos líderes no modelo CBB. Inclua um versículo de encorajamento.",
 
-  "icebreakerTitle": "Nome da dinâmica escolhida ou adaptada (pode referenciar uma da lista ou criar nova)",
-  "icebreaker": "Descrição completa da dinâmica: como conduzir, o que cada um faz, quanto tempo. Deve ser descontraída, sem pressão espiritual, e conectada indiretamente ao tema.",
+  "icebreakerTitle": "Nome da dinâmica de quebra-gelo",
+  "icebreaker": "Descrição detalhada da dinâmica (5-7 linhas): como iniciar, conduzir e encerrar. Leve, descontraída, sem pressão espiritual, mas com conexão temática indireta. Especifique tempo sugerido (5-10 min).",
 
   "youtubeLinks": [
-    { "title": "Nome da música de louvor 1", "url": "" },
+    { "title": "Nome da música de louvor 1 — preferencialmente hinos batistas ou louvor contemporâneo cristocêntrico", "url": "" },
     { "title": "Nome da música de louvor 2", "url": "" },
     { "title": "Nome da música de louvor 3", "url": "" }
   ],
 
-  "introduction": "Parágrafo de introdução que apresenta o tema central da pregação de forma envolvente, contextualizando para o grupo.",
+  "introduction": "Parágrafo de introdução denso (5-7 linhas): apresente o contexto histórico-cultural do texto bíblico, a relevância do tema para a vida cristã hoje, e como ele se encaixa no plano redentor de Deus. Desperte curiosidade e necessidade espiritual no grupo.",
 
   "studyPoints": [
     {
-      "title": "1) Título do Ponto 1: Subtítulo explicativo",
-      "bibleRef": "Referência bíblica do ponto 1 (ex: Fp 2:3-4)",
-      "content": "Desenvolvimento do ponto em 3-4 linhas. Explique o princípio bíblico, conecte com a vida real e seja claro e aplicável.",
-      "discussionQuestion": "Pergunta de discussão em negrito — deve gerar conversa real e pessoal sobre este ponto específico."
+      "title": "1) Título do Ponto 1: Subtítulo que revela a verdade bíblica",
+      "bibleRef": "Referência principal + 1-2 referências cruzadas complementares (ex: Rm 3.23; Is 53.6; Ef 2.1-3)",
+      "content": "Desenvolvimento teológico profundo em 6-8 linhas: (1) explique o significado exegético do texto no seu contexto original; (2) apresente a verdade doutrinária que emerge; (3) mostre como isso se conecta à narrativa bíblica maior (criação, queda, redenção, restauração); (4) aplique concretamente à vida do crente batista hoje.",
+      "discussionQuestion": "Pergunta profunda e pessoal que não pode ser respondida com 'sim' ou 'não' — deve desafiar o grupo a refletir sobre sua vida à luz desta verdade bíblica específica."
     },
     {
-      "title": "2) Título do Ponto 2: Subtítulo explicativo",
-      "bibleRef": "Referência bíblica do ponto 2",
-      "content": "Desenvolvimento do ponto em 3-4 linhas.",
-      "discussionQuestion": "Pergunta de discussão que conecta a verdade bíblica à vida prática."
+      "title": "2) Título do Ponto 2: Subtítulo que revela a verdade bíblica",
+      "bibleRef": "Referência principal + referências cruzadas",
+      "content": "Desenvolvimento teológico profundo em 6-8 linhas seguindo a mesma estrutura: contexto exegético, verdade doutrinária, narrativa bíblica maior, aplicação prática batista.",
+      "discussionQuestion": "Pergunta que conecta a verdade bíblica a uma situação concreta da vida, relacionamentos ou missão do grupo."
     },
     {
-      "title": "3) Título do Ponto 3: Subtítulo explicativo",
-      "bibleRef": "Referência bíblica do ponto 3",
-      "content": "Desenvolvimento do ponto em 3-4 linhas.",
-      "discussionQuestion": "Pergunta de discussão que leva à aplicação e mudança de vida."
+      "title": "3) Título do Ponto 3: Subtítulo que revela a verdade bíblica",
+      "bibleRef": "Referência principal + referências cruzadas",
+      "content": "Desenvolvimento teológico profundo em 6-8 linhas. Este ponto deve levar à decisão e transformação: o que Deus exige de nós à luz desta verdade?",
+      "discussionQuestion": "Pergunta de compromisso: que mudança concreta esta verdade exige da sua vida esta semana? Como você vai obedecer?"
     }
   ],
 
-  "conclusion": "Parágrafo de conclusão que amarra os 3 pontos, reafirma a verdade central e convida à transformação.",
-  "conclusionQuestion": "Pergunta final de checagem e aplicação prática: 'Qual dos pontos mais te chamou atenção? Qual passo prático você tomará esta semana?'",
-  "leaderTip": "Dica pastoral para o líder conduzir o momento de conclusão (ex: dividir em micro-grupos de 2-5 pessoas, distribuir líderes em formação, encerrar em oração ou louvor).",
+  "conclusion": "Conclusão pastoral densa (5-7 linhas): amarre os 3 pontos mostrando a progressão lógica e espiritual, reafirme a verdade central com autoridade das Escrituras, convide à transformação e ao compromisso com Cristo. Termine com uma frase memorável ou versículo-chave.",
+  "conclusionQuestion": "Pergunta de aplicação final dupla: (1) Qual verdade deste estudo mais te desafiou? (2) Que passo concreto e verificável você tomará nos próximos 7 dias em obediência a esta Palavra?",
+  "leaderTip": "Orientação pastoral prática para o líder: como conduzir o momento de decisão, como orar com o grupo, como dividir em duplas para oração específica, como identificar alguém que precisa de acompanhamento pastoral. Mencione o modelo de célula CBB (célula → distrito → igreja local).",
 
-  "evangelism": "Orientação para o líder: se houver não crentes, como fazer o apelo; se todos forem crentes, como comunicar a visão de multiplicação e orar pelos perdidos.",
-  "evangelismStory": "Título e texto de uma história inspiradora real (ou fictícia verossímil) sobre evangelismo, missões ou impacto do Reino — conectada ao tema da semana. 2-3 linhas.",
-  "evangelismChallenge": "Desafio específico da semana relacionado a evangelismo, missões ou servir a comunidade."
+  "evangelism": "Orientação evangelística em 4-5 linhas: se houver visitantes ou não-crentes, roteiro de apelo claro e respeitoso baseado no Evangelho de graça; se todos forem crentes, desafio à visão missionária — quem você convidará para a próxima célula? Conecte ao compromisso batista com a Grande Comissão.",
+  "evangelismStory": "História real ou verossímil de 4-5 linhas sobre conversão, evangelismo ou impacto missionário — preferencialmente no contexto batista brasileiro ou de células. Inclua um título impactante.",
+  "evangelismChallenge": "Desafio missionário específico, mensurável e com prazo: uma ação concreta de evangelismo, serviço ou intercessão que o grupo fará até o próximo encontro."
 }
 
-Diretrizes importantes:
-- Linguagem: português brasileiro natural, caloroso, sem jargão excessivo
-- Se 'sermonContent' foi fornecido, adapte fielmente o conteúdo da pregação para os 3 pontos de estudo
-- Os 3 pontos devem seguir a estrutura: título + ref bíblica + desenvolvimento + pergunta de discussão
-- As perguntas de discussão devem ser pessoais e gerar conversa real, não respostas teóricas
-- O quebra-gelo deve ser leve e descontraído; escolha ou adapte uma das dinâmicas abaixo conforme o tema, ou crie uma nova se nenhuma se encaixar bem
-- Os links do YouTube ficam vazios (o líder preencherá)
+Diretrizes de qualidade:
+- Profundidade teológica sem pedantismo — acessível mas desafiador
+- Sempre ancore cada ponto nas Escrituras, nunca em opinião ou experiência humana
+- Linguagem: português brasileiro natural, caloroso, pastoral — como um pastor falando ao seu rebanho
+- Se 'sermonContent' foi fornecido, adapte fielmente mantendo os argumentos do pregador
+- As perguntas devem ser impossíveis de responder com uma palavra — devem gerar conversa real
+- Referências cruzadas devem ser genuínas e relevantes, não decorativas
+- O quebra-gelo deve ser escolhido da lista abaixo ou criado — nunca forçado ao tema
 
-BANCO DE QUEBRA-GELOS DISPONÍVEIS (escolha o mais adequado ao tema da semana):
+BANCO DE QUEBRA-GELOS DISPONÍVEIS:
 ${quebraGelosList}`;
 
   const apiKey = process.env.SAMBANOVA_API_KEY;
@@ -113,7 +123,7 @@ ${quebraGelosList}`;
         model: "Meta-Llama-3.3-70B-Instruct",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
-        max_tokens: 4096,
+        max_tokens: 6000,
       }),
     });
 
