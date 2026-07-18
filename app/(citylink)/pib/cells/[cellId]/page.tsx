@@ -83,6 +83,28 @@ export default function CellDetailPage() {
     }
   };
 
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [nameSaving, setNameSaving] = useState(false);
+
+  const handleRenameSave = async () => {
+    if (!nameInput.trim() || !cell) return;
+    setNameSaving(true);
+    try {
+      const res = await fetch(`/api/pib/cells/${cellId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameInput.trim() }),
+      });
+      if (res.ok) {
+        setCell((prev) => prev ? { ...prev, name: nameInput.trim() } : prev);
+        setEditingName(false);
+      }
+    } finally {
+      setNameSaving(false);
+    }
+  };
+
   const handleToggleEntryMode = async () => {
     if (!cell) return;
     const next = cell.entryMode === "open" ? "invite_only" : "open";
@@ -140,7 +162,29 @@ export default function CellDetailPage() {
           <Link href="/pib/cells" className="text-indigo-200 text-sm hover:text-white">
             ← Células
           </Link>
-          <h1 className="text-2xl font-bold mt-3">{cell.name}</h1>
+          {editingName ? (
+            <div className="flex items-center gap-2 mt-3">
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                className="flex-1 px-3 py-1.5 rounded-lg text-gray-900 text-lg font-bold focus:outline-none"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter') handleRenameSave(); if (e.key === 'Escape') setEditingName(false); }}
+              />
+              <button onClick={handleRenameSave} disabled={nameSaving} className="px-3 py-1.5 bg-white text-indigo-700 rounded-lg text-sm font-bold">
+                {nameSaving ? '...' : '✓'}
+              </button>
+              <button onClick={() => setEditingName(false)} className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm">✕</button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mt-3">
+              <h1 className="text-2xl font-bold">{cell.name}</h1>
+              {isLeader && (
+                <button onClick={() => { setNameInput(cell.name); setEditingName(true); }} className="text-indigo-300 hover:text-white text-sm" title="Renomear">✏️</button>
+              )}
+            </div>
+          )}
           {cell.description && (
             <p className="text-indigo-200 mt-1 text-sm">{cell.description}</p>
           )}

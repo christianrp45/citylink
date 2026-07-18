@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import type { CellGuideDetail, StudyPoint, YoutubeLink } from '@/lib/types';
 
 // Mapeia nome do livro → abreviação usada no leitor bíblico
@@ -154,6 +155,7 @@ function parseSermonText(text: string): Partial<GuideForm> {
 
 export default function GuidePage() {
   const { cellId, meetingId } = useParams<{ cellId: string; meetingId: string }>();
+  const { data: session } = useSession();
   const [guide, setGuide] = useState<CellGuideDetail | null>(null);
   const [form, setForm] = useState<GuideForm>(EMPTY_FORM);
   const [editing, setEditing] = useState(false);
@@ -164,6 +166,24 @@ export default function GuidePage() {
   const [newYtUrl, setNewYtUrl] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
+  const [isLeader, setIsLeader] = useState(false);
+
+  // Verifica se o usuário é líder ou co-líder da célula
+  useEffect(() => {
+    if (!cellId || !session?.user?.id) return;
+    fetch(`/api/pib/cells/${cellId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) {
+          setIsLeader(
+            data.leaderId === session.user.id ||
+            data.coLeaderId === session.user.id
+          );
+        }
+      });
+  }, [cellId, session?.user?.id]);
+
+  const handlePrint = () => window.print();
 
   useEffect(() => {
     if (!meetingId) return;
@@ -312,19 +332,35 @@ export default function GuidePage() {
 
     return (
       <div className="h-full overflow-y-auto bg-gray-100 pb-24">
+        {/* Estilos de impressão */}
+        <style>{`
+          @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-content { max-width: 100% !important; padding: 0 16px !important; }
+          }
+        `}</style>
+
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm no-print">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <Link href={`/pib/cells/${cellId}`} className="text-gray-500 hover:text-gray-700 text-lg">←</Link>
             <div className="text-center">
               <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Roteiro de Célula</p>
               <p className="text-sm font-bold text-gray-900">{guide.sermonTitle || guide.title}</p>
             </div>
-            <button onClick={() => setEditing(true)} className="text-sm text-indigo-600 font-medium">Editar</button>
+            <div className="flex items-center gap-2">
+              <button onClick={handlePrint} className="text-sm text-gray-500 hover:text-gray-700 font-medium" title="Baixar PDF">
+                📄
+              </button>
+              {isLeader && (
+                <button onClick={() => setEditing(true)} className="text-sm text-indigo-600 font-medium">Editar</button>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto px-4 py-4 space-y-3">
+        <div className="max-w-2xl mx-auto px-4 py-4 space-y-3 print-content">
           {/* Cabeçalho: título + pregação */}
           <div className="bg-gray-900 text-white rounded-2xl p-5">
             <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Roteiro de Célula</p>
