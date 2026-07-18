@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
   if (!biblePassage && !sermonContent) {
     return Response.json(
-      { error: "Informe a passagem bíblica ou o conteúdo da pregação" },
+      { error: "[v2780f50] Informe a passagem bíblica ou o conteúdo da pregação" },
       { status: 400 }
     );
   }
