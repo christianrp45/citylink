@@ -97,36 +97,36 @@ Diretrizes importantes:
 BANCO DE QUEBRA-GELOS DISPONÍVEIS (escolha o mais adequado ao tema da semana):
 ${quebraGelosList}`;
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.SAMBANOVA_API_KEY;
   if (!apiKey) {
-    return Response.json({ error: "Chave da API Groq não configurada no servidor." }, { status: 500 });
+    return Response.json({ error: "Chave da API SambaNova não configurada no servidor." }, { status: 500 });
   }
 
   try {
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const aiRes = await fetch("https://api.sambanova.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "Meta-Llama-3.3-70B-Instruct",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
         max_tokens: 4096,
       }),
     });
 
-    if (!groqRes.ok) {
-      const errBody = await groqRes.text();
-      console.error("[generate-guide] Groq API error:", groqRes.status, errBody);
+    if (!aiRes.ok) {
+      const errBody = await aiRes.text();
+      console.error("[generate-guide] SambaNova API error:", aiRes.status, errBody);
       return Response.json(
-        { error: `Erro da API Groq (${groqRes.status}): ${errBody.slice(0, 200)}` },
+        { error: `Erro da API SambaNova (${aiRes.status}): ${errBody.slice(0, 200)}` },
         { status: 500 }
       );
     }
 
-    const groqData = await groqRes.json();
+    const groqData = await aiRes.json();
     const text: string = groqData.choices?.[0]?.message?.content ?? "";
 
     if (!text) {
