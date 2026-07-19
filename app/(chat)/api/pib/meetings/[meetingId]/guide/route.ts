@@ -1,6 +1,7 @@
 import { auth } from "@/app/(auth)/auth";
-import { getGuideByMeeting, upsertGuide, deleteGuide, getCellById } from "@/lib/db/queries-cells";
-import { getMeetingById } from "@/lib/db/queries-cells";
+import { getGuideByMeeting, upsertGuide, deleteGuide, getCellById, getCellMembers, getMeetingById } from "@/lib/db/queries-cells";
+import { getAllPushSubscriptionsForUsers, deletePushSubscription } from "@/lib/db/queries/push";
+import { sendPush } from "@/lib/push";
 
 export async function GET(
   _request: Request,
@@ -61,6 +62,10 @@ export async function POST(
     return Response.json({ error: "Título é obrigatório" }, { status: 400 });
   }
 
+  // Verifica se o roteiro já estava publicado antes de salvar
+  const existing = await getGuideByMeeting(meetingId);
+  const wasPublished = existing?.isPublished ?? false;
+
   const guide = await upsertGuide({
     meetingId,
     title,
@@ -85,6 +90,37 @@ export async function POST(
     generatedByAI: generatedByAI ?? false,
     leaderNotes,
   });
+
+  // Envia push para todos os membros apenas na PRIMEIRA publicação
+  if (isPublished && !wasPublished) {
+    try {
+      const meeting = await getMeetingById(meetingId);
+      if (meeting) {
+        const members = await getCellMembers(meeting.cellId);
+        const userIds = members.map((m) => m.userId);
+        if (userIds.length > 0) {
+          const subscriptions = await getAllPushSubscriptionsForUsers(userIds);
+          const guideTitle = sermonTitle || title;
+          await Promise.all(
+            subscriptions.map(async (sub) => {
+              const ok = await sendPush(sub, {
+                title: "📖 Novo roteiro disponível",
+                body: guideTitle
+                  ? `"${guideTitle}" foi publicado para a sua célula.`
+                  : "O roteiro do próximo encontro foi publicado.",
+                url: `/pib/cells/${meeting.cellId}/meeting/${meetingId}/guide`,
+              });
+              // Remove subscriptions expiradas
+              if (!ok) await deletePushSubscription(sub.endpoint);
+            })
+          );
+        }
+      }
+    } catch (pushErr) {
+      // Falha de push não deve impedir a resposta — loga e segue
+      console.error("[guide] push notification error:", pushErr);
+    }
+  }
 
   return Response.json(guide, { status: 201 });
 }

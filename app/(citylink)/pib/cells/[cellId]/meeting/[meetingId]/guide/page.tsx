@@ -475,8 +475,8 @@ export default function GuidePage() {
             )}
           </div>
 
-          {/* PARA O LÍDER */}
-          {guide.leaderNote && (
+          {/* PARA O LÍDER — apenas líder/co-líder */}
+          {isLeader && guide.leaderNote && (
             <div className="space-y-2">
               <SectionHeader label="Para o Líder" />
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
@@ -485,8 +485,8 @@ export default function GuidePage() {
             </div>
           )}
 
-          {/* QUEBRANDO O GELO */}
-          {guide.icebreaker && (
+          {/* QUEBRANDO O GELO — apenas líder/co-líder */}
+          {isLeader && guide.icebreaker && (
             <div className="space-y-2">
               <SectionHeader label="Quebrando o Gelo" />
               <div className="bg-white rounded-xl p-4 border border-gray-200">
@@ -566,8 +566,8 @@ export default function GuidePage() {
             </div>
           )}
 
-          {/* EVANGELISMO */}
-          {(guide.evangelism || guide.evangelismStory || guide.evangelismChallenge) && (
+          {/* EVANGELISMO — apenas líder/co-líder */}
+          {isLeader && (guide.evangelism || guide.evangelismStory || guide.evangelismChallenge) && (
             <div className="space-y-2">
               <SectionHeader label="Evangelismo" />
               <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-3">
