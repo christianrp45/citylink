@@ -1,8 +1,34 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { cellGuide } from "../schema";
+import { cellGuide, cellMeeting } from "../schema";
+
+export async function getGuidesForCell(cellId: string) {
+  return db
+    .select({
+      guideId: cellGuide.id,
+      meetingId: cellMeeting.id,
+      scheduledAt: cellMeeting.scheduledAt,
+      meetingStatus: cellMeeting.status,
+      title: cellGuide.title,
+      sermonTitle: cellGuide.sermonTitle,
+      preacher: cellGuide.preacher,
+      biblePassage: cellGuide.biblePassage,
+      theme: cellGuide.theme,
+      isPublished: cellGuide.isPublished,
+      generatedByAI: cellGuide.generatedByAI,
+      createdAt: cellGuide.createdAt,
+    })
+    .from(cellGuide)
+    .innerJoin(cellMeeting, eq(cellGuide.meetingId, cellMeeting.id))
+    .where(eq(cellMeeting.cellId, cellId))
+    .orderBy(desc(cellMeeting.scheduledAt));
+}
+
+export async function deleteGuide(meetingId: string) {
+  await db.delete(cellGuide).where(eq(cellGuide.meetingId, meetingId));
+}
 
 export async function getGuideByMeeting(meetingId: string) {
   const [result] = await db
@@ -24,7 +50,7 @@ export async function upsertGuide(data: {
   icebreaker?: string;
   youtubeLinks?: { title: string; url: string }[];
   introduction?: string;
-  studyPoints?: { title: string; bibleRef: string; content: string; discussionQuestion: string }[];
+  studyPoints?: { title: string; bibleRef: string; content: string; discussionQuestion: string; innerReflection?: string }[];
   conclusion?: string;
   evangelism?: string;
   evangelismStory?: string;
@@ -34,6 +60,7 @@ export async function upsertGuide(data: {
   prayer?: string;
   isPublished?: boolean;
   generatedByAI?: boolean;
+  leaderNotes?: string;
 }) {
   const existing = await getGuideByMeeting(data.meetingId);
 

@@ -38,7 +38,7 @@ function parseBiblePassageUrl(passage: string): string | null {
   return `/bible/read/${abbrev}/${chapter}`;
 }
 
-const EMPTY_POINT: StudyPoint = { title: '', bibleRef: '', content: '', discussionQuestion: '' };
+const EMPTY_POINT: StudyPoint = { title: '', bibleRef: '', content: '', discussionQuestion: '', innerReflection: '' };
 
 type GuideForm = {
   title: string;
@@ -167,6 +167,10 @@ export default function GuidePage() {
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [isLeader, setIsLeader] = useState(false);
+  const [activeTab, setActiveTab] = useState<'guide' | 'notes'>('guide');
+  const [leaderNotes, setLeaderNotes] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
 
   // Verifica se o usuário é líder ou co-líder da célula
   useEffect(() => {
@@ -185,6 +189,42 @@ export default function GuidePage() {
 
   const handlePrint = () => window.print();
 
+  const handleSaveNotes = async () => {
+    if (!guide) return;
+    setSavingNotes(true);
+    try {
+      await fetch(`/api/pib/meetings/${meetingId}/guide`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: guide.title || 'Roteiro',
+          leaderNotes,
+          // preserva o resto do guia
+          biblePassage: guide.biblePassage,
+          sermonTitle: guide.sermonTitle,
+          preacher: guide.preacher,
+          theme: guide.theme,
+          leaderNote: guide.leaderNote,
+          icebreakerTitle: guide.icebreakerTitle,
+          icebreaker: guide.icebreaker,
+          youtubeLinks: guide.youtubeLinks,
+          introduction: guide.introduction,
+          studyPoints: guide.studyPoints,
+          conclusion: guide.conclusion,
+          evangelism: guide.evangelism,
+          evangelismStory: guide.evangelismStory,
+          evangelismChallenge: guide.evangelismChallenge,
+          isPublished: guide.isPublished,
+          generatedByAI: guide.generatedByAI,
+        }),
+      });
+      setNotesSaved(true);
+      setTimeout(() => setNotesSaved(false), 2000);
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
   useEffect(() => {
     if (!meetingId) return;
     fetch(`/api/pib/meetings/${meetingId}/guide`)
@@ -192,6 +232,7 @@ export default function GuidePage() {
       .then((data: CellGuideDetail | null) => {
         if (data) {
           setGuide(data);
+          setLeaderNotes(data.leaderNotes ?? '');
           setForm({
             title: data.title ?? '',
             biblePassage: data.biblePassage ?? '',
@@ -358,9 +399,62 @@ export default function GuidePage() {
               )}
             </div>
           </div>
+          {/* Abas — Anotações visível apenas para líderes */}
+          {isLeader && (
+            <div className="max-w-2xl mx-auto px-4 flex border-t border-gray-100">
+              <button
+                onClick={() => setActiveTab('guide')}
+                className={`flex-1 py-2 text-xs font-semibold transition border-b-2 ${
+                  activeTab === 'guide'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                Roteiro
+              </button>
+              <button
+                onClick={() => setActiveTab('notes')}
+                className={`flex-1 py-2 text-xs font-semibold transition border-b-2 ${
+                  activeTab === 'notes'
+                    ? 'border-violet-600 text-violet-600'
+                    : 'border-transparent text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                🔒 Anotações do Líder
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="max-w-2xl mx-auto px-4 py-4 space-y-3 print-content">
+        {/* Aba de Anotações Privadas */}
+        {isLeader && activeTab === 'notes' && (
+          <div className="max-w-2xl mx-auto px-4 py-4 space-y-3">
+            <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 space-y-3">
+              <div>
+                <p className="text-sm font-bold text-violet-900">Anotações do Líder</p>
+                <p className="text-xs text-violet-600 mt-0.5">
+                  Visível apenas para você e o co-líder desta célula. Use para registrar observações, pedidos de oração surgidos durante o estudo, ou próximos passos.
+                </p>
+              </div>
+              <textarea
+                value={leaderNotes}
+                onChange={(e) => setLeaderNotes(e.target.value)}
+                rows={12}
+                placeholder="Escreva suas anotações aqui...&#10;&#10;Ex: João mencionou dificuldades no trabalho — orar por ele. Maria pediu para conversar sobre batismo. Grupo chegou tarde, iniciar 10min antes. Ponto 2 gerou boa discussão..."
+                className="w-full px-3 py-2 border border-violet-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white resize-none"
+              />
+              <button
+                onClick={handleSaveNotes}
+                disabled={savingNotes}
+                className="w-full py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-700 transition disabled:opacity-50"
+              >
+                {notesSaved ? '✓ Salvo!' : savingNotes ? 'Salvando...' : 'Salvar anotações'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className={`max-w-2xl mx-auto px-4 py-4 space-y-3 print-content ${isLeader && activeTab === 'notes' ? 'hidden' : ''}`}>
           {/* Cabeçalho: título + pregação */}
           <div className="bg-gray-900 text-white rounded-2xl p-5">
             <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Roteiro de Célula</p>
@@ -442,7 +536,13 @@ export default function GuidePage() {
                     )}
                     <p className="text-gray-700 text-sm leading-relaxed mb-2">{pt.content}</p>
                     {pt.discussionQuestion && (
-                      <p className="font-bold text-gray-800 text-sm">• {pt.discussionQuestion}</p>
+                      <p className="font-bold text-gray-800 text-sm mb-2">• {pt.discussionQuestion}</p>
+                    )}
+                    {pt.innerReflection && (
+                      <div className="bg-violet-50 border border-violet-100 rounded-lg px-3 py-2 mt-2">
+                        <p className="text-xs font-semibold text-violet-600 uppercase tracking-wide mb-1">Reflexão Interior</p>
+                        <p className="text-gray-700 text-sm leading-relaxed italic">{pt.innerReflection}</p>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -710,6 +810,11 @@ export default function GuidePage() {
                 value={pt.content} onChange={(e) => setPoint(i, 'content', e.target.value)} className={textareaCls} />
               <textarea placeholder="Pergunta de discussão para o grupo..." rows={2}
                 value={pt.discussionQuestion} onChange={(e) => setPoint(i, 'discussionQuestion', e.target.value)} className={textareaCls} />
+              <div className="bg-violet-50 rounded-lg p-2 space-y-1">
+                <label className="block text-xs font-semibold text-violet-600 uppercase tracking-wide">Reflexão Interior</label>
+                <textarea placeholder="Que padrão interno esta verdade expõe? Como o ego resiste a ela? (gerado automaticamente pela IA)" rows={3}
+                  value={pt.innerReflection ?? ''} onChange={(e) => setPoint(i, 'innerReflection', e.target.value)} className={`${textareaCls} bg-white border-violet-200`} />
+              </div>
             </div>
           ))}
         </div>

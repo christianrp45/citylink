@@ -464,6 +464,8 @@ export const cellGuide = pgTable("CellGuide", {
   isPublished: boolean("isPublished").notNull().default(false),
   publishedAt: timestamp("publishedAt"),
   generatedByAI: boolean("generatedByAI").notNull().default(false),
+  // Anotações privadas do líder — visíveis apenas ao líder e co-líder
+  leaderNotes: text("leaderNotes"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
 

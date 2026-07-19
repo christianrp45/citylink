@@ -26,20 +26,31 @@ export default function MeetingDetailPage() {
   const [rsvp, setRsvp] = useState<string>('no-response');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isLeader, setIsLeader] = useState(false);
+  const [meetingStatus, setMeetingStatus] = useState<string>('scheduled');
+  const [closingMeeting, setClosingMeeting] = useState(false);
 
   useEffect(() => {
-    if (!meetingId) return;
-    fetch(`/api/pib/meetings/${meetingId}/attendance`)
-      .then((r) => r.json())
-      .then((data) => {
-        const rows: AttendanceRow[] = Array.isArray(data) ? data : [];
-        setAttendance(rows);
-        const myRow = rows.find((r) => r.userId === session?.user?.id);
-        if (myRow?.rsvpStatus) setRsvp(myRow.rsvpStatus);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [meetingId, session?.user?.id]);
+    if (!meetingId || !cellId) return;
+    Promise.all([
+      fetch(`/api/pib/meetings/${meetingId}/attendance`).then((r) => r.json()),
+      fetch(`/api/pib/cells/${cellId}`).then((r) => r.ok ? r.json() : null),
+    ]).then(([attendanceData, cellData]) => {
+      const rows: AttendanceRow[] = Array.isArray(attendanceData) ? attendanceData : [];
+      setAttendance(rows);
+      const myRow = rows.find((r) => r.userId === session?.user?.id);
+      if (myRow?.rsvpStatus) setRsvp(myRow.rsvpStatus);
+      if (cellData) {
+        setIsLeader(
+          cellData.leaderId === session?.user?.id ||
+          cellData.coLeaderId === session?.user?.id
+        );
+        const thisMeeting = cellData.meetings?.find((m: { id: string; status: string }) => m.id === meetingId);
+        if (thisMeeting) setMeetingStatus(thisMeeting.status);
+      }
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [meetingId, cellId, session?.user?.id]);
 
   async function handleRsvp(status: string) {
     setSaving(true);
@@ -59,6 +70,21 @@ export default function MeetingDetailPage() {
   const going = attendance.filter((a) => a.rsvpStatus === 'going').length;
   const notGoing = attendance.filter((a) => a.rsvpStatus === 'not-going').length;
   const maybe = attendance.filter((a) => a.rsvpStatus === 'maybe').length;
+
+  const handleCloseMeeting = async () => {
+    if (!confirm('Encerrar este encontro? Ele será arquivado no histórico da célula.')) return;
+    setClosingMeeting(true);
+    try {
+      const res = await fetch(`/api/pib/meetings/${meetingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' }),
+      });
+      if (res.ok) setMeetingStatus('completed');
+    } finally {
+      setClosingMeeting(false);
+    }
+  };
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50 pb-24">
@@ -139,6 +165,33 @@ export default function MeetingDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Encerrar encontro — apenas líder, apenas se ainda "scheduled" */}
+        {isLeader && meetingStatus === 'scheduled' && (
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <p className="text-sm font-semibold text-gray-800 mb-1">Encerrar encontro</p>
+            <p className="text-xs text-gray-500 mb-3">
+              Marque como concluído para arquivar no histórico. O roteiro continuará acessível para todos os membros.
+            </p>
+            <button
+              onClick={handleCloseMeeting}
+              disabled={closingMeeting}
+              className="w-full py-2.5 bg-gray-700 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
+            >
+              {closingMeeting ? 'Encerrando...' : '✓ Encerrar este encontro'}
+            </button>
+          </div>
+        )}
+
+        {meetingStatus === 'completed' && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+            <p className="text-sm font-semibold text-emerald-700">Encontro encerrado</p>
+            <p className="text-xs text-emerald-600 mt-0.5">
+              Este encontro foi concluído e está disponível no{' '}
+              <a href={`/pib/cells/${cellId}/history`} className="underline font-medium">histórico da célula</a>.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

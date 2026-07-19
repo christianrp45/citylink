@@ -190,6 +190,7 @@ export type StudyPoint = {
   bibleRef: string;
   content: string;
   discussionQuestion: string;
+  innerReflection?: string;
 };
 
 export type CellGuideDetail = {
@@ -223,6 +224,8 @@ export type CellGuideDetail = {
   isPublished: boolean;
   publishedAt?: string;
   generatedByAI: boolean;
+  // Anotações privadas do líder
+  leaderNotes?: string;
   createdAt: string;
 };
 

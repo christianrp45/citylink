@@ -4,6 +4,18 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { cellAttendance, cellMeeting, user } from "../schema";
 
+export async function updateMeetingStatus(
+  meetingId: string,
+  status: "scheduled" | "completed" | "cancelled"
+) {
+  const [updated] = await db
+    .update(cellMeeting)
+    .set({ status })
+    .where(eq(cellMeeting.id, meetingId))
+    .returning();
+  return updated ?? null;
+}
+
 export async function getMeetingsByCell(cellId: string) {
   return db
     .select()

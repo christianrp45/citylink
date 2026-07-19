@@ -256,20 +256,27 @@ export default function CellDetailPage() {
         )}
 
         {/* Ações rápidas */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Link
             href={`/pib/cells/${cellId}/prayer`}
             className="bg-white rounded-xl p-4 shadow-sm text-center hover:shadow-md transition"
           >
             <p className="text-2xl">🙏</p>
-            <p className="font-medium text-gray-800 mt-1 text-sm">Pedidos de Oração</p>
+            <p className="font-medium text-gray-800 mt-1 text-sm">Oração</p>
           </Link>
           <Link
             href={`/pib/cells/${cellId}/meeting/new`}
             className="bg-white rounded-xl p-4 shadow-sm text-center hover:shadow-md transition"
           >
             <p className="text-2xl">📅</p>
-            <p className="font-medium text-gray-800 mt-1 text-sm">Agendar Encontro</p>
+            <p className="font-medium text-gray-800 mt-1 text-sm">Agendar</p>
+          </Link>
+          <Link
+            href={`/pib/cells/${cellId}/history`}
+            className="bg-white rounded-xl p-4 shadow-sm text-center hover:shadow-md transition"
+          >
+            <p className="text-2xl">📚</p>
+            <p className="font-medium text-gray-800 mt-1 text-sm">Histórico</p>
           </Link>
         </div>
 

@@ -70,19 +70,22 @@ Responda APENAS com JSON válido, sem texto adicional, seguindo exatamente este 
       "title": "1) Título do Ponto 1: Subtítulo que revela a verdade bíblica",
       "bibleRef": "Referência principal + 1-2 referências cruzadas complementares (ex: Rm 3.23; Is 53.6; Ef 2.1-3)",
       "content": "Desenvolvimento teológico profundo em 6-8 linhas: (1) explique o significado exegético do texto no seu contexto original; (2) apresente a verdade doutrinária que emerge; (3) mostre como isso se conecta à narrativa bíblica maior (criação, queda, redenção, restauração); (4) aplique concretamente à vida do crente batista hoje.",
-      "discussionQuestion": "Pergunta profunda e pessoal que não pode ser respondida com 'sim' ou 'não' — deve desafiar o grupo a refletir sobre sua vida à luz desta verdade bíblica específica."
+      "discussionQuestion": "Pergunta profunda e pessoal que não pode ser respondida com 'sim' ou 'não' — deve desafiar o grupo a refletir sobre sua vida à luz desta verdade bíblica específica.",
+      "innerReflection": "Reflexão interior de 3-4 linhas que ilumina o movimento interno que esta verdade provoca: que padrão emocional ou mental a pessoa costuma usar para resistir ou distorcer esta verdade? Como o ego se defende dela? Que forma de desconexão — de si mesmo, dos outros ou de Deus — esta verdade expõe? E como a aceitação genuína desta Palavra pode iniciar um movimento de restauração interior? Escreva em linguagem pastoral e acolhedora, sem jargão técnico."
     },
     {
       "title": "2) Título do Ponto 2: Subtítulo que revela a verdade bíblica",
       "bibleRef": "Referência principal + referências cruzadas",
       "content": "Desenvolvimento teológico profundo em 6-8 linhas seguindo a mesma estrutura: contexto exegético, verdade doutrinária, narrativa bíblica maior, aplicação prática batista.",
-      "discussionQuestion": "Pergunta que conecta a verdade bíblica a uma situação concreta da vida, relacionamentos ou missão do grupo."
+      "discussionQuestion": "Pergunta que conecta a verdade bíblica a uma situação concreta da vida, relacionamentos ou missão do grupo.",
+      "innerReflection": "Reflexão interior de 3-4 linhas: que impulso interno — de controle, autossuficiência ou negação — esta verdade confronta? Como a pessoa pode, inconscientemente, inverter esta verdade para se proteger de sua exigência? Que emoção ou resistência costuma surgir quando somos chamados a viver isso de verdade? Escreva de forma suave, sem acusação, convidando à consciência e à rendição."
     },
     {
       "title": "3) Título do Ponto 3: Subtítulo que revela a verdade bíblica",
       "bibleRef": "Referência principal + referências cruzadas",
       "content": "Desenvolvimento teológico profundo em 6-8 linhas. Este ponto deve levar à decisão e transformação: o que Deus exige de nós à luz desta verdade?",
-      "discussionQuestion": "Pergunta de compromisso: que mudança concreta esta verdade exige da sua vida esta semana? Como você vai obedecer?"
+      "discussionQuestion": "Pergunta de compromisso: que mudança concreta esta verdade exige da sua vida esta semana? Como você vai obedecer?",
+      "innerReflection": "Reflexão interior de 3-4 linhas voltada à transformação: que parte de mim ainda quer ser o centro — o juiz de si mesmo, o dono de suas decisões? Como esta verdade me convida a soltar esse controle e confiar em Deus de forma concreta? Que passo interior — não apenas externo — esta Palavra pede? Finalize com uma frase de convite à rendição e à liberdade que vem de confiar em Cristo."
     }
   ],
 
