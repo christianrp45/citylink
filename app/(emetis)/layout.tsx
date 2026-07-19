@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 import { EmetisHeader } from '@/components/emetis-header';
 import { BottomNav } from '@/components/emetis-bottom-nav';
+import { TeoFAB } from '@/components/teo-fab';
 import { auth } from '@/app/(auth)/auth';
 import { getUserPrivacySettings } from '@/lib/db/queries';
 
@@ -32,6 +33,7 @@ export default async function EmetisLayout({ children }: { children: React.React
         </Suspense>
       </main>
       <BottomNav />
+      <TeoFAB />
     </div>
   );
 }

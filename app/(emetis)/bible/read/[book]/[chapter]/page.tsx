@@ -57,6 +57,7 @@ export default function ChapterPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>('sm');
+  const [selectedText, setSelectedText] = useState('');
   const teoBottomRef = useRef<HTMLDivElement>(null);
 
   // Carregar preferências do localStorage
@@ -107,6 +108,39 @@ export default function ChapterPage() {
   useEffect(() => {
     teoBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [teoMessages]);
+
+  // Detecta seleção de texto para acionar o Teo
+  useEffect(() => {
+    function onSelectionChange() {
+      const sel = window.getSelection();
+      const text = sel?.toString().trim() ?? '';
+      setSelectedText(text);
+    }
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () => document.removeEventListener('selectionchange', onSelectionChange);
+  }, []);
+
+  function askTeoWithSelection() {
+    if (!selectedText) return;
+    const ctx = teoContextRef.current;
+    const prefix = ctx ? `[${ctx.bookName} ${ctx.chapter}] ` : '';
+    window.dispatchEvent(
+      new CustomEvent('teo:ask', { detail: { text: `${prefix}"${selectedText}"` } })
+    );
+    window.getSelection()?.removeAllRanges();
+    setSelectedText('');
+  }
+
+  function askTeoWithVerse(verse: number) {
+    const verseData = data?.verses.find((v) => v.verse === verse);
+    if (!verseData || !data) return;
+    window.dispatchEvent(
+      new CustomEvent('teo:ask', {
+        detail: { text: `[${data.bookName} ${data.chapter}:${verse}] "${verseData.text}"` },
+      })
+    );
+    setSelectedVerse(null);
+  }
 
   const loadChapter = useCallback(async () => {
     setLoading(true);
@@ -389,7 +423,7 @@ export default function ChapterPage() {
               <span className={`text-[11px] font-bold mr-1.5 select-none ${dm ? 'text-indigo-300' : 'text-indigo-400'}`}>
                 {verse}
               </span>
-              <span className={`${FONT_SIZE_CLASS[fontSize]} leading-relaxed ${dm ? 'text-gray-100' : 'text-slate-800'}`}>
+              <span className={`${FONT_SIZE_CLASS[fontSize]} leading-relaxed select-text ${dm ? 'text-gray-100' : 'text-slate-800'}`}>
                 {text}
               </span>
               {hl?.note && (
@@ -522,6 +556,28 @@ export default function ChapterPage() {
         </div>
       )}
 
+      {/* Barra flutuante de seleção de texto → Teo */}
+      {selectedText.length > 0 && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9980] flex items-center gap-2 bg-slate-900 text-white rounded-full shadow-xl px-4 py-2.5 text-sm font-medium whitespace-nowrap">
+          <span className="text-indigo-300 font-bold" style={{ fontFamily: 'serif' }}>τ</span>
+          <span className="max-w-[180px] truncate text-slate-300 text-xs">
+            "{selectedText}"
+          </span>
+          <button
+            onClick={askTeoWithSelection}
+            className="ml-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors"
+          >
+            Perguntar ao Teo
+          </button>
+          <button
+            onClick={() => { window.getSelection()?.removeAllRanges(); setSelectedText(''); }}
+            className="text-slate-400 hover:text-white ml-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Highlight action sheet */}
       {selectedVerse !== null && (
         <div className="fixed inset-0 z-[100] flex items-end" onClick={() => { setSelectedVerse(null); setShowNoteInput(false); }}>
@@ -574,6 +630,19 @@ export default function ChapterPage() {
                 }`}
               />
             )}
+
+            {/* Perguntar ao Teo */}
+            <button
+              onClick={() => askTeoWithVerse(selectedVerse)}
+              className={`w-full text-sm font-medium py-2.5 rounded-xl mb-2 flex items-center justify-center gap-2 transition-colors ${
+                dm
+                  ? 'bg-indigo-900/40 text-indigo-300 border border-indigo-800 hover:bg-indigo-900/60'
+                  : 'bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100'
+              }`}
+            >
+              <span className="font-bold" style={{ fontFamily: 'serif' }}>τ</span>
+              Perguntar ao Teo sobre este versículo
+            </button>
 
             {/* Remove highlight */}
             {getHighlight(selectedVerse) && (
