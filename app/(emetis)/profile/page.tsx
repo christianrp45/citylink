@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus } from 'lucide-react';
+import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus, QrCode, Copy } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
@@ -182,7 +183,21 @@ export default function ProfilePage() {
   const [savingLocation, setSavingLocation] = useState(false);
   const [togglingLocId, setTogglingLocId] = useState<string | null>(null);
   const [deletingLocId, setDeletingLocId] = useState<string | null>(null);
+  const [showQR, setShowQR] = useState(false);
+  const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const connectUrl = typeof window !== 'undefined' && profile
+    ? `${window.location.origin}/connect/${profile.id}`
+    : '';
+
+  function handleCopyLink() {
+    if (!connectUrl) return;
+    navigator.clipboard.writeText(connectUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   // Carregar perfil do banco
   useEffect(() => {
@@ -545,13 +560,22 @@ export default function ProfilePage() {
             />
           </div>
 
-          <div className="text-white">
+          <div className="text-white flex-1 min-w-0">
             <h1 className="text-xl font-bold">{displayName}</h1>
             {profile?.profession && (
               <p className="text-blue-200 text-sm">{profile.profession}</p>
             )}
             <p className="text-blue-300 text-xs mt-0.5">{profile?.email}</p>
           </div>
+
+          {/* Botão QR Code */}
+          <button
+            onClick={() => setShowQR(true)}
+            className="flex-shrink-0 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"
+            title="Meu QR Code"
+          >
+            <QrCode size={20} className="text-white" />
+          </button>
         </div>
       </div>
 
@@ -1259,6 +1283,57 @@ export default function ProfilePage() {
           Sair da Conta
         </button>
       </div>
+
+      {/* Modal QR Code */}
+      {showQR && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
+          style={{ background: 'rgba(15,23,42,0.7)' }}
+          onClick={() => setShowQR(false)}
+        >
+          <div
+            className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl p-6 space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-slate-800 text-lg">Meu QR Code</h2>
+              <button onClick={() => setShowQR(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                <X size={16} className="text-slate-500" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-500 text-center">
+              Mostre este QR para alguém escanear e se conectar com você no Emetis.
+            </p>
+
+            {/* QR */}
+            <div className="flex justify-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+              {connectUrl && (
+                <QRCode
+                  value={connectUrl}
+                  size={200}
+                  bgColor="#ffffff"
+                  fgColor="#1e1b4b"
+                />
+              )}
+            </div>
+
+            <p className="text-center font-semibold text-slate-700 text-sm">{displayName}</p>
+
+            {/* Link copiável */}
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+              <p className="flex-1 text-xs text-slate-500 truncate">{connectUrl}</p>
+              <button
+                onClick={handleCopyLink}
+                className="flex-shrink-0 flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? 'Copiado!' : 'Copiar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
