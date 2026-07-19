@@ -78,19 +78,30 @@ export default function ChapterPage() {
     localStorage.setItem('bible-font-size', size);
   }
 
+  // Ref para sempre ter o contexto mais recente ao enviar mensagens
+  const teoContextRef = useRef<{ bookName: string; chapter: number } | null>(null);
+  useEffect(() => {
+    if (data) teoContextRef.current = { bookName: data.bookName, chapter: data.chapter };
+  }, [data]);
+
   const { messages: teoMessages, sendMessage: teoSend, status: teoStatus } = useChat({
-    transport: new DefaultChatTransport({
-      api: '/api/teo',
-      body: data ? { context: { bookName: data.bookName, chapter: data.chapter } } : {},
-    }),
+    transport: new DefaultChatTransport({ api: '/api/teo' }),
   });
+
+  function submitTeoWithContext(text: string) {
+    if (!text.trim() || teoLoading) return;
+    // Injeta o contexto da passagem diretamente no body de cada mensagem
+    teoSend(
+      { role: 'user', parts: [{ type: 'text', text: text.trim() }] },
+      { body: teoContextRef.current ? { context: teoContextRef.current } : undefined }
+    );
+    setTeoInput('');
+  }
 
   const teoLoading = teoStatus === 'streaming' || teoStatus === 'submitted';
 
   function submitTeo(text: string) {
-    if (!text.trim() || teoLoading) return;
-    teoSend({ role: 'user', parts: [{ type: 'text', text: text.trim() }] });
-    setTeoInput('');
+    submitTeoWithContext(text);
   }
 
   useEffect(() => {

@@ -887,7 +887,7 @@ export default function MapPage() {
 
       {/* Botão Teo para novo usuário — aparece após fechar o modal de boas-vindas */}
       {showTeoIntro && (
-        <div className="fixed bottom-20 left-4 right-4 z-[100]">
+        <div className="fixed bottom-20 left-4 right-4 z-[9997]">
           <div className="bg-white rounded-2xl shadow-xl border border-indigo-100 p-4 flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
               τ

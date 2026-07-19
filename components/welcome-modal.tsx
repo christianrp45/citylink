@@ -51,7 +51,7 @@ export function WelcomeModal({ onDismiss }: WelcomeModalProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-[200] flex items-end sm:items-center justify-center transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[9999] flex items-end sm:items-center justify-center transition-opacity duration-300 ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
       style={{ background: 'rgba(15,23,42,0.75)' }}

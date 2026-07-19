@@ -57,7 +57,7 @@ export function TeoNewUserSheet({ onDismiss }: TeoNewUserSheetProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-[150] flex flex-col justify-end transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[9998] flex flex-col justify-end transition-opacity duration-300 ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
       style={{ background: 'rgba(15,23,42,0.5)' }}
