@@ -1,8 +1,8 @@
 # Emetis — Roadmap de Implementação
-**Atualizado em:** 2026-07-04  
-**Deploy:** [emetis-rosy.vercel.app](https://emetis-rosy.vercel.app)  
-**Repositório:** github.com/christianrp45/emetis  
-**Stack:** Next.js 16 · App Router · Drizzle ORM · Neon PostgreSQL · NextAuth 5 · Vercel AI SDK · Leaflet · Tailwind CSS 4
+**Atualizado em:** 2026-07-19
+**Deploy:** [app.emetis.com.br](https://app.emetis.com.br)
+**Repositório:** github.com/christianrp45/citylink
+**Stack:** Next.js 16 · App Router · Drizzle ORM · Neon PostgreSQL · NextAuth 5 · Vercel AI SDK v6 · Leaflet · Tailwind CSS 4 · SambaNova
 
 ---
 

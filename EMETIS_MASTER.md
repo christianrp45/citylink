@@ -1,7 +1,7 @@
 # Emetis — Documento Master
-**Versão:** 2.0  
-**Última atualização:** 2026-07-05  
-**Status:** Em desenvolvimento ativo — deploy em produção em emetis-rosy.vercel.app
+**Versão:** 3.0
+**Última atualização:** 2026-07-19
+**Status:** Em produção — [app.emetis.com.br](https://app.emetis.com.br)
 
 ---
 
@@ -37,12 +37,12 @@ O Emetis não é mais um app de redes sociais. É uma plataforma de **reconexão
 | Leaflet | — | Mapas interativos |
 | Tailwind CSS | 4 | Estilização |
 | web-push (VAPID) | — | Push notifications |
+| SambaNova API | Meta-Llama-3.3-70B-Instruct | Geração de roteiro MDC (gratuito) |
 | pnpm | — | Package manager |
 
-**Deploy:** Vercel  
-**Repositório:** github.com/christianrp45/emetis  
-**Domínio futuro:** emetis.com.br  
-**Dir local:** d:/Emetis-main/Emetis-main
+**Deploy:** Vercel — [app.emetis.com.br](https://app.emetis.com.br)
+**Repositório:** github.com/christianrp45/citylink
+**Dir local:** d:/Citylink-main/Citylink-main
 
 ---
 
@@ -417,6 +417,9 @@ node -e "const wp=require('web-push');const k=wp.generateVAPIDKeys();console.log
 | 2026-07-05 | ConsentLog como tabela insert-only | Auditoria LGPD imutável |
 | 2026-07-05 | Localização com TTL configurável | Dado mínimo necessário (LGPD art. 6) |
 | 2026-07-05 | Cooldown de alerta de proximidade | Evitar comportamento Zenly (assédio por proximidade) |
+| 2026-07-14 | Migrar gerador de roteiro para SambaNova | Gratuito, sem cartão de crédito; Gemini e Groq exigem billing |
+| 2026-07-14 | Ocultar nome da instituição parceira do prompt de IA | Nome de terceiro não deve ser exposto a usuários finais |
+| 2026-07-19 | Rename completo: citylink→emetis, pib→mdc, teos→teo | Consolidar branding; MDC reflete a natureza do módulo (grupos batistas) |
 
 ---
 

@@ -1,10 +1,10 @@
 # Emetis — Planejamento e Estado do Projeto
 
-**Versão:** 8.0
-**Atualizado:** 2026-07-05
-**Stack:** Next.js 16 + App Router + Drizzle ORM (Neon PostgreSQL) + NextAuth 5 + Vercel AI SDK v6 + Leaflet + Tailwind CSS 4
-**Deploy:** https://emetis-rosy.vercel.app
-**Repositório:** https://github.com/christianrp45/emetis
+**Versão:** 9.0
+**Atualizado:** 2026-07-19
+**Stack:** Next.js 16 + App Router + Drizzle ORM (Neon PostgreSQL) + NextAuth 5 + Vercel AI SDK v6 + Leaflet + Tailwind CSS 4 + SambaNova (Meta-Llama-3.3-70B)
+**Deploy:** [app.emetis.com.br](https://app.emetis.com.br)
+**Repositório:** [github.com/christianrp45/citylink](https://github.com/christianrp45/citylink)
 
 ---
 
@@ -15,7 +15,7 @@
 | Item | Status |
 |---|---|
 | Banco Neon PostgreSQL conectado | ✅ |
-| Drizzle ORM com migrações (0001–0024) | ✅ |
+| Drizzle ORM com migrações (0001–0025) | ✅ |
 | NextAuth 5 com sessão real | ✅ |
 | Vercel AI SDK v6 (useChat v3, DefaultChatTransport, sendMessage) | ✅ |
 | Deploy Vercel automático via GitHub push | ✅ |
@@ -52,24 +52,33 @@
 | Botão "Convidar" na página da Célula (líder/co-líder) | `mdc/cells/[cellId]/page.tsx` | ✅ |
 | `primaryChurchId` no User (uma igreja por usuário) | migração 0022 | ✅ |
 
-### Módulo MDC Curitiba — Grupos Pequenos
+### Módulo MDC — Grupos Pequenos
 
 | Feature | Arquivo | Status |
 |---|---|---|
 | Hub de grupos (`/mdc`) com abas: Minha Célula, Grupos, Oração, IA Pastoral | `mdc/page.tsx` | ✅ |
 | Diretório de grupos (`/mdc/cells`) | `mdc/cells/page.tsx` | ✅ |
 | Página do grupo com feed + reuniões | `mdc/cells/[cellId]/page.tsx` | ✅ |
+| Renomear célula (líder) | `mdc/cells/[cellId]/page.tsx` | ✅ |
 | Agendar reunião (líder) | `mdc/cells/[cellId]/meeting/new/page.tsx` | ✅ |
+| Encerrar reunião (líder) | `api/mdc/meetings/[meetingId]/route.ts` | ✅ |
 | RSVP de reunião | `api/mdc/meetings/[meetingId]/rsvp/` | ✅ |
 | Lista de presença | `api/mdc/meetings/[meetingId]/attendance/` | ✅ |
 | Pedidos de oração com "Orei por isso 🙏" | `mdc/cells/[cellId]/prayer/page.tsx` | ✅ |
-| Roteiro no padrão MDC Curitiba (7 seções) | `guide/page.tsx` | ✅ |
-| Geração de roteiro com IA (padrão MDC) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
+| Roteiro padrão MDC batista (7 seções) | `mdc/cells/[cellId]/meeting/[meetingId]/guide/page.tsx` | ✅ |
+| Geração de roteiro com IA (SambaNova — Meta-Llama-3.3-70B) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
 | Colar pregação completa → adapta para formato MDC | `guide/page.tsx` + API | ✅ |
 | Link passagem bíblica → leitor bíblico | `guide/page.tsx` | ✅ |
+| PDF do roteiro (gerado no cliente) | `guide/page.tsx` | ✅ |
+| Notas privadas do líder (visível só ao líder) | `guide/page.tsx` + `api/mdc/meetings/[meetingId]/guide/` | ✅ |
+| Seções exclusivas do líder ocultas para membros | `guide/page.tsx` | ✅ |
+| Histórico de roteiros da célula | `mdc/cells/[cellId]/history/page.tsx` | ✅ |
+| Cache offline do roteiro gerado | `guide/page.tsx` (localStorage) | ✅ |
+| Push notification ao publicar roteiro | `api/mdc/meetings/[meetingId]/guide/` | ✅ |
+| Ícone Emetis sempre visível + link para /map no roteiro | `guide/page.tsx` | ✅ |
 | Assistente IA Pastoral (Teo) na aba de grupos | `mdc/page.tsx` | ✅ |
 
-#### Formato do Roteiro MDC Curitiba (7 seções implementadas):
+#### Formato do Roteiro MDC batista (7 seções implementadas)
 
 1. **PARA O LÍDER** — reflexão sobre discipulado e formação
 2. **QUEBRANDO O GELO** — nome temático + dinâmica
@@ -121,11 +130,14 @@
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| `teoPrompt` — assistente bíblico com identidade Teo (θεός) | `lib/ai/prompts.ts` | ✅ |
+| `teoPrompt` — assistente bíblico com identidade Teo (θεός), sem emojis | `lib/ai/prompts.ts` | ✅ |
 | `teoWithPassagePrompt(book, chapter)` — com contexto do capítulo | `lib/ai/prompts.ts` | ✅ |
 | Rota `/api/teo` com rate limit 50 msg/dia | `api/teo/route.ts` | ✅ |
 | Rota `/api/pastoral` com rate limit 30 msg/dia | `api/pastoral/route.ts` | ✅ |
-| Rota `/api/mdc/ai/generate-guide` — gera roteiro MDC | `api/mdc/ai/generate-guide/route.ts` | ✅ |
+| Rota `/api/mdc/ai/generate-guide` — gera roteiro MDC via SambaNova (Meta-Llama-3.3-70B) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
+| Modelo gratuito fallback — Google Gemini 2.0/2.5 Flash Lite via `@ai-sdk/google` | `lib/ai/providers.ts` | ✅ |
+| Banco de quebra-gelos integrado ao gerador de roteiro (lib/data/quebra-gelos.ts) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
+| Nome da instituição parceira oculto do prompt de IA (não exposto aos usuários) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
 
 ---
 
@@ -143,6 +155,7 @@
 | 0022 | InviteCode table + primaryChurchId no User | ✅ aplicada |
 | 0023 | circle (family/friends) na tabela Friendship | ✅ aplicada |
 | 0024 | UserLocation (id, userId, label, type, lat, lng, isActive) | ✅ aplicada |
+| 0025 | BusinessRecommendation (communityId, userId, comment) — Irmão Indica Irmão | ✅ aplicada |
 
 ---
 
@@ -151,7 +164,7 @@
 ### Prioridade MÉDIA
 
 - [x] **Push notifications** — `lib/push.ts` com web-push + VAPID keys no Vercel; envio real em visitas, proximidade, hospitalidade e mensagens
-- [ ] **Irmão Indica Irmão** — exibir recomendadores no card de empresa na página de Negócios
+- [x] **Irmão Indica Irmão** — toggle "Indicar" por usuário, lista de recomendadores com avatar/nome/profissão; API GET/POST `/api/communities/[id]/recommend` (migration 0025)
 - [x] **Modo noturno + tamanho de fonte** no leitor bíblico — botão Aa no header, toggle dark mode, 3 tamanhos (P/M/G), persistido em localStorage
 
 ### Prioridade BAIXA (futuro)
@@ -231,4 +244,14 @@ return createUIMessageStreamResponse({
 
 ---
 
-*Atualizado em 2026-07-05 — repositório: github.com/christianrp45/emetis*
+---
+
+## 7. Decisões Arquiteturais Recentes
+
+| Data | Decisão | Motivo |
+| --- | --- | --- |
+| 2026-07-14 | Migrar gerador de roteiro para SambaNova (Meta-Llama-3.3-70B) | Gratuito, sem necessidade de cartão de crédito |
+| 2026-07-14 | Ocultar nome da instituição parceira do prompt de IA | Evitar que usuários vejam nome de terceiro nas respostas geradas |
+| 2026-07-19 | Rename: `(citylink)→(emetis)`, `pib→mdc`, `teos→teo` | Consolidar branding Emetis em toda a codebase |
+
+Atualizado em 2026-07-19 — repositório: github.com/christianrp45/citylink
