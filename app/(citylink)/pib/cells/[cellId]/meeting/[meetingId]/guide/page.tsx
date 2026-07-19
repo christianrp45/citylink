@@ -200,7 +200,7 @@ export default function GuidePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: guide.title || 'Roteiro',
+          title: guide.sermonTitle || guide.title || 'Roteiro',
           leaderNotes,
           // preserva o resto do guia
           biblePassage: guide.biblePassage,
@@ -363,7 +363,7 @@ export default function GuidePage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: form.title || form.sermonTitle || 'Roteiro',
+        title: form.sermonTitle || form.title || 'Roteiro',
         biblePassage: form.biblePassage,
         sermonTitle: form.sermonTitle,
         preacher: form.preacher,
