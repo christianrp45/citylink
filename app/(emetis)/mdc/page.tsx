@@ -1209,7 +1209,7 @@ const SUGGESTED_QUESTIONS = [
 
 function PastoralTab() {
   const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/teo' }),
+    transport: new DefaultChatTransport({ api: '/api/pastoral' }),
   });
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);

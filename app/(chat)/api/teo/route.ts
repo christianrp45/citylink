@@ -5,7 +5,7 @@ import {
   streamText,
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
-import { teoPrompt, teoWithPassagePrompt } from "@/lib/ai/prompts";
+import { teoPrompt, teoWithPassagePrompt, newUserTeoPrompt } from "@/lib/ai/prompts";
 import { getFreeModel } from "@/lib/ai/providers";
 import { getMessageCountByUserId } from "@/lib/db/queries";
 
@@ -34,11 +34,13 @@ export async function POST(request: Request) {
   const { messages, context } = await request.json();
   const modelMessages = await convertToModelMessages(messages);
 
-  // Se vier contexto de passagem bíblica, usa prompt enriquecido
-  const systemPrompt =
-    context?.bookName && context?.chapter
-      ? teoWithPassagePrompt(context.bookName, context.chapter)
-      : teoPrompt;
+  // Seleciona o prompt certo conforme o contexto
+  let systemPrompt = teoPrompt;
+  if (context?.isNewUser) {
+    systemPrompt = newUserTeoPrompt;
+  } else if (context?.bookName && context?.chapter) {
+    systemPrompt = teoWithPassagePrompt(context.bookName, context.chapter);
+  }
 
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {

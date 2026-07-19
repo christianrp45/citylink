@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import VisitRequestModal from '@/components/visit-request-modal';
+import { WelcomeModal } from '@/components/welcome-modal';
+import { TeoNewUserSheet } from '@/components/teo-new-user-sheet';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(m => m.TileLayer), { ssr: false });
@@ -89,6 +91,20 @@ const ALERT_COLOR: Record<string, string> = {
 
 export default function MapPage() {
   const router = useRouter();
+
+  // Onboarding de novo usuário
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [showTeoIntro, setShowTeoIntro] = useState(false);
+  const [showTeoSheet, setShowTeoSheet] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('emetis_welcomed')) {
+      setShowWelcome(true);
+    } else if (localStorage.getItem('emetis_show_teo_intro')) {
+      setShowTeoIntro(true);
+    }
+  }, []);
+
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [center, setCenter] = useState<[number, number]>([CURITIBA.lat, CURITIBA.lng]);
   const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
@@ -867,6 +883,46 @@ export default function MapPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Botão Teo para novo usuário — aparece após fechar o modal de boas-vindas */}
+      {showTeoIntro && (
+        <div className="fixed bottom-20 left-4 right-4 z-[100]">
+          <div className="bg-white rounded-2xl shadow-xl border border-indigo-100 p-4 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+              τ
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-slate-800 text-sm">Olá! Sou o Teo</p>
+              <p className="text-slate-500 text-xs leading-snug">Posso te ajudar a dar os primeiros passos no Emetis.</p>
+            </div>
+            <div className="flex flex-col gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => { localStorage.removeItem('emetis_show_teo_intro'); setShowTeoIntro(false); setShowTeoSheet(true); }}
+                className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 active:scale-95 transition-all whitespace-nowrap"
+              >
+                Falar com Teo
+              </button>
+              <button
+                onClick={() => { localStorage.removeItem('emetis_show_teo_intro'); setShowTeoIntro(false); }}
+                className="px-3 py-1.5 bg-slate-100 text-slate-500 text-xs rounded-xl hover:bg-slate-200 active:scale-95 transition-all"
+              >
+                Agora não
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modais de novo usuário */}
+      {showWelcome && (
+        <WelcomeModal onDismiss={() => {
+          setShowWelcome(false);
+          setShowTeoIntro(true);
+        }} />
+      )}
+      {showTeoSheet && (
+        <TeoNewUserSheet onDismiss={() => setShowTeoSheet(false)} />
       )}
 
     </div>
