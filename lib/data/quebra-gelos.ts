@@ -1,6 +1,6 @@
 /**
  * Banco de quebra-gelos e dinâmicas para reuniões de célula.
- * Base: "Quebra-gelos e Dinâmicas — PIB Curitiba"
+ * Base: "Quebra-gelos e Dinâmicas — MDC Curitiba"
  * 40 dinâmicas catalogadas para uso pelo gerador de roteiro de IA.
  */
 

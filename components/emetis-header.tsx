@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { EmetisIcon, EmetisLogo } from './emetis-icon';
 
-const ROOT_PATHS = ['/map', '/community', '/bible', '/chat', '/pib', '/profile', '/businesses', '/events'];
+const ROOT_PATHS = ['/map', '/community', '/bible', '/chat', '/mdc', '/profile', '/businesses', '/events'];
 
 function isRootPage(pathname: string) {
   return ROOT_PATHS.some((p) => pathname === p);

@@ -1,5 +1,5 @@
-// CityLink Service Worker — v1
-const CACHE_NAME = 'citylink-v1';
+// Emetis Service Worker — v1
+const CACHE_NAME = 'emetis-v1';
 
 // Arquivos essenciais para cache offline
 const PRECACHE = ['/map', '/chat', '/community', '/events'];
@@ -58,10 +58,10 @@ self.addEventListener('push', (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: 'CityLink', body: event.data.text() };
+    payload = { title: 'Emetis', body: event.data.text() };
   }
 
-  const { title = 'CityLink', body = '', icon = '/images/icon-192.png', url = '/map' } = payload;
+  const { title = 'Emetis', body = '', icon = '/images/icon-192.png', url = '/map' } = payload;
 
   event.waitUntil(
     self.registration.showNotification(title, {

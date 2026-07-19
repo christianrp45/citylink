@@ -186,7 +186,7 @@ export const stream = pgTable(
 export type Stream = InferSelectModel<typeof stream>;
 
 // ============================================================
-// CITYLINK — AMIZADES E VISITAS
+// EMETIS — AMIZADES E VISITAS
 // ============================================================
 
 export const friendship = pgTable(
@@ -219,7 +219,7 @@ export const friendship = pgTable(
 export type Friendship = InferSelectModel<typeof friendship>;
 
 // ============================================================
-// CITYLINK — EVENTOS
+// EMETIS — EVENTOS
 // ============================================================
 
 export const event = pgTable("Event", {
@@ -262,7 +262,7 @@ export const eventAttendee = pgTable(
 export type EventAttendee = InferSelectModel<typeof eventAttendee>;
 
 // ============================================================
-// CITYLINK — ALERTAS SAMARITANOS
+// EMETIS — ALERTAS SAMARITANOS
 // ============================================================
 
 export const samaritanAlert = pgTable("SamaritanAlert", {
@@ -343,7 +343,7 @@ export const visitRequest = pgTable("VisitRequest", {
 export type VisitRequest = InferSelectModel<typeof visitRequest>;
 
 // ============================================================
-// CITYLINK — MÓDULO CÉLULAS
+// EMETIS — MÓDULO CÉLULAS
 // ============================================================
 
 export const cell = pgTable("Cell", {
@@ -530,7 +530,7 @@ export const prayerInteraction = pgTable(
 export type PrayerInteraction = InferSelectModel<typeof prayerInteraction>;
 
 // ============================================================
-// CITYLINK — FASE 6: PUSH NOTIFICATIONS
+// EMETIS — FASE 6: PUSH NOTIFICATIONS
 // ============================================================
 
 export const pushSubscription = pgTable(
@@ -550,7 +550,7 @@ export const pushSubscription = pgTable(
 export type PushSubscription = InferSelectModel<typeof pushSubscription>;
 
 // ============================================================
-// CITYLINK — FASE 7: IGREJAS, TESTEMUNHOS, ORAÇÃO, VOLUNTARIADO
+// EMETIS — FASE 7: IGREJAS, TESTEMUNHOS, ORAÇÃO, VOLUNTARIADO
 // ============================================================
 
 export const church = pgTable("Church", {
@@ -686,7 +686,7 @@ export const volunteerEnrollment = pgTable(
 export type VolunteerEnrollment = InferSelectModel<typeof volunteerEnrollment>;
 
 // ============================================================
-// CITYLINK — ETAPA 8: COMUNIDADES, PRIVACIDADE E LGPD
+// EMETIS — ETAPA 8: COMUNIDADES, PRIVACIDADE E LGPD
 // ============================================================
 
 export const community = pgTable("Community", {
@@ -903,7 +903,7 @@ export const readingPlanProgress = pgTable("ReadingPlanProgress", {
 export type ReadingPlanProgress = InferSelectModel<typeof readingPlanProgress>;
 
 // ============================================================
-// CITYLINK — SISTEMA DE VÍNCULOS: CONVITES
+// EMETIS — SISTEMA DE VÍNCULOS: CONVITES
 // ============================================================
 
 export const inviteCode = pgTable("InviteCode", {

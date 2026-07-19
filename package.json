@@ -18,8 +18,7 @@
     "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.15",
-    "@ai-sdk/google": "^4.0.16",
+    "@ai-sdk/openai": "^4.0.16",
     "@ai-sdk/provider": "^3.0.3",
     "@ai-sdk/react": "3.0.39",
     "@codemirror/lang-javascript": "^6.2.2",

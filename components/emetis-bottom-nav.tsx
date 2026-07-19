@@ -19,7 +19,7 @@ const NAV_ITEMS: { href: string; label: string; icon: NavIcon }[] = [
   { href: '/community', label: 'Amigos',  icon: IconCommunity },
   { href: '/bible',     label: 'Bíblia',  icon: IconBible },
   { href: '/chat',      label: 'Chat',    icon: IconChat },
-  { href: '/pib',       label: 'Grupos',  icon: IconGroups },
+  { href: '/mdc',       label: 'Grupos',  icon: IconGroups },
   { href: '/profile',   label: 'Perfil',  icon: IconProfile },
 ];
 

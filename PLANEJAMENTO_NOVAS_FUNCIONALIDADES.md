@@ -1,10 +1,10 @@
-# CityLink — Planejamento e Estado do Projeto
+# Emetis — Planejamento e Estado do Projeto
 
 **Versão:** 8.0
 **Atualizado:** 2026-07-05
 **Stack:** Next.js 16 + App Router + Drizzle ORM (Neon PostgreSQL) + NextAuth 5 + Vercel AI SDK v6 + Leaflet + Tailwind CSS 4
-**Deploy:** https://citylink-rosy.vercel.app
-**Repositório:** https://github.com/christianrp45/citylink
+**Deploy:** https://emetis-rosy.vercel.app
+**Repositório:** https://github.com/christianrp45/emetis
 
 ---
 
@@ -21,8 +21,8 @@
 | Deploy Vercel automático via GitHub push | ✅ |
 | Headers de segurança (X-Frame, CSP, etc.) | ✅ |
 | OG/Twitter metadata em app/layout.tsx | ✅ |
-| Error boundary (`app/(citylink)/error.tsx`) | ✅ |
-| Loading state (`app/(citylink)/loading.tsx`) | ✅ |
+| Error boundary (`app/(emetis)/error.tsx`) | ✅ |
+| Loading state (`app/(emetis)/loading.tsx`) | ✅ |
 | PWA manifest + ícones `icon-192.png` e `icon-512.png` | ✅ |
 
 ### Módulo Mapa / Uber Humano (Sistema de Visitas)
@@ -49,27 +49,27 @@
 | Uso do convite (vincula membro) | `api/invite/[code]/use/` | ✅ |
 | Revogação de código | `api/invite/[code]/` DELETE | ✅ |
 | Página pública `/join/[code]` com redirect para login | `join/[code]/page.tsx` | ✅ |
-| Botão "Convidar" na página da Célula (líder/co-líder) | `pib/cells/[cellId]/page.tsx` | ✅ |
+| Botão "Convidar" na página da Célula (líder/co-líder) | `mdc/cells/[cellId]/page.tsx` | ✅ |
 | `primaryChurchId` no User (uma igreja por usuário) | migração 0022 | ✅ |
 
-### Módulo PIB Curitiba — Grupos Pequenos
+### Módulo MDC Curitiba — Grupos Pequenos
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| Hub de grupos (`/pib`) com abas: Minha Célula, Grupos, Oração, IA Pastoral | `pib/page.tsx` | ✅ |
-| Diretório de grupos (`/pib/cells`) | `pib/cells/page.tsx` | ✅ |
-| Página do grupo com feed + reuniões | `pib/cells/[cellId]/page.tsx` | ✅ |
-| Agendar reunião (líder) | `pib/cells/[cellId]/meeting/new/page.tsx` | ✅ |
-| RSVP de reunião | `api/pib/meetings/[meetingId]/rsvp/` | ✅ |
-| Lista de presença | `api/pib/meetings/[meetingId]/attendance/` | ✅ |
-| Pedidos de oração com "Orei por isso 🙏" | `pib/cells/[cellId]/prayer/page.tsx` | ✅ |
-| Roteiro no padrão PIB Curitiba (7 seções) | `guide/page.tsx` | ✅ |
-| Geração de roteiro com IA (padrão PIB) | `api/pib/ai/generate-guide/route.ts` | ✅ |
-| Colar pregação completa → adapta para formato PIB | `guide/page.tsx` + API | ✅ |
+| Hub de grupos (`/mdc`) com abas: Minha Célula, Grupos, Oração, IA Pastoral | `mdc/page.tsx` | ✅ |
+| Diretório de grupos (`/mdc/cells`) | `mdc/cells/page.tsx` | ✅ |
+| Página do grupo com feed + reuniões | `mdc/cells/[cellId]/page.tsx` | ✅ |
+| Agendar reunião (líder) | `mdc/cells/[cellId]/meeting/new/page.tsx` | ✅ |
+| RSVP de reunião | `api/mdc/meetings/[meetingId]/rsvp/` | ✅ |
+| Lista de presença | `api/mdc/meetings/[meetingId]/attendance/` | ✅ |
+| Pedidos de oração com "Orei por isso 🙏" | `mdc/cells/[cellId]/prayer/page.tsx` | ✅ |
+| Roteiro no padrão MDC Curitiba (7 seções) | `guide/page.tsx` | ✅ |
+| Geração de roteiro com IA (padrão MDC) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
+| Colar pregação completa → adapta para formato MDC | `guide/page.tsx` + API | ✅ |
 | Link passagem bíblica → leitor bíblico | `guide/page.tsx` | ✅ |
-| Assistente IA Pastoral (Teos) na aba de grupos | `pib/page.tsx` | ✅ |
+| Assistente IA Pastoral (Teo) na aba de grupos | `mdc/page.tsx` | ✅ |
 
-#### Formato do Roteiro PIB Curitiba (7 seções implementadas):
+#### Formato do Roteiro MDC Curitiba (7 seções implementadas):
 
 1. **PARA O LÍDER** — reflexão sobre discipulado e formação
 2. **QUEBRANDO O GELO** — nome temático + dinâmica
@@ -87,8 +87,8 @@
 | Progresso dos planos persistido no DB | `api/bible/plans/route.ts`, tabela ReadingPlanProgress | ✅ |
 | Leitor de capítulo com navegação | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
 | Highlights (destaques coloridos) por versículo | `api/bible/highlights/route.ts` | ✅ |
-| Teos — Assistente Bíblico com contexto do capítulo | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
-| Bottom sheet Teos (70dvh) com perguntas sugeridas | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
+| Teo — Assistente Bíblico com contexto do capítulo | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
+| Bottom sheet Teo (70dvh) com perguntas sugeridas | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
 | Busca de livros na home | `bible/page.tsx` | ✅ |
 
 ### Módulo Comunidade
@@ -117,15 +117,15 @@
 | Excluir conta | `api/users/delete-account/` | ✅ |
 | Onboarding (consentimento LGPD) | `app/(onboarding)/onboarding/page.tsx` | ✅ |
 
-### IA — Teos e Pastoral
+### IA — Teo e Pastoral
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| `teosPrompt` — assistente bíblico com identidade Teos (θεός) | `lib/ai/prompts.ts` | ✅ |
-| `teosWithPassagePrompt(book, chapter)` — com contexto do capítulo | `lib/ai/prompts.ts` | ✅ |
-| Rota `/api/teos` com rate limit 50 msg/dia | `api/teos/route.ts` | ✅ |
+| `teoPrompt` — assistente bíblico com identidade Teo (θεός) | `lib/ai/prompts.ts` | ✅ |
+| `teoWithPassagePrompt(book, chapter)` — com contexto do capítulo | `lib/ai/prompts.ts` | ✅ |
+| Rota `/api/teo` com rate limit 50 msg/dia | `api/teo/route.ts` | ✅ |
 | Rota `/api/pastoral` com rate limit 30 msg/dia | `api/pastoral/route.ts` | ✅ |
-| Rota `/api/pib/ai/generate-guide` — gera roteiro PIB | `api/pib/ai/generate-guide/route.ts` | ✅ |
+| Rota `/api/mdc/ai/generate-guide` — gera roteiro MDC | `api/mdc/ai/generate-guide/route.ts` | ✅ |
 
 ---
 
@@ -139,7 +139,7 @@
 | 0018 | HospitalityWindow | ✅ aplicada |
 | 0019 | communityId em Cell | ✅ aplicada |
 | 0020 | ReadingPlanProgress | ✅ aplicada |
-| 0021 | CellGuide formato PIB (sermonTitle, preacher, leaderNote, icebreakerTitle, studyPoints, conclusion, evangelism…) | ✅ aplicada |
+| 0021 | CellGuide formato MDC (sermonTitle, preacher, leaderNote, icebreakerTitle, studyPoints, conclusion, evangelism…) | ✅ aplicada |
 | 0022 | InviteCode table + primaryChurchId no User | ✅ aplicada |
 | 0023 | circle (family/friends) na tabela Friendship | ✅ aplicada |
 | 0024 | UserLocation (id, userId, label, type, lat, lng, isActive) | ✅ aplicada |
@@ -172,7 +172,7 @@
 ```typescript
 // CORRETO (v3 API)
 const { messages, sendMessage, status } = useChat({
-  transport: new DefaultChatTransport({ api: '/api/teos' }),
+  transport: new DefaultChatTransport({ api: '/api/teo' }),
 });
 const [input, setInput] = useState('');
 
@@ -213,10 +213,10 @@ return createUIMessageStreamResponse({
 | `lib/db/schema.ts` | Schema completo de todas as tabelas |
 | `lib/db/queries.ts` | Queries principais: usuário, visitas, convites, localização, amizades |
 | `lib/db/queries-cells.ts` | Queries de células, reuniões, guias, orações |
-| `lib/ai/prompts.ts` | Prompts: Teos, teosWithPassage, pastoral, generateGuide |
+| `lib/ai/prompts.ts` | Prompts: Teo, teoWithPassage, pastoral, generateGuide |
 | `lib/reading-plans.ts` | 3 planos de leitura estáticos (Salmos, NT90, Bíblia1Ano) |
-| `components/citylink-bottom-nav.tsx` | Navegação inferior (5 abas) |
-| `app/(citylink)/layout.tsx` | Layout raiz com auth + onboarding redirect |
+| `components/emetis-bottom-nav.tsx` | Navegação inferior (5 abas) |
+| `app/(emetis)/layout.tsx` | Layout raiz com auth + onboarding redirect |
 | `next.config.ts` | Config Next.js com headers e cacheComponents |
 | `vercel.json` | Build command + cron schedule |
 
@@ -226,9 +226,9 @@ return createUIMessageStreamResponse({
 
 ```
 [🗺️ Mapa] [📖 Bíblia] [⛪ Igreja] [💬 Chat] [👤 Perfil]
-                              ↳ /pib (Grupos, Oração, Pastoral)
+                              ↳ /mdc (Grupos, Oração, Pastoral)
 ```
 
 ---
 
-*Atualizado em 2026-07-05 — repositório: github.com/christianrp45/citylink*
+*Atualizado em 2026-07-05 — repositório: github.com/christianrp45/emetis*

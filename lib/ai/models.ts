@@ -1,5 +1,5 @@
-// Curated list of top models from Vercel AI Gateway
-export const DEFAULT_CHAT_MODEL = "google/gemini-2.5-flash-lite";
+// Modelos disponíveis via SambaNova Cloud (SAMBANOVA_API_KEY)
+export const DEFAULT_CHAT_MODEL = "Meta-Llama-3.3-70B-Instruct";
 
 export type ChatModel = {
   id: string;
@@ -9,88 +9,35 @@ export type ChatModel = {
 };
 
 export const chatModels: ChatModel[] = [
-  // Anthropic
   {
-    id: "anthropic/claude-haiku-4.5",
-    name: "Claude Haiku 4.5",
-    provider: "anthropic",
-    description: "Fast and affordable, great for everyday tasks",
+    id: "Meta-Llama-3.3-70B-Instruct",
+    name: "Llama 3.3 70B",
+    provider: "sambanova",
+    description: "Rápido e eficiente para tarefas do dia a dia",
   },
   {
-    id: "anthropic/claude-sonnet-4.5",
-    name: "Claude Sonnet 4.5",
-    provider: "anthropic",
-    description: "Best balance of speed, intelligence, and cost",
+    id: "Meta-Llama-3.1-405B-Instruct",
+    name: "Llama 3.1 405B",
+    provider: "sambanova",
+    description: "Modelo mais capaz para tarefas complexas",
   },
   {
-    id: "anthropic/claude-opus-4.5",
-    name: "Claude Opus 4.5",
-    provider: "anthropic",
-    description: "Most capable Anthropic model",
-  },
-  // OpenAI
-  {
-    id: "openai/gpt-4.1-mini",
-    name: "GPT-4.1 Mini",
-    provider: "openai",
-    description: "Fast and cost-effective for simple tasks",
+    id: "DeepSeek-R1",
+    name: "DeepSeek R1",
+    provider: "sambanova",
+    description: "Raciocínio avançado para problemas complexos",
   },
   {
-    id: "openai/gpt-5.2",
-    name: "GPT-5.2",
-    provider: "openai",
-    description: "Most capable OpenAI model",
-  },
-  // Google
-  {
-    id: "google/gemini-2.5-flash-lite",
-    name: "Gemini 2.5 Flash Lite",
-    provider: "google",
-    description: "Ultra fast and affordable",
+    id: "DeepSeek-V3-0324",
+    name: "DeepSeek V3",
+    provider: "sambanova",
+    description: "Alta performance geral",
   },
   {
-    id: "google/gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
-    provider: "google",
-    description: "Fast with improved performance",
-  },
-  {
-    id: "google/gemini-2.5-pro",
-    name: "Gemini 2.5 Pro",
-    provider: "google",
-    description: "More capable for complex tasks",
-  },
-  {
-    id: "google/gemini-3-pro-preview",
-    name: "Gemini 3 Pro",
-    provider: "google",
-    description: "Most capable Google model",
-  },
-  {
-    id: "google/gemini-1.5-pro",
-    name: "Gemini 1.5 Pro",
-    provider: "google",
-    description: "Previous generation with 2M context",
-  },
-  // xAI
-  {
-    id: "xai/grok-4.1-fast-non-reasoning",
-    name: "Grok 4.1 Fast",
-    provider: "xai",
-    description: "Fast with 30K context",
-  },
-  // Reasoning models (extended thinking)
-  {
-    id: "anthropic/claude-3.7-sonnet-thinking",
-    name: "Claude 3.7 Sonnet",
-    provider: "reasoning",
-    description: "Extended thinking for complex problems",
-  },
-  {
-    id: "xai/grok-code-fast-1-thinking",
-    name: "Grok Code Fast",
-    provider: "reasoning",
-    description: "Reasoning optimized for code",
+    id: "Qwen3-32B",
+    name: "Qwen 3 32B",
+    provider: "sambanova",
+    description: "Multilingual com bom desempenho em português",
   },
 ];
 

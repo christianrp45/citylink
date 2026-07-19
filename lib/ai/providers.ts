@@ -1,6 +1,5 @@
-import { gateway } from "@ai-sdk/gateway";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import type { LanguageModelV2 } from "@ai-sdk/provider";
+import { createOpenAI } from "@ai-sdk/openai";
+import type { LanguageModelV3 } from "@ai-sdk/provider";
 import {
   customProvider,
   extractReasoningMiddleware,
@@ -29,6 +28,12 @@ export const myProvider = isTestEnvironment
     })()
   : null;
 
+// Provedor SambaNova — OpenAI-compatible, usa SAMBANOVA_API_KEY
+const sambaNova = createOpenAI({
+  baseURL: "https://api.sambanova.ai/v1",
+  apiKey: process.env.SAMBANOVA_API_KEY ?? "",
+});
+
 export function getLanguageModel(modelId: string) {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel(modelId);
@@ -38,36 +43,31 @@ export function getLanguageModel(modelId: string) {
     modelId.includes("reasoning") || modelId.endsWith("-thinking");
 
   if (isReasoningModel) {
-    const gatewayModelId = modelId.replace(THINKING_SUFFIX_REGEX, "");
-
+    const baseModelId = modelId.replace(THINKING_SUFFIX_REGEX, "");
     return wrapLanguageModel({
-      model: gateway.languageModel(gatewayModelId),
+      model: sambaNova(baseModelId) as unknown as LanguageModelV3,
       middleware: extractReasoningMiddleware({ tagName: "thinking" }),
     });
   }
 
-  return gateway.languageModel(modelId);
+  return sambaNova(modelId) as unknown as LanguageModelV3;
 }
 
 export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  return gateway.languageModel("google/gemini-2.5-flash-lite");
+  return sambaNova("Meta-Llama-3.3-70B-Instruct") as unknown as LanguageModelV3;
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("artifact-model");
   }
-  return gateway.languageModel("anthropic/claude-haiku-4.5");
+  return sambaNova("Meta-Llama-3.3-70B-Instruct") as unknown as LanguageModelV3;
 }
 
-// Modelo gratuito para Teos, Pastoral e gerador de roteiro.
-// Usa @ai-sdk/google diretamente com GOOGLE_GENERATIVE_AI_API_KEY.
-// O cast é necessário pois @ai-sdk/google@4.x exporta LanguageModelV4
-// enquanto ai@6.x espera LanguageModelV3 — compatíveis em runtime.
-const googleAI = createGoogleGenerativeAI();
+// Modelo para Teo e funcionalidades pastorais
 export function getFreeModel() {
-  return googleAI("gemini-2.0-flash") as unknown as LanguageModelV2;
+  return sambaNova("Meta-Llama-3.3-70B-Instruct") as unknown as LanguageModelV3;
 }

@@ -1,16 +1,16 @@
-# CityLink — Roadmap de Implementação
+# Emetis — Roadmap de Implementação
 **Atualizado em:** 2026-07-04  
-**Deploy:** [citylink-rosy.vercel.app](https://citylink-rosy.vercel.app)  
-**Repositório:** github.com/christianrp45/citylink  
+**Deploy:** [emetis-rosy.vercel.app](https://emetis-rosy.vercel.app)  
+**Repositório:** github.com/christianrp45/emetis  
 **Stack:** Next.js 16 · App Router · Drizzle ORM · Neon PostgreSQL · NextAuth 5 · Vercel AI SDK · Leaflet · Tailwind CSS 4
 
 ---
 
 ## 1. Visão do Produto
 
-O CityLink é um **"Uber Humano"** — um app de proximidade social para igrejas e comunidades cristãs. A ideia central: quando você está passando perto da casa de um amigo, vê isso no mapa e com um toque informa **"Estou passando na sua área!"**. Se ele estiver com **Mesa Posta** (portas abertas), você vai direto sem pedir autorização.
+O Emetis é um **"Uber Humano"** — um app de proximidade social para igrejas e comunidades cristãs. A ideia central: quando você está passando perto da casa de um amigo, vê isso no mapa e com um toque informa **"Estou passando na sua área!"**. Se ele estiver com **Mesa Posta** (portas abertas), você vai direto sem pedir autorização.
 
-**Público-alvo:** membros de igrejas evangélicas, especialmente a PIB Curitiba.  
+**Público-alvo:** membros de igrejas evangélicas, especialmente a MDC Curitiba.  
 **Domínio futuro:** emetis.com.br
 
 ---
@@ -25,12 +25,12 @@ O CityLink é um **"Uber Humano"** — um app de proximidade social para igrejas
 | `/community` | Amigos | Mock | UI pronta, sem banco |
 | `/events` | Eventos | Mock | UI pronta, sem banco |
 | `/chat` | Chat | Mock | UI pronta, sem banco |
-| `/pib` | Igreja | Mock + Banco | Hub Igreja completo; Células usa banco real |
-| `/pib/cells` | — | Banco real | CRUD células funciona |
-| `/pib/cells/[id]` | — | Banco real | Detalhes, reuniões, RSVP |
-| `/pib/cells/[id]/prayer` | — | Banco real | Pedidos de oração |
-| `/pib/cells/[id]/meeting/new` | — | Banco real | Criar reunião |
-| `/pib/cells/[id]/meeting/[id]/guide` | — | Banco real + IA | Roteiro gerado por IA |
+| `/mdc` | Igreja | Mock + Banco | Hub Igreja completo; Células usa banco real |
+| `/mdc/cells` | — | Banco real | CRUD células funciona |
+| `/mdc/cells/[id]` | — | Banco real | Detalhes, reuniões, RSVP |
+| `/mdc/cells/[id]/prayer` | — | Banco real | Pedidos de oração |
+| `/mdc/cells/[id]/meeting/new` | — | Banco real | Criar reunião |
+| `/mdc/cells/[id]/meeting/[id]/guide` | — | Banco real + IA | Roteiro gerado por IA |
 | `/profile` | Perfil | Mock | UI pronta, sem banco |
 | `/login` | — | Banco real | Funciona |
 | `/register` | — | Banco real | Funciona (campos básicos) |
@@ -43,7 +43,7 @@ O CityLink é um **"Uber Humano"** — um app de proximidade social para igrejas
 | Banco de dados | ✅ Real | Neon PostgreSQL + Drizzle ORM |
 | Upload de imagem | ✅ Real | Vercel Blob — `POST /api/files/upload` (5MB, JPEG/PNG) |
 | Chat com IA | ✅ Real | Streaming SSE, histórico salvo no banco |
-| Células (PIB) | ✅ Real | CRUD completo, reuniões, oração, roteiro IA |
+| Células (MDC) | ✅ Real | CRUD completo, reuniões, oração, roteiro IA |
 | Chat entre membros | ❌ Mock | Sem persistência, só estado React |
 | Usuários no mapa | ❌ Mock | Hardcoded em MOCK_USERS |
 | Amizades | ❌ Mock | Sem tabela no banco |
@@ -298,7 +298,7 @@ VolunteerEnrollment: { opportunityId, userId, enrolledAt }
 lib/db/schema.ts              — adicionar campos em User
 lib/db/migrations/            — nova migration
 app/(auth)/register/page.tsx  — campos extras
-app/(citylink)/profile/page.tsx — conectar ao banco
+app/(emetis)/profile/page.tsx — conectar ao banco
 app/(chat)/api/users/me/route.ts — GET/PATCH perfil
 ```
 
@@ -306,7 +306,7 @@ app/(chat)/api/users/me/route.ts — GET/PATCH perfil
 ```
 app/(chat)/api/users/nearby/route.ts   — GET usuários próximos
 app/(chat)/api/users/location/route.ts — POST atualizar posição
-app/(citylink)/map/page.tsx            — substituir MOCK_USERS pela API
+app/(emetis)/map/page.tsx            — substituir MOCK_USERS pela API
 ```
 
 ### Fase 3
@@ -316,7 +316,7 @@ app/(chat)/api/friends/route.ts
 app/(chat)/api/friends/[userId]/route.ts
 app/(chat)/api/visits/route.ts
 app/(chat)/api/visits/[id]/respond/route.ts
-app/(citylink)/community/page.tsx        — conectar ao banco
+app/(emetis)/community/page.tsx        — conectar ao banco
 components/visit-request-modal.tsx       — conectar ao banco
 ```
 
@@ -325,7 +325,7 @@ components/visit-request-modal.tsx       — conectar ao banco
 lib/db/schema.ts                              — tabela DirectMessage
 app/(chat)/api/messages/route.ts
 app/(chat)/api/messages/[userId]/route.ts
-app/(citylink)/chat/page.tsx                  — conectar ao banco
+app/(emetis)/chat/page.tsx                  — conectar ao banco
 ```
 
 ### Fase 5
@@ -333,7 +333,7 @@ app/(citylink)/chat/page.tsx                  — conectar ao banco
 lib/db/schema.ts                          — tabelas Event e SamaritanAlert
 app/(chat)/api/events/route.ts
 app/(chat)/api/alerts/route.ts
-app/(citylink)/events/page.tsx            — conectar ao banco
+app/(emetis)/events/page.tsx            — conectar ao banco
 ```
 
 ### Fase 6
@@ -351,7 +351,7 @@ app/(chat)/api/churches/
 app/(chat)/api/testimonials/
 app/(chat)/api/prayer-groups/
 app/(chat)/api/volunteer/
-app/(citylink)/pib/page.tsx   — conectar tabs ao banco
+app/(emetis)/mdc/page.tsx   — conectar tabs ao banco
 ```
 
 ---
@@ -384,8 +384,8 @@ git push origin master:main
 
 | Recurso | Link |
 |---------|------|
-| Deploy atual | citylink-rosy.vercel.app |
-| Repositório | github.com/christianrp45/citylink |
+| Deploy atual | emetis-rosy.vercel.app |
+| Repositório | github.com/christianrp45/emetis |
 | Banco (Neon) | console.neon.tech |
 | Deploy (Vercel) | vercel.com/dashboard |
 | Drizzle ORM | orm.drizzle.team |

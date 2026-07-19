@@ -1,11 +1,11 @@
-t# CityLink — Documentação do Projeto
+t# Emetis — Documentação do Projeto
 
 ## Visão Geral
 
 Emetis é um aplicativo de proximidade social voltado para comunidades, igrejas, amigos e familiares. A ideia central é resgatar as visitas espontâneas do passado: quando você está passando perto da casa de um amigo, pode solicitar uma visita. Se ele estiver com o modo "Aberto para visitas" ativado, você vai direto sem precisar de confirmação.
 
 **Deploy:** Vercel  
-**Repositório:** github.com/christianrp45/citylink  
+**Repositório:** github.com/christianrp45/emetis  
 **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v4 + Zustand + Leaflet
 
 ---
@@ -27,7 +27,7 @@ Emetis é um aplicativo de proximidade social voltado para comunidades, igrejas,
 ## Estrutura de Arquivos
 
 ```
-citylink/
+emetis/
 ├── public/
 │   ├── favicon.svg
 │   └── icons.svg
@@ -301,8 +301,8 @@ O rewrite `/(.*) → /index.html` é obrigatório para que o roteamento client-s
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/christianrp45/citylink.git
-cd citylink
+git clone https://github.com/christianrp45/emetis.git
+cd emetis
 
 # 2. Instale as dependências
 npm install

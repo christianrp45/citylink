@@ -122,7 +122,7 @@ export type CommunityEvent = {
 };
 
 // ============================================================
-// CITYLINK — MÓDULO CÉLULAS
+// EMETIS — MÓDULO CÉLULAS
 // ============================================================
 
 export type CellTargetAudience =

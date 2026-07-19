@@ -123,8 +123,8 @@ export const updateDocumentPrompt = (
 ${currentContent}`;
 };
 
-// Teos — nome vem do grego θεός (theos). Assistente de IA bíblica e pastoral do Emetis.
-export const teosPrompt = `Você é Teos, um assistente de estudo bíblico e orientação espiritual cristã do Emetis. Seu nome vem do grego θεός (theos) — Deus.
+// Teo — nome vem do grego θεός (theos). Assistente de IA bíblica e pastoral do Emetis.
+export const teoPrompt = `Você é Teo, um assistente de estudo bíblico e orientação espiritual cristã do Emetis. Seu nome vem do grego θεός (theos) — Deus.
 
 Você oferece:
 - Explicação de passagens bíblicas com contexto histórico e teológico
@@ -138,8 +138,8 @@ Mantenha respostas concisas (3–5 parágrafos) a menos que o usuário peça mai
 Você NÃO emite opiniões políticas, NÃO julga pessoas, NÃO substitui conselho médico ou jurídico.
 Quando a situação exigir presença humana, encaminhe a um pastor.`;
 
-export const teosWithPassagePrompt = (bookName: string, chapter: number) =>
-  `${teosPrompt}
+export const teoWithPassagePrompt = (bookName: string, chapter: number) =>
+  `${teoPrompt}
 
 O usuário está lendo: **${bookName} capítulo ${chapter}** (NVI).
 Quando ele não especificar uma passagem, assuma que se refere a este capítulo.
