@@ -1,8 +1,9 @@
 'use client';
 
 import { Bell, ChevronLeft } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { EmetisLogo } from './emetis-icon';
+import { EmetisIcon, EmetisLogo } from './emetis-icon';
 
 const ROOT_PATHS = ['/map', '/community', '/bible', '/chat', '/pib', '/profile', '/businesses', '/events'];
 
@@ -13,7 +14,7 @@ function isRootPage(pathname: string) {
 export function EmetisHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const showBack = !isRootPage(pathname);
+  const isRoot = isRootPage(pathname);
 
   return (
     <header
@@ -24,7 +25,8 @@ export function EmetisHeader() {
       }}
     >
       <div className="flex items-center gap-2 min-w-0">
-        {showBack ? (
+        {/* Botão voltar — apenas em sub-páginas */}
+        {!isRoot && (
           <button
             type="button"
             onClick={() => router.back()}
@@ -34,9 +36,15 @@ export function EmetisHeader() {
             <ChevronLeft size={20} strokeWidth={2.5} />
             <span className="text-sm font-semibold">Voltar</span>
           </button>
-        ) : (
-          <EmetisLogo iconSize={26} variant="white" />
         )}
+
+        {/* Logo — sempre visível, linka para /map */}
+        <Link href="/map" aria-label="Ir para o mapa" className="flex items-center rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors p-1">
+          {isRoot
+            ? <EmetisLogo iconSize={26} variant="white" />
+            : <EmetisIcon size={24} variant="white" />
+          }
+        </Link>
       </div>
 
       <button
@@ -45,7 +53,6 @@ export function EmetisHeader() {
         aria-label="Notificações"
       >
         <Bell size={22} strokeWidth={1.8} />
-        {/* Badge de notificação (decorativo por agora) */}
         <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full border border-white/60" />
       </button>
     </header>

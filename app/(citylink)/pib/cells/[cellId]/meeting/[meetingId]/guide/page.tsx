@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import type { CellGuideDetail, StudyPoint, YoutubeLink } from '@/lib/types';
+import { EmetisIcon } from '@/components/emetis-icon';
 
 // Mapeia nome do livro → abreviação usada no leitor bíblico
 const BOOK_MAP: Record<string, string> = {
@@ -540,6 +541,12 @@ export default function GuidePage() {
         )}
 
         <div className={`max-w-2xl mx-auto px-4 py-4 space-y-3 print-content ${isLeader && activeTab === 'notes' ? 'hidden' : ''}`}>
+          {/* Cabeçalho de impressão — apenas no PDF */}
+          <div className="hidden print:flex items-center gap-2 pb-2 border-b border-gray-200 mb-2">
+            <EmetisIcon size={28} variant="blue" />
+            <span className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Roteiro de Célula — Emetis</span>
+          </div>
+
           {/* Cabeçalho: título + pregação */}
           <div className="bg-gray-900 text-white rounded-2xl p-5">
             <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Roteiro de Célula</p>
