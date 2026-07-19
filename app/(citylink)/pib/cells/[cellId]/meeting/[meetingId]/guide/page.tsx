@@ -171,6 +171,9 @@ export default function GuidePage() {
   const [leaderNotes, setLeaderNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [savedOffline, setSavedOffline] = useState(false);
+  const [offlineSaved, setOfflineSaved] = useState(false);
 
   // Verifica se o usuário é líder ou co-líder da célula
   useEffect(() => {
@@ -225,12 +228,35 @@ export default function GuidePage() {
     }
   };
 
+  // Chave do cache offline
+  const offlineKey = meetingId ? `citylink-guide-${meetingId}` : null;
+
+  // Detecta status online/offline
+  useEffect(() => {
+    const update = () => setIsOffline(!navigator.onLine);
+    update();
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); };
+  }, []);
+
+  // Verifica se já foi salvo offline
+  useEffect(() => {
+    if (!offlineKey) return;
+    setSavedOffline(!!localStorage.getItem(offlineKey));
+  }, [offlineKey]);
+
   useEffect(() => {
     if (!meetingId) return;
     fetch(`/api/pib/meetings/${meetingId}/guide`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data: CellGuideDetail | null) => {
         if (data) {
+          // Auto-salva no localStorage sempre que carregar online
+          if (offlineKey) {
+            localStorage.setItem(offlineKey, JSON.stringify(data));
+            setSavedOffline(true);
+          }
           setGuide(data);
           setLeaderNotes(data.leaderNotes ?? '');
           setForm({
@@ -256,10 +282,31 @@ export default function GuidePage() {
             sermonContent: '',
           });
         } else {
+          // Tenta carregar do cache offline
+          if (offlineKey) {
+            const cached = localStorage.getItem(offlineKey);
+            if (cached) {
+              const data: CellGuideDetail = JSON.parse(cached);
+              setGuide(data);
+              setIsOffline(true);
+              return;
+            }
+          }
           setEditing(true);
         }
+      })
+      .catch(() => {
+        // Sem conexão — tenta o cache
+        if (offlineKey) {
+          const cached = localStorage.getItem(offlineKey);
+          if (cached) {
+            const data: CellGuideDetail = JSON.parse(cached);
+            setGuide(data);
+            setIsOffline(true);
+          }
+        }
       });
-  }, [meetingId]);
+  }, [meetingId, offlineKey]);
 
   const handleGenerate = async () => {
     if (!form.biblePassage && !form.sermonContent) {
@@ -377,8 +424,13 @@ export default function GuidePage() {
         <style>{`
           @media print {
             .no-print { display: none !important; }
-            body { background: white !important; }
-            .print-content { max-width: 100% !important; padding: 0 16px !important; }
+            body { background: white !important; font-family: Georgia, serif; }
+            .print-content { max-width: 100% !important; padding: 0 24px !important; }
+            .print-content .bg-gray-900 { background: #1a1a1a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-content .bg-amber-50 { background: #fffbeb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-content .bg-violet-50 { background: #f5f3ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-content > div { page-break-inside: avoid; margin-bottom: 16px; }
+            @page { margin: 20mm; }
           }
         `}</style>
 
@@ -391,13 +443,36 @@ export default function GuidePage() {
               <p className="text-sm font-bold text-gray-900">{guide.sermonTitle || guide.title}</p>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={handlePrint} className="text-sm text-gray-500 hover:text-gray-700 font-medium" title="Baixar PDF">
-                📄
-              </button>
               {isLeader && (
                 <button onClick={() => setEditing(true)} className="text-sm text-indigo-600 font-medium">Editar</button>
               )}
             </div>
+          </div>
+          {/* Barra de ações — PDF e Offline */}
+          <div className="max-w-2xl mx-auto px-4 pb-2 flex gap-2">
+            <button
+              onClick={handlePrint}
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-lg hover:bg-gray-900 transition"
+            >
+              📄 Gerar PDF
+            </button>
+            <button
+              onClick={() => {
+                if (offlineKey && guide) {
+                  localStorage.setItem(offlineKey, JSON.stringify(guide));
+                  setSavedOffline(true);
+                  setOfflineSaved(true);
+                  setTimeout(() => setOfflineSaved(false), 2000);
+                }
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition ${
+                savedOffline
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {offlineSaved ? '✓ Salvo!' : savedOffline ? '📥 Disponível offline' : '📥 Salvar offline'}
+            </button>
           </div>
           {/* Abas — Anotações visível apenas para líderes */}
           {isLeader && (
@@ -450,6 +525,16 @@ export default function GuidePage() {
               >
                 {notesSaved ? '✓ Salvo!' : savingNotes ? 'Salvando...' : 'Salvar anotações'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Banner offline */}
+        {isOffline && (
+          <div className="max-w-2xl mx-auto px-4 pt-3 no-print">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center gap-2">
+              <span className="text-amber-600 text-sm">📶</span>
+              <p className="text-xs text-amber-700 font-medium">Você está offline — exibindo versão salva no dispositivo.</p>
             </div>
           </div>
         )}

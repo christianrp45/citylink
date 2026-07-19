@@ -155,6 +155,12 @@ function GuideCard({
   onDelete: (meetingId: string) => void;
   accent: 'indigo' | 'gray';
 }) {
+  const [isAvailableOffline, setIsAvailableOffline] = useState(false);
+
+  useEffect(() => {
+    setIsAvailableOffline(!!localStorage.getItem(`citylink-guide-${item.meetingId}`));
+  }, [item.meetingId]);
+
   const date = new Date(item.scheduledAt);
   const dateStr = date.toLocaleDateString('pt-BR', {
     weekday: 'long',
@@ -184,7 +190,7 @@ function GuideCard({
             {item.biblePassage && (
               <p className="text-xs text-indigo-600 mt-0.5">📖 {item.biblePassage}</p>
             )}
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               {item.isPublished && (
                 <span className="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-medium">
                   Publicado
@@ -193,6 +199,11 @@ function GuideCard({
               {item.generatedByAI && (
                 <span className="text-xs px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full font-medium">
                   ✨ IA
+                </span>
+              )}
+              {isAvailableOffline && (
+                <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-medium">
+                  📥 Offline
                 </span>
               )}
             </div>
