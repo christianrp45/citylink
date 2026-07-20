@@ -1,8 +1,12 @@
 export type PlanDay = {
   day: number;
-  passage: string;   // ex: "Gênesis 1-2"
-  book: string;      // abbrev: "gn"
-  chapter: number;   // capítulo inicial do dia
+  passage: string;      // ex: "Gênesis 1-2"
+  book: string;         // abbrev: "gn"
+  chapter: number;      // capítulo inicial do dia
+  // Campos extras para planos de estudo estruturado
+  theme?: string;       // tema do dia (3-5 palavras)
+  context?: string;     // contexto histórico/literário (1-2 frases)
+  reflection?: string[]; // 2 perguntas reflexivas
 };
 
 export type ReadingPlan = {
@@ -135,6 +139,8 @@ function buildBiblia1Ano(): PlanDay[] {
   return days;
 }
 
+import { SERMAO_MONTE_DAYS, PROVERBIOS_DAYS, ATOS_DAYS } from './study-plans-data';
+
 export const READING_PLANS: ReadingPlan[] = [
   {
     slug: 'salmos-30',
@@ -159,5 +165,30 @@ export const READING_PLANS: ReadingPlan[] = [
     emoji: '📖',
     totalDays: 365,
     days: buildBiblia1Ano(),
+  },
+  // ─── Planos de Estudo Estruturado ────────────────────────────────────────
+  {
+    slug: 'sermao-do-monte',
+    title: 'Sermão do Monte',
+    description: 'Mateus 5–7 e paralelos em 21 dias de estudo profundo',
+    emoji: '⛰️',
+    totalDays: 21,
+    days: SERMAO_MONTE_DAYS,
+  },
+  {
+    slug: 'proverbios-31',
+    title: 'Provérbios em 31 Dias',
+    description: 'Um capítulo por dia com perguntas para reflexão',
+    emoji: '💡',
+    totalDays: 31,
+    days: PROVERBIOS_DAYS,
+  },
+  {
+    slug: 'atos-apostolos',
+    title: 'Igreja Primitiva — Atos',
+    description: 'Os 28 capítulos de Atos: o nascimento e expansão da Igreja',
+    emoji: '🔥',
+    totalDays: 28,
+    days: ATOS_DAYS,
   },
 ];

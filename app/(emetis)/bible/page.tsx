@@ -232,25 +232,50 @@ export default function BiblePage() {
 
                       {/* Leitura de hoje */}
                       {todayRef && plan.currentDay <= plan.totalDays && (
-                        <div className="mt-3 flex items-center justify-between bg-indigo-50 rounded-xl px-3 py-2.5">
-                          <div>
-                            <p className="text-[10px] text-indigo-500 font-semibold">Dia {plan.currentDay}</p>
-                            <p className="text-xs text-slate-700 font-medium">{todayRef.passage}</p>
+                        <div className="mt-3 bg-indigo-50 rounded-xl px-3 py-2.5 space-y-2">
+                          {/* Cabeçalho do dia */}
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[10px] text-indigo-500 font-semibold">
+                                Dia {plan.currentDay}
+                                {todayRef.theme ? ` · ${todayRef.theme}` : ''}
+                              </p>
+                              <p className="text-xs text-slate-700 font-medium">{todayRef.passage}</p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Link
+                                href={`/bible/read/${todayRef.book}/${todayRef.chapter}`}
+                                className="text-xs text-indigo-600 font-semibold bg-white border border-indigo-200 rounded-lg px-2.5 py-1.5 hover:bg-indigo-50"
+                              >
+                                Ler
+                              </Link>
+                              <button
+                                onClick={() => handleMarkDay(plan.slug, plan.currentDay)}
+                                className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-white border border-emerald-200 rounded-lg px-2.5 py-1.5 hover:bg-emerald-50"
+                              >
+                                <CheckCircle2 size={12} /> Feito
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Link
-                              href={`/bible/read/${todayRef.book}/${todayRef.chapter}`}
-                              className="text-xs text-indigo-600 font-semibold bg-white border border-indigo-200 rounded-lg px-2.5 py-1.5 hover:bg-indigo-50"
-                            >
-                              Ler
-                            </Link>
-                            <button
-                              onClick={() => handleMarkDay(plan.slug, plan.currentDay)}
-                              className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-white border border-emerald-200 rounded-lg px-2.5 py-1.5 hover:bg-emerald-50"
-                            >
-                              <CheckCircle2 size={12} /> Feito
-                            </button>
-                          </div>
+
+                          {/* Contexto histórico/literário */}
+                          {todayRef.context && (
+                            <p className="text-[11px] text-slate-500 leading-relaxed italic border-t border-indigo-100 pt-2">
+                              {todayRef.context}
+                            </p>
+                          )}
+
+                          {/* Perguntas reflexivas */}
+                          {todayRef.reflection && todayRef.reflection.length > 0 && (
+                            <div className="border-t border-indigo-100 pt-2 space-y-1">
+                              <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-wide">Para refletir</p>
+                              {todayRef.reflection.map((q, i) => (
+                                <p key={i} className="text-[11px] text-slate-600 leading-relaxed">
+                                  {i + 1}. {q}
+                                </p>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                       {plan.currentDay > plan.totalDays && (
