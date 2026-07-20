@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   IconMap,
   IconCommunity,
@@ -28,27 +28,36 @@ export function BottomNav() {
   const [pendingVisits, setPendingVisits] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
+  const fetchBadges = useCallback(async () => {
+    try {
+      const [visitsRes, unreadRes] = await Promise.all([
+        fetch('/api/visits/pending'),
+        fetch('/api/messages/unread'),
+      ]);
+      if (visitsRes.ok) {
+        const data: unknown[] = await visitsRes.json();
+        setPendingVisits(Array.isArray(data) ? data.length : 0);
+      }
+      if (unreadRes.ok) {
+        const data = await unreadRes.json() as { count: number };
+        setUnreadMessages(data.count ?? 0);
+      }
+    } catch { /* silencioso */ }
+  }, []);
+
+  // Polling a cada 30s
   useEffect(() => {
-    async function fetchBadges() {
-      try {
-        const [visitsRes, unreadRes] = await Promise.all([
-          fetch('/api/visits/pending'),
-          fetch('/api/messages/unread'),
-        ]);
-        if (visitsRes.ok) {
-          const data: unknown[] = await visitsRes.json();
-          setPendingVisits(Array.isArray(data) ? data.length : 0);
-        }
-        if (unreadRes.ok) {
-          const data = await unreadRes.json() as { count: number };
-          setUnreadMessages(data.count ?? 0);
-        }
-      } catch { /* silencioso */ }
-    }
     fetchBadges();
     const interval = setInterval(fetchBadges, 30_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchBadges]);
+
+  // Re-fetch imediato quando sai do chat (para limpar badge)
+  useEffect(() => {
+    if (!pathname.startsWith('/chat')) {
+      fetchBadges();
+    }
+  }, [pathname, fetchBadges]);
 
   return (
     <nav
@@ -58,9 +67,10 @@ export function BottomNav() {
       <div className="flex">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/');
+          // Badge de chat não aparece quando o usuário já está na tela de chat
           const badge =
             (href === '/profile' && pendingVisits > 0) ? pendingVisits :
-            (href === '/chat' && unreadMessages > 0) ? unreadMessages :
+            (href === '/chat' && unreadMessages > 0 && !pathname.startsWith('/chat')) ? unreadMessages :
             0;
 
           return (
