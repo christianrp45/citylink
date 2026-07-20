@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar, Bell } from 'lucide-react';
+import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar, Bell, Search } from 'lucide-react';
 import Link from 'next/link';
 import VisitRequestModal from '@/components/visit-request-modal';
 import { WelcomeModal } from '@/components/welcome-modal';
@@ -672,14 +672,23 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* Botão notificações */}
-      <Link
-        href="/notifications"
-        className="absolute top-4 right-4 z-[1400] w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
-        aria-label="Notificações"
-      >
-        <Bell size={18} className="text-slate-600" />
-      </Link>
+      {/* Botões flutuantes: busca + notificações */}
+      <div className="absolute top-4 right-4 z-[1400] flex flex-col gap-2">
+        <Link
+          href="/search"
+          className="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
+          aria-label="Buscar"
+        >
+          <Search size={17} className="text-slate-600" />
+        </Link>
+        <Link
+          href="/notifications"
+          className="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
+          aria-label="Notificações"
+        >
+          <Bell size={17} className="text-slate-600" />
+        </Link>
+      </div>
 
       {/* Banner: visita aceita */}
       {acceptedVisit && (
