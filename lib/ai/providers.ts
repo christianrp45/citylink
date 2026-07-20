@@ -29,10 +29,13 @@ export const myProvider = isTestEnvironment
   : null;
 
 // Provedor SambaNova — OpenAI-compatible, usa SAMBANOVA_API_KEY
-const sambaNova = createOpenAI({
+// .chat() força endpoint /chat/completions (SambaNova não suporta Responses API)
+const _sn = createOpenAI({
   baseURL: "https://api.sambanova.ai/v1",
   apiKey: process.env.SAMBANOVA_API_KEY ?? "",
+  name: "sambanova",
 });
+const sn = (modelId: string) => _sn.chat(modelId) as unknown as LanguageModelV3;
 
 export function getLanguageModel(modelId: string) {
   if (isTestEnvironment && myProvider) {
@@ -45,29 +48,29 @@ export function getLanguageModel(modelId: string) {
   if (isReasoningModel) {
     const baseModelId = modelId.replace(THINKING_SUFFIX_REGEX, "");
     return wrapLanguageModel({
-      model: sambaNova(baseModelId) as unknown as LanguageModelV3,
+      model: sn(baseModelId),
       middleware: extractReasoningMiddleware({ tagName: "thinking" }),
     });
   }
 
-  return sambaNova(modelId) as unknown as LanguageModelV3;
+  return sn(modelId);
 }
 
 export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  return sambaNova("Meta-Llama-3.3-70B-Instruct") as unknown as LanguageModelV3;
+  return sn("Meta-Llama-3.3-70B-Instruct");
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("artifact-model");
   }
-  return sambaNova("Meta-Llama-3.3-70B-Instruct") as unknown as LanguageModelV3;
+  return sn("Meta-Llama-3.3-70B-Instruct");
 }
 
 // Modelo para Teo e funcionalidades pastorais
 export function getFreeModel() {
-  return sambaNova("Meta-Llama-3.3-70B-Instruct") as unknown as LanguageModelV3;
+  return sn("Meta-Llama-3.3-70B-Instruct");
 }
