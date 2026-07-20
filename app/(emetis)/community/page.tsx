@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
+  CalendarDays,
   HandHeart,
   Handshake,
   Loader2,
@@ -399,8 +400,8 @@ export default function CommunityPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50 pb-24">
-      {/* Card Troca de Talentos */}
-      <div className="px-4 pt-4 pb-1">
+      {/* Cards de acesso rápido */}
+      <div className="px-4 pt-4 pb-1 flex flex-col gap-2">
         <Link
           href="/talents"
           className="flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl px-4 py-3.5 shadow-sm active:scale-95 transition-transform"
@@ -412,6 +413,22 @@ export default function CommunityPage() {
             <p className="font-bold text-white text-sm">Troca de Talentos</p>
             <p className="text-emerald-100 text-xs leading-tight">
               Ofereça e encontre habilidades na comunidade
+            </p>
+          </div>
+          <span className="text-white/70 text-lg">›</span>
+        </Link>
+
+        <Link
+          href="/events"
+          className="flex items-center gap-3 bg-gradient-to-r from-violet-500 to-indigo-600 rounded-2xl px-4 py-3.5 shadow-sm active:scale-95 transition-transform"
+        >
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+            <CalendarDays size={22} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm">Eventos</p>
+            <p className="text-violet-100 text-xs leading-tight">
+              Encontros sociais, religiosos e de voluntariado
             </p>
           </div>
           <span className="text-white/70 text-lg">›</span>
