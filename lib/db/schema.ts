@@ -497,6 +497,20 @@ export const cellAttendance = pgTable(
 
 export type CellAttendance = InferSelectModel<typeof cellAttendance>;
 
+export const cellMessage = pgTable("CellMessage", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  cellId: uuid("cellId")
+    .notNull()
+    .references(() => cell.id, { onDelete: "cascade" }),
+  fromUserId: uuid("fromUserId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type CellMessage = InferSelectModel<typeof cellMessage>;
+
 export const prayerRequest = pgTable("PrayerRequest", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   cellId: uuid("cellId")
