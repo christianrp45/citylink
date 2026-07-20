@@ -24,6 +24,8 @@ export async function GET() {
   const plans = READING_PLANS.map((plan) => {
     const prog = progresses.find((p) => p.planSlug === plan.slug);
     const completedDays = (prog?.completedDays as number[]) ?? [];
+    const currentDay = completedDays.length + 1;
+    const todayDay = plan.days[currentDay - 1] ?? null;
     return {
       slug: plan.slug,
       title: plan.title,
@@ -33,8 +35,9 @@ export async function GET() {
       enrolled: !!prog,
       completedDays,
       percentComplete: Math.round((completedDays.length / plan.totalDays) * 100),
-      currentDay: completedDays.length + 1,
+      currentDay,
       startedAt: prog?.startedAt ?? null,
+      todayDay,
     };
   });
 

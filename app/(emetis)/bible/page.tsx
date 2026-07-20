@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, ChevronRight, Star, Search, CheckCircle2, Circle } from 'lucide-react';
-import type { ReadingPlan } from '@/lib/reading-plans';
+import { BookOpen, ChevronRight, Star, Search, CheckCircle2 } from 'lucide-react';
+import type { ReadingPlan, PlanDay } from '@/lib/reading-plans';
 
 type VerseOfDay = {
   ref: string;
@@ -100,11 +100,12 @@ const ALL_BOOKS = [
   { abbrev: 'ap',   name: 'Apocalipse',        chapters: 22,  testament: 'NT' },
 ];
 
-type PlanWithProgress = ReadingPlan & {
+type PlanWithProgress = Omit<ReadingPlan, 'days'> & {
   enrolled: boolean;
   completedDays: number[];
   percentComplete: number;
   currentDay: number;
+  todayDay: PlanDay | null;
 };
 
 export default function BiblePage() {
@@ -189,7 +190,7 @@ export default function BiblePage() {
         </p>
         <div className="space-y-3">
           {plans.map((plan) => {
-            const todayRef = plan.enrolled ? plan.days?.[plan.currentDay - 1] : null;
+            const todayRef = plan.enrolled ? plan.todayDay : null;
             return (
               <div key={plan.slug} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="p-4">
