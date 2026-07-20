@@ -26,19 +26,27 @@ const NAV_ITEMS: { href: string; label: string; icon: NavIcon }[] = [
 export function BottomNav() {
   const pathname = usePathname();
   const [pendingVisits, setPendingVisits] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
-    async function fetchPending() {
+    async function fetchBadges() {
       try {
-        const res = await fetch('/api/visits/pending');
-        if (res.ok) {
-          const data: unknown[] = await res.json();
+        const [visitsRes, unreadRes] = await Promise.all([
+          fetch('/api/visits/pending'),
+          fetch('/api/messages/unread'),
+        ]);
+        if (visitsRes.ok) {
+          const data: unknown[] = await visitsRes.json();
           setPendingVisits(Array.isArray(data) ? data.length : 0);
+        }
+        if (unreadRes.ok) {
+          const data = await unreadRes.json() as { count: number };
+          setUnreadMessages(data.count ?? 0);
         }
       } catch { /* silencioso */ }
     }
-    fetchPending();
-    const interval = setInterval(fetchPending, 30_000);
+    fetchBadges();
+    const interval = setInterval(fetchBadges, 30_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -50,7 +58,10 @@ export function BottomNav() {
       <div className="flex">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href + '/');
-          const badge = href === '/profile' && pendingVisits > 0 ? pendingVisits : 0;
+          const badge =
+            (href === '/profile' && pendingVisits > 0) ? pendingVisits :
+            (href === '/chat' && unreadMessages > 0) ? unreadMessages :
+            0;
 
           return (
             <Link
