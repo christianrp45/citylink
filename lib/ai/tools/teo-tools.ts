@@ -1,30 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { getVerseOfDay } from '@/lib/bible/verses-of-day';
-import postgres from 'postgres';
-
-function getDb() {
-  return postgres(process.env.POSTGRES_URL!);
-}
-
-/** Gemini text-embedding-004 via REST — sem dependência de SDK */
-async function geminiEmbed(text: string): Promise<number[]> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error('GEMINI_API_KEY não configurada');
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${key}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: { parts: [{ text }] } }),
-      signal: AbortSignal.timeout(15_000),
-    }
-  );
-  if (!res.ok) throw new Error(`Gemini embed HTTP ${res.status}`);
-  const data = await res.json();
-  return data.embedding.values as number[];
-}
+import { searchTheology } from '@/lib/ai/theological-search';
 
 const CDN_URL =
   'https://cdn.jsdelivr.net/gh/thiagobodruk/biblia/json/nvi.json';
@@ -119,40 +96,18 @@ export const buscarTeologia = tool({
       ),
   }),
   execute: async ({ query }) => {
-    if (!process.env.GEMINI_API_KEY) {
-      return { error: 'Base teológica não configurada.' };
+    const results = searchTheology(query, 3);
+    if (results.length === 0) {
+      return { error: 'Nenhum resultado encontrado para este tema.' };
     }
-
-    let sql;
-    try {
-      const embedding = await geminiEmbed(query);
-
-      sql = getDb();
-      const rows = await sql<{ title: string; topic: string; content: string; sources: string[] }[]>`
-        SELECT title, topic, content, sources
-        FROM "TheologicalChunk"
-        WHERE embedding IS NOT NULL
-        ORDER BY embedding <=> ${JSON.stringify(embedding)}::vector
-        LIMIT 3
-      `;
-
-      if (rows.length === 0) {
-        return { error: 'Nenhum resultado encontrado na base teológica.' };
-      }
-
-      return {
-        results: rows.map((r) => ({
-          title: r.title,
-          topic: r.topic,
-          content: r.content,
-          sources: r.sources,
-        })),
-      };
-    } catch (err) {
-      return { error: `Erro ao buscar base teológica: ${err instanceof Error ? err.message : 'desconhecido'}` };
-    } finally {
-      await sql?.end();
-    }
+    return {
+      results: results.map((r) => ({
+        title: r.title,
+        topic: r.topic,
+        content: r.content,
+        sources: r.sources,
+      })),
+    };
   },
 });
 
