@@ -37,3 +37,7 @@ export async function getAllPushSubscriptionsForUsers(userIds: string[]) {
     .from(pushSubscription)
     .where(inArray(pushSubscription.userId, userIds));
 }
+
+export async function getAllPushSubscriptions() {
+  return db.select().from(pushSubscription);
+}
