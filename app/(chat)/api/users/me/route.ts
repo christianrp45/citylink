@@ -38,6 +38,7 @@ export async function PATCH(request: Request) {
     "availabilityStatus",
     "lat",
     "lng",
+    "birthDate",
   ] as const;
 
   type AllowedKey = (typeof allowed)[number];

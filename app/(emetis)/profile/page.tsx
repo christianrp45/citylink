@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus, QrCode, Copy } from 'lucide-react';
+import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus, QrCode, Copy, Calendar } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -79,6 +79,7 @@ type UserProfile = {
   availabilityStatus: AvailabilityStatus | null;
   lat: string | null;
   lng: string | null;
+  birthDate: string | null;
 };
 
 const STATUS_CONFIG: Record<
@@ -158,7 +159,7 @@ export default function ProfilePage() {
   const [editBio, setEditBio] = useState('');
   const [savingBio, setSavingBio] = useState(false);
   const [isEditingInfo, setIsEditingInfo] = useState(false);
-  const [editInfo, setEditInfo] = useState({ name: '', phone: '', profession: '' });
+  const [editInfo, setEditInfo] = useState({ name: '', phone: '', profession: '', birthDate: '' });
   const [savingInfo, setSavingInfo] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -463,6 +464,7 @@ export default function ProfilePage() {
           name: editInfo.name.trim() || undefined,
           phone: editInfo.phone.trim() || undefined,
           profession: editInfo.profession.trim() || undefined,
+          birthDate: editInfo.birthDate || undefined,
         }),
       });
       setProfile((prev) => prev ? { ...prev, ...updated } : prev);
@@ -763,6 +765,7 @@ export default function ProfilePage() {
                     name: profile?.name ?? '',
                     phone: profile?.phone ?? '',
                     profession: profile?.profession ?? '',
+                    birthDate: profile?.birthDate ?? '',
                   });
                   setIsEditingInfo(true);
                 }}
@@ -804,6 +807,15 @@ export default function ProfilePage() {
                     className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-slate-400 flex-shrink-0" />
+                  <input
+                    type="date"
+                    value={editInfo.birthDate}
+                    onChange={(e) => setEditInfo((p) => ({ ...p, birthDate: e.target.value }))}
+                    className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
               </div>
               <div className="flex gap-2 mt-2">
                 <button
@@ -835,7 +847,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <button
-                  onClick={() => { setEditInfo({ name: profile?.name ?? '', phone: '', profession: profile?.profession ?? '' }); setIsEditingInfo(true); }}
+                  onClick={() => { setEditInfo({ name: profile?.name ?? '', phone: '', profession: profile?.profession ?? '', birthDate: profile?.birthDate ?? '' }); setIsEditingInfo(true); }}
                   className="flex items-center gap-2 text-xs text-blue-500 hover:text-blue-700"
                 >
                   <Phone size={13} /> Adicionar telefone
@@ -848,10 +860,23 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <button
-                  onClick={() => { setEditInfo({ name: profile?.name ?? '', phone: profile?.phone ?? '', profession: '' }); setIsEditingInfo(true); }}
+                  onClick={() => { setEditInfo({ name: profile?.name ?? '', phone: profile?.phone ?? '', profession: '', birthDate: profile?.birthDate ?? '' }); setIsEditingInfo(true); }}
                   className="flex items-center gap-2 text-xs text-blue-500 hover:text-blue-700"
                 >
                   <Briefcase size={13} /> Adicionar profissão
+                </button>
+              )}
+              {profile?.birthDate ? (
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <Calendar size={15} className="text-slate-400 flex-shrink-0" />
+                  <span>🎂 {new Date(profile.birthDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditInfo({ name: profile?.name ?? '', phone: profile?.phone ?? '', profession: profile?.profession ?? '', birthDate: '' }); setIsEditingInfo(true); }}
+                  className="flex items-center gap-2 text-xs text-blue-500 hover:text-blue-700"
+                >
+                  <Calendar size={13} /> Adicionar aniversário
                 </button>
               )}
               {(profile?.lat && profile?.lng) && (

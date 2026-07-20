@@ -1,6 +1,7 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
   boolean,
+  date,
   foreignKey,
   integer,
   json,
@@ -30,6 +31,7 @@ export const user = pgTable("User", {
   lat: varchar("lat", { length: 20 }),
   lng: varchar("lng", { length: 20 }),
   primaryChurchId: uuid("primaryChurchId"),
+  birthDate: date("birthDate"),
   updatedAt: timestamp("updatedAt").defaultNow(),
 });
 
