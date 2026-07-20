@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Loader2, BookmarkPlus, X, Send, Moon, Sun } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, BookmarkPlus, X, Send, Moon, Sun, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
+import { ShareVerseModal } from '@/components/share-verse-modal';
 
 type Verse = { verse: number; text: string };
 
@@ -58,6 +59,7 @@ export default function ChapterPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>('sm');
   const [selectedText, setSelectedText] = useState('');
+  const [shareVerse, setShareVerse] = useState<number | null>(null);
   const teoBottomRef = useRef<HTMLDivElement>(null);
 
   // Carregar preferências do localStorage
@@ -644,6 +646,19 @@ export default function ChapterPage() {
               Perguntar ao Teo sobre este versículo
             </button>
 
+            {/* Compartilhar como imagem */}
+            <button
+              onClick={() => { setShareVerse(selectedVerse); setSelectedVerse(null); }}
+              className={`w-full text-sm font-medium py-2.5 rounded-xl mb-2 flex items-center justify-center gap-2 transition-colors ${
+                dm
+                  ? 'bg-slate-700 text-slate-300 border border-slate-600 hover:bg-slate-600'
+                  : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              <Share2 size={15} />
+              Compartilhar versículo
+            </button>
+
             {/* Remove highlight */}
             {getHighlight(selectedVerse) && (
               <button
@@ -662,6 +677,16 @@ export default function ChapterPage() {
             )}
           </div>
         </div>
+      )}
+      {/* Modal de compartilhamento */}
+      {shareVerse !== null && data && (
+        <ShareVerseModal
+          verse={shareVerse}
+          text={data.verses.find((v) => v.verse === shareVerse)?.text ?? ''}
+          bookName={data.bookName}
+          chapter={data.chapter}
+          onClose={() => setShareVerse(null)}
+        />
       )}
     </div>
   );
