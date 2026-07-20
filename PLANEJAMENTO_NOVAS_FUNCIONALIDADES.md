@@ -1,21 +1,21 @@
 # Emetis — Planejamento e Estado do Projeto
 
-**Versão:** 9.0
-**Atualizado:** 2026-07-19
+**Versão:** 10.0
+**Atualizado:** 2026-07-20
 **Stack:** Next.js 16 + App Router + Drizzle ORM (Neon PostgreSQL) + NextAuth 5 + Vercel AI SDK v6 + Leaflet + Tailwind CSS 4 + SambaNova (Meta-Llama-3.3-70B)
 **Deploy:** [app.emetis.com.br](https://app.emetis.com.br)
 **Repositório:** [github.com/christianrp45/citylink](https://github.com/christianrp45/citylink)
 
 ---
 
-## 1. Estado Atual — O que já está implementado e em produção
+## 1. Estado Atual — Tudo implementado e em produção
 
 ### Infraestrutura
 
 | Item | Status |
 |---|---|
 | Banco Neon PostgreSQL conectado | ✅ |
-| Drizzle ORM com migrações (0001–0025) | ✅ |
+| Drizzle ORM com migrações (0001–0028) | ✅ |
 | NextAuth 5 com sessão real | ✅ |
 | Vercel AI SDK v6 (useChat v3, DefaultChatTransport, sendMessage) | ✅ |
 | Deploy Vercel automático via GitHub push | ✅ |
@@ -24,157 +24,153 @@
 | Error boundary (`app/(emetis)/error.tsx`) | ✅ |
 | Loading state (`app/(emetis)/loading.tsx`) | ✅ |
 | PWA manifest + ícones `icon-192.png` e `icon-512.png` | ✅ |
+| Push Notifications (VAPID, service worker, subscribe/unsubscribe) | ✅ |
 
-### Módulo Mapa / Uber Humano (Sistema de Visitas)
+### Módulo Mapa / Uber Humano
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| Mapa Leaflet real com usuários próximos | `map/page.tsx` | ✅ |
-| Status Mesa Posta 🟢 / Requer Aviso 🟡 | `map/page.tsx`, `profile/page.tsx` | ✅ |
+| Mapa Leaflet com usuários próximos (haversine) | `map/page.tsx` | ✅ |
+| Status Mesa Posta / Requer Aviso / Offline | `map/page.tsx`, `profile/page.tsx` | ✅ |
+| Botão "Estou disponível agora" → HospitalityWindow 3h | `map/page.tsx` | ✅ |
 | Sistema de visitas (solicitar, aceitar, recusar, adiar) | `api/visits/` | ✅ |
-| Alertas de proximidade (cron diário às 8h) | `api/cron/proximity/route.ts`, `vercel.json` | ✅ |
-| Janelas de Hospitalidade (HospitalityWindow) | `api/hospitality/` | ✅ |
-| Configuração de proximidade no Perfil | `profile/page.tsx`, `api/users/proximity-config/` | ✅ |
-| Botão "Estou disponível agora" no Mapa | `map/page.tsx` | ✅ |
-| Visibilidade configurável (quem me vê) | `api/users/visibility/` | ✅ |
-| Círculos de Confiança (família = exato, amigos = bairro ~1km) | `api/users/nearby/`, `api/friends/[id]/circle/` | ✅ |
-| Múltiplos pontos de localização (Casa, Trabalho, Igreja) | `api/users/locations/`, `profile/page.tsx` | ✅ |
+| Alertas Samaritano (urgência, oração, ajuda) com marcadores coloridos | `map/page.tsx`, `api/alerts/` | ✅ |
+| Alertas de proximidade (cron diário às 8h) | `api/cron/proximity/`, `vercel.json` | ✅ |
+| Janelas de Hospitalidade com push para amigos | `api/hospitality/` | ✅ |
+| Círculos de Confiança (família=exato, amigos=bairro ~1km) | `api/friends/[id]/circle/` | ✅ |
+| Múltiplos pontos de localização (Casa, Trabalho, Igreja) | `api/users/locations/` | ✅ |
+| Visibilidade configurável | `api/users/visibility/` | ✅ |
+| Modal de boas-vindas (novo usuário) | `components/welcome-modal.tsx` | ✅ |
+| Teo intro para novo usuário (chat automático) | `components/teo-new-user-sheet.tsx` | ✅ |
 
-### Módulo Vínculo — Igreja / Célula / Comunidade
+### Módulo Vínculo
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| Geração de código de convite (líder/admin) | `api/invite/generate/` | ✅ |
-| Preview público do convite | `api/invite/[code]/` | ✅ |
-| Uso do convite (vincula membro) | `api/invite/[code]/use/` | ✅ |
-| Revogação de código | `api/invite/[code]/` DELETE | ✅ |
-| Página pública `/join/[code]` com redirect para login | `join/[code]/page.tsx` | ✅ |
-| Botão "Convidar" na página da Célula (líder/co-líder) | `mdc/cells/[cellId]/page.tsx` | ✅ |
-| `primaryChurchId` no User (uma igreja por usuário) | migração 0022 | ✅ |
+| Códigos de convite (gerar, usar, revogar) | `api/invite/` | ✅ |
+| Página pública `/join/[code]` | `join/[code]/page.tsx` | ✅ |
+| QR Code de conexão pessoal no Perfil | `profile/page.tsx` (`react-qr-code`) | ✅ |
+| Página `/connect/[userId]` pós-scan | `connect/[userId]/page.tsx` | ✅ |
+| `primaryChurchId` no User | migração 0022 | ✅ |
 
 ### Módulo MDC — Grupos Pequenos
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| Hub de grupos (`/mdc`) com abas: Minha Célula, Grupos, Oração, IA Pastoral | `mdc/page.tsx` | ✅ |
-| Diretório de grupos (`/mdc/cells`) | `mdc/cells/page.tsx` | ✅ |
+| Hub `/mdc` com abas: Grupos, Oração, Pastoral IA | `mdc/page.tsx` | ✅ |
+| Diretório de grupos `/mdc/cells` | `mdc/cells/page.tsx` | ✅ |
 | Página do grupo com feed + reuniões | `mdc/cells/[cellId]/page.tsx` | ✅ |
 | Renomear célula (líder) | `mdc/cells/[cellId]/page.tsx` | ✅ |
-| Agendar reunião (líder) | `mdc/cells/[cellId]/meeting/new/page.tsx` | ✅ |
-| Encerrar reunião (líder) | `api/mdc/meetings/[meetingId]/route.ts` | ✅ |
-| RSVP de reunião | `api/mdc/meetings/[meetingId]/rsvp/` | ✅ |
-| Lista de presença | `api/mdc/meetings/[meetingId]/attendance/` | ✅ |
+| Agendar reunião | `mdc/cells/[cellId]/meeting/new/page.tsx` | ✅ |
+| Encerrar reunião, RSVP, lista de presença | `api/mdc/meetings/` | ✅ |
 | Pedidos de oração com "Orei por isso 🙏" | `mdc/cells/[cellId]/prayer/page.tsx` | ✅ |
-| Roteiro padrão MDC batista (7 seções) | `mdc/cells/[cellId]/meeting/[meetingId]/guide/page.tsx` | ✅ |
-| Geração de roteiro com IA (SambaNova — Meta-Llama-3.3-70B) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
-| Colar pregação completa → adapta para formato MDC | `guide/page.tsx` + API | ✅ |
-| Link passagem bíblica → leitor bíblico | `guide/page.tsx` | ✅ |
+| Roteiro MDC 7 seções com geração IA (SambaNova) | `api/mdc/ai/generate-guide/` | ✅ |
 | PDF do roteiro (gerado no cliente) | `guide/page.tsx` | ✅ |
-| Notas privadas do líder (visível só ao líder) | `guide/page.tsx` + `api/mdc/meetings/[meetingId]/guide/` | ✅ |
-| Seções exclusivas do líder ocultas para membros | `guide/page.tsx` | ✅ |
-| Histórico de roteiros da célula | `mdc/cells/[cellId]/history/page.tsx` | ✅ |
-| Cache offline do roteiro gerado | `guide/page.tsx` (localStorage) | ✅ |
-| Push notification ao publicar roteiro | `api/mdc/meetings/[meetingId]/guide/` | ✅ |
-| Ícone Emetis sempre visível + link para /map no roteiro | `guide/page.tsx` | ✅ |
-| Assistente IA Pastoral (Teo) na aba de grupos | `mdc/page.tsx` | ✅ |
-
-#### Formato do Roteiro MDC batista (7 seções implementadas)
-
-1. **PARA O LÍDER** — reflexão sobre discipulado e formação
-2. **QUEBRANDO O GELO** — nome temático + dinâmica
-3. **EXALTAÇÃO** — músicas (links YouTube) + oração
-4. **O QUE APRENDEMOS ESSA SEMANA?** — introdução + 3 pontos (título + ref bíblica + desenvolvimento + pergunta de discussão)
-5. **CONCLUSÃO E CHECAGEM** — síntese + pergunta de aplicação + dica ao líder
-6. **EVANGELISMO** — orientação crentes/não-crentes + história + desafio da semana
+| Histórico de roteiros | `mdc/cells/[cellId]/history/page.tsx` | ✅ |
+| Push ao publicar roteiro | `api/mdc/meetings/[meetingId]/guide/` | ✅ |
+| **Dashboard do Líder** — presença histórica, inativos, pedidos de oração | `mdc/dashboard/page.tsx` | ✅ |
 
 ### Módulo Bíblia
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| Home da Bíblia com versículo do dia | `bible/page.tsx` | ✅ |
-| Planos de leitura (Salmos 30, NT 90, Bíblia 1 Ano) | `bible/page.tsx` + `lib/reading-plans.ts` | ✅ |
-| Progresso dos planos persistido no DB | `api/bible/plans/route.ts`, tabela ReadingPlanProgress | ✅ |
-| Leitor de capítulo com navegação | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
-| Highlights (destaques coloridos) por versículo | `api/bible/highlights/route.ts` | ✅ |
-| Teo — Assistente Bíblico com contexto do capítulo | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
-| Bottom sheet Teo (70dvh) com perguntas sugeridas | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
-| Busca de livros na home | `bible/page.tsx` | ✅ |
+| Home com versículo do dia e planos de leitura | `bible/page.tsx` | ✅ |
+| Planos: Salmos 30, NT 90, Bíblia 1 Ano | `lib/reading-plans.ts` | ✅ |
+| Leitor de capítulo com highlights coloridos | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
+| Modo noturno + tamanho de fonte (P/M/G) | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
+| Teo Bíblico com contexto do capítulo (bottom sheet) | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
+| Seleção de texto → barra flutuante "Perguntar ao Teo" | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
+| Toque em versículo → opção "Perguntar ao Teo" | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
+| **Versículo compartilhável como imagem** (Canvas 1080×1080, 4 temas, Web Share API) | `components/share-verse-modal.tsx` | ✅ |
 
-### Módulo Comunidade
+### Módulo Comunidade e Negócios
 
 | Feature | Arquivo | Status |
 |---|---|---|
 | Feed de testemunhos com curtidas e comentários | `community/page.tsx` | ✅ |
-| Alertas Samaritano (urgência, oração, ajuda) | `community/page.tsx` | ✅ |
-| Comunidades com aprovação de membros | `api/communities/` | ✅ |
-| Grupos de oração | `api/prayer-groups/` | ✅ |
-| Voluntariado | `api/volunteer/` | ✅ |
+| Alertas Samaritano | `community/page.tsx` | ✅ |
+| Comunidades, grupos de oração, voluntariado | `api/communities/`, `api/prayer-groups/`, `api/volunteer/` | ✅ |
+| Página de Negócios com "Irmão Indica Irmão" | `businesses/page.tsx` | ✅ |
+| **Troca de Talentos** — oferecer e encontrar habilidades | `talents/page.tsx`, `api/talents/` | ✅ |
 
 ### Módulo Perfil e Conta
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| Perfil completo com foto, bio, talentos | `profile/page.tsx` | ✅ |
-| Status Mesa Posta / Requer Aviso / Offline | `profile/page.tsx` | ✅ |
+| Foto, bio, status disponibilidade, profissão | `profile/page.tsx` | ✅ |
+| Edição de nome, telefone, profissão | `api/users/me/` PATCH | ✅ |
 | Visitas pendentes e confirmadas | `profile/page.tsx` | ✅ |
-| Notificações push (subscribe/unsubscribe) | `profile/page.tsx`, `api/push/subscribe/` | ✅ |
-| Círculos de Confiança (família/amigos) | `profile/page.tsx`, `api/friends/[id]/circle/` | ✅ |
-| Meus Locais (casa, trabalho, igreja configuráveis) | `profile/page.tsx`, `api/users/locations/` | ✅ |
-| Alertas de Proximidade (toggle, raio, cooldown, expiração) | `profile/page.tsx`, `api/users/proximity-config/` | ✅ |
-| Configurações de privacidade | `api/users/privacy/` | ✅ |
-| Exportar dados (LGPD) | `api/users/export/` | ✅ |
-| Excluir conta | `api/users/delete-account/` | ✅ |
+| Notificações push (subscribe/unsubscribe) | `profile/page.tsx` | ✅ |
+| Círculos de Confiança | `profile/page.tsx` | ✅ |
+| Meus Locais (CRUD + ativação) | `profile/page.tsx` | ✅ |
+| Alertas de Proximidade (toggle, raio, cooldown) | `profile/page.tsx` | ✅ |
+| QR Code pessoal de conexão | `profile/page.tsx` | ✅ |
+| **Missões semanais e pontos** (10 missões, 5 níveis) | `profile/page.tsx`, `api/missions/` | ✅ |
+| Configurações de privacidade, exportar dados, excluir conta | `api/users/` | ✅ |
 | Onboarding (consentimento LGPD) | `app/(onboarding)/onboarding/page.tsx` | ✅ |
 
 ### IA — Teo e Pastoral
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| `teoPrompt` — assistente bíblico com identidade Teo (θεός), sem emojis | `lib/ai/prompts.ts` | ✅ |
-| `teoWithPassagePrompt(book, chapter)` — com contexto do capítulo | `lib/ai/prompts.ts` | ✅ |
-| Rota `/api/teo` com rate limit 50 msg/dia | `api/teo/route.ts` | ✅ |
-| Rota `/api/pastoral` com rate limit 30 msg/dia | `api/pastoral/route.ts` | ✅ |
-| Rota `/api/mdc/ai/generate-guide` — gera roteiro MDC via SambaNova (Meta-Llama-3.3-70B) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
-| Modelo gratuito fallback — Google Gemini 2.0/2.5 Flash Lite via `@ai-sdk/google` | `lib/ai/providers.ts` | ✅ |
-| Banco de quebra-gelos integrado ao gerador de roteiro (lib/data/quebra-gelos.ts) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
-| Nome da instituição parceira oculto do prompt de IA (não exposto aos usuários) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
+| Teo FAB global — botão τ flutuante em todas as telas | `components/teo-fab.tsx` | ✅ |
+| Teo bíblico com contexto do capítulo/versículo | `api/teo/route.ts`, `lib/ai/prompts.ts` | ✅ |
+| Modo boas-vindas (novo usuário) | `components/teo-new-user-sheet.tsx` | ✅ |
+| API Pastoral com rate limit 30 msg/dia | `api/pastoral/route.ts` | ✅ |
+| Gerador de roteiro MDC (SambaNova Meta-Llama-3.3-70B) | `api/mdc/ai/generate-guide/route.ts` | ✅ |
+| Banco de quebra-gelos integrado | `lib/data/quebra-gelos.ts` | ✅ |
+| Nome da instituição parceira oculto dos prompts | `api/mdc/ai/generate-guide/route.ts` | ✅ |
+| `teo:ask` CustomEvent — comunicação cross-component | `teo-fab.tsx` ↔ `bible/read` | ✅ |
 
 ---
 
-## 2. Banco de Dados — Migrações Aplicadas
+## 2. Banco de Dados — Migrações
 
-| Migração | Conteúdo | Status |
-|---|---|---|
-| 0001–0015 | Schema base (User, Chat, Cell, Church, Community, Friendship, etc.) | ✅ aplicada |
-| 0016 | BibleHighlight | ✅ aplicada |
-| 0017 | UserPrivacySettings, ConsentLog, UserProximityConfig, UserVisibilityConfig | ✅ aplicada |
-| 0018 | HospitalityWindow | ✅ aplicada |
-| 0019 | communityId em Cell | ✅ aplicada |
-| 0020 | ReadingPlanProgress | ✅ aplicada |
-| 0021 | CellGuide formato MDC (sermonTitle, preacher, leaderNote, icebreakerTitle, studyPoints, conclusion, evangelism…) | ✅ aplicada |
-| 0022 | InviteCode table + primaryChurchId no User | ✅ aplicada |
-| 0023 | circle (family/friends) na tabela Friendship | ✅ aplicada |
-| 0024 | UserLocation (id, userId, label, type, lat, lng, isActive) | ✅ aplicada |
-| 0025 | BusinessRecommendation (communityId, userId, comment) — Irmão Indica Irmão | ✅ aplicada |
+| Migração | Conteúdo |
+|---|---|
+| 0001–0015 | Schema base (User, Chat, Cell, Church, Community, Friendship, etc.) |
+| 0016 | BibleHighlight |
+| 0017 | UserPrivacySettings, ConsentLog, UserProximityConfig, UserVisibilityConfig |
+| 0018 | HospitalityWindow |
+| 0019 | communityId em Cell |
+| 0020 | ReadingPlanProgress |
+| 0021 | CellGuide formato MDC (7 seções) |
+| 0022 | InviteCode + primaryChurchId no User |
+| 0023 | circle (family/friends) na Friendship |
+| 0024 | UserLocation |
+| 0025 | BusinessRecommendation |
+| 0026 | entryMode na Cell |
+| 0027 | UserTalent (Troca de Talentos) |
+| 0028 | UserPoints + UserMission (Gamificação) |
 
 ---
 
-## 3. O que ainda falta implementar
+## 3. Gamificação — Missões e Níveis
 
-### Prioridade MÉDIA
+### Missões semanais (10 total, resetam toda semana)
 
-- [x] **Push notifications** — `lib/push.ts` com web-push + VAPID keys no Vercel; envio real em visitas, proximidade, hospitalidade e mensagens
-- [x] **Irmão Indica Irmão** — toggle "Indicar" por usuário, lista de recomendadores com avatar/nome/profissão; API GET/POST `/api/communities/[id]/recommend` (migration 0025)
-- [x] **Modo noturno + tamanho de fonte** no leitor bíblico — botão Aa no header, toggle dark mode, 3 tamanhos (P/M/G), persistido em localStorage
+| Ação | Missão | Pontos | Hook |
+|---|---|---|---|
+| Presença em reunião | Participe de uma reunião de célula | 40 | `POST /api/mdc/meetings/.../attendance` |
+| Highlight bíblico | Faça um destaque na Bíblia | 15 | `POST /api/bible/highlights` |
+| Plano de leitura | Avance no plano de leitura | 25 | `POST /api/bible/plans` |
+| Visita solicitada | Solicite uma visita a alguém | 30 | `POST /api/visits` |
+| Visita aceita | Aceite um visitante | 50 | `POST /api/visits/respond` |
+| Talento oferecido | Ofereça um talento na comunidade | 20 | `POST /api/talents` |
+| Testemunho | Compartilhe um testemunho | 25 | `POST /api/testimonials` |
+| Mensagem enviada | Envie uma mensagem de encorajamento | 10 | `POST /api/messages/[userId]` |
+| Mesa Posta | Ative a Mesa Posta | 30 | `POST /api/hospitality` |
+| Oração | Ore por alguém na célula | 20 | `POST /api/mdc/prayer/[id]/pray` |
 
-### Prioridade BAIXA (futuro)
+### Níveis
 
-- [ ] **Troca de Talentos** — ofertas de ajuda não-monetária entre membros
-- [ ] **Gamificação** — badges por visitas, ajudas e oração
-- [ ] **Missões automáticas** — "Dona Rosa não recebe visitas há 2 semanas"
-- [ ] **Dashboard do Líder** — frequência, inativos, aniversariantes, relatório PDF
-- [ ] **Versículo do dia compartilhável** como imagem (Vercel OG)
-- [ ] **Botão "Convidar" nas páginas de Igreja e Comunidade** (já existe na Célula)
+| Nível | Pontos mínimos |
+|---|---|
+| 🌱 Semente | 0 |
+| 🌿 Broto | 100 |
+| 🌳 Árvore | 300 |
+| 🍎 Fruto | 600 |
+| ✨ Luz | 1000 |
 
 ---
 
@@ -183,39 +179,55 @@
 ### AI SDK v6 — useChat no cliente
 
 ```typescript
-// CORRETO (v3 API)
 const { messages, sendMessage, status } = useChat({
   transport: new DefaultChatTransport({ api: '/api/teo' }),
 });
-const [input, setInput] = useState('');
 
-function submit(text: string) {
-  sendMessage({ role: 'user', parts: [{ type: 'text', text: text.trim() }] });
-  setInput('');
-}
+// Enviar com contexto dinâmico por mensagem:
+sendMessage(
+  { role: 'user', parts: [{ type: 'text', text }] },
+  { body: { context: { bookName, chapter } } }
+);
 ```
 
 ### AI SDK v6 — Route handler com streaming
 
 ```typescript
-// CORRETO (v6 API)
 const result = streamText({ model, messages: await convertToModelMessages(messages), system });
 return createUIMessageStreamResponse({
   execute: (writer) => { writer.merge(result.toUIMessageStream()); },
 });
 ```
 
-### Next.js 16 com cacheComponents
+### Gamificação — fire-and-forget
 
-- `cacheComponents: false` no `next.config.ts` (true é incompatível com ThemeProvider e auth)
-- Usar `await connection()` do `next/server` em layouts que fazem fetch dinâmico
-- NÃO usar `export const dynamic = 'force-dynamic'` (incompatível com cacheComponents)
+```typescript
+// Não bloqueia a resposta HTTP
+void awardPoints(session.user.id, "attend_meeting");
+```
+
+### Comunicação cross-component — Teo
+
+```typescript
+// Disparar de qualquer lugar (ex: Bible reader)
+window.dispatchEvent(new CustomEvent('teo:ask', { detail: { text: '[João 3:16] "..."' } }));
+
+// TeoFAB escuta e abre automaticamente
+window.addEventListener('teo:ask', onTeoRequest as EventListener);
+```
+
+### Next.js 16
+
+- `cacheComponents: false` no `next.config.ts`
+- `await connection()` em layouts com fetch dinâmico
+- NÃO usar `export const dynamic = 'force-dynamic'`
 
 ### Deploy
 
-- `vercel --prod` faz deploy manual (GitHub push pode triggar automaticamente)
-- Migrações rodam automaticamente no build: `tsx lib/db/migrate && next build`
-- Cron de proximidade: `0 8 * * *` (diário às 8h — limite do plano Hobby)
+- Push para `main` → Vercel deploy automático
+- Migrações: `tsx lib/db/migrate && next build`
+- Cron de proximidade: `0 8 * * *` (diário às 8h)
+- Graphify: rodar `graphify update .` após modificar código
 
 ---
 
@@ -224,34 +236,46 @@ return createUIMessageStreamResponse({
 | Arquivo | Função |
 |---|---|
 | `lib/db/schema.ts` | Schema completo de todas as tabelas |
-| `lib/db/queries.ts` | Queries principais: usuário, visitas, convites, localização, amizades |
+| `lib/db/queries.ts` | Barrel de queries (importar sempre daqui) |
 | `lib/db/queries-cells.ts` | Queries de células, reuniões, guias, orações |
-| `lib/ai/prompts.ts` | Prompts: Teo, teoWithPassage, pastoral, generateGuide |
-| `lib/reading-plans.ts` | 3 planos de leitura estáticos (Salmos, NT90, Bíblia1Ano) |
+| `lib/ai/prompts.ts` | Prompts: teoPrompt, teoWithPassagePrompt, newUserTeoPrompt, pastoralPrompt |
+| `lib/gamification.ts` | MISSIONS, awardPoints(), getUserMissionsProgress(), níveis |
+| `lib/reading-plans.ts` | 3 planos de leitura estáticos |
+| `components/teo-fab.tsx` | FAB global do Teo (ouve evento teo:ask) |
+| `components/share-verse-modal.tsx` | Modal de compartilhamento de versículo (Canvas API) |
+| `components/welcome-modal.tsx` | Modal de boas-vindas (novo usuário) |
+| `components/teo-new-user-sheet.tsx` | Chat intro do Teo para novo usuário |
 | `components/emetis-bottom-nav.tsx` | Navegação inferior (5 abas) |
-| `app/(emetis)/layout.tsx` | Layout raiz com auth + onboarding redirect |
+| `app/(emetis)/layout.tsx` | Layout raiz com auth + TeoFAB |
 | `next.config.ts` | Config Next.js com headers e cacheComponents |
 | `vercel.json` | Build command + cron schedule |
 
 ---
 
-## 6. Navegação Atual (Bottom Nav — 5 abas)
+## 6. Navegação (Bottom Nav — 5 abas)
 
 ```
-[🗺️ Mapa] [📖 Bíblia] [⛪ Igreja] [💬 Chat] [👤 Perfil]
-                              ↳ /mdc (Grupos, Oração, Pastoral)
+[🗺️ Mapa] [📖 Bíblia] [⛪ MDC] [💬 Chat] [👤 Perfil]
+                           ↳ /mdc (Grupos, Oração, Pastoral, Dashboard)
 ```
+
+**Páginas adicionais acessíveis por navegação interna:**
+- `/talents` — Troca de Talentos (link na página /community)
+- `/mdc/dashboard` — Dashboard do Líder (card na página da célula, só para líderes)
+- `/connect/[userId]` — Perfil público pós-scan de QR Code
+- `/join/[code]` — Entrada via convite
 
 ---
 
----
-
-## 7. Decisões Arquiteturais Recentes
+## 7. Decisões Arquiteturais
 
 | Data | Decisão | Motivo |
-| --- | --- | --- |
-| 2026-07-14 | Migrar gerador de roteiro para SambaNova (Meta-Llama-3.3-70B) | Gratuito, sem necessidade de cartão de crédito |
-| 2026-07-14 | Ocultar nome da instituição parceira do prompt de IA | Evitar que usuários vejam nome de terceiro nas respostas geradas |
-| 2026-07-19 | Rename: `(citylink)→(emetis)`, `pib→mdc`, `teos→teo` | Consolidar branding Emetis em toda a codebase |
-
-Atualizado em 2026-07-19 — repositório: github.com/christianrp45/citylink
+|---|---|---|
+| 2026-07-14 | SambaNova (Meta-Llama-3.3-70B) para gerador de roteiro | Gratuito, sem cartão de crédito |
+| 2026-07-14 | Ocultar nome da instituição parceira do prompt de IA | Evitar exposição de terceiros aos usuários |
+| 2026-07-19 | Rename: `(citylink)→(emetis)`, `pib→mdc`, `teos→teo` | Consolidar branding Emetis |
+| 2026-07-19 | Onboarding: localStorage flags sem migração de DB | Simplicidade — não requer dado persistido |
+| 2026-07-19 | QR Code usa `userId` estável como parâmetro | Sem sistema de tokens — suficiente para o caso de uso |
+| 2026-07-19 | Teo cross-component via CustomEvent `teo:ask` | Evita estado global complexo |
+| 2026-07-20 | Gamificação com `awardPoints()` fire-and-forget | Zero impacto na latência dos handlers existentes |
+| 2026-07-20 | Canvas API para imagem de versículo (client-side) | Sem dependências novas, funciona offline |

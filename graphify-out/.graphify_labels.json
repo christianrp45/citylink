@@ -199,5 +199,13 @@
   "197": "auth.test.ts",
   "198": "chat.test.ts",
   "199": "model-selector.test.ts",
-  "200": "expect"
+  "200": "expect",
+  "201": "loading.tsx",
+  "202": "page.tsx",
+  "203": "class-variance-authority",
+  "204": "@tailwindcss/postcss",
+  "205": "rename-emetis.sh",
+  "206": "rename-mdc.sh",
+  "207": "rename-teo.sh",
+  "208": "QUEBRA-GELOS E DINÂMICAS.md"
 }
