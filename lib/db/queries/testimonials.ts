@@ -19,13 +19,16 @@ export async function getTestimonials() {
     .leftJoin(user, eq(testimonial.userId, user.id))
     .orderBy(desc(testimonial.createdAt));
 
-  // Busca likes e comentários para cada testemunho
   const ids = rows.map((r) => r.id);
   if (ids.length === 0) return [];
 
   const [likes, comments] = await Promise.all([
     db
-      .select()
+      .select({
+        testimonialId: testimonialLike.testimonialId,
+        userId: testimonialLike.userId,
+        emoji: testimonialLike.emoji,
+      })
       .from(testimonialLike)
       .where(inArray(testimonialLike.testimonialId, ids)),
     db
@@ -43,11 +46,26 @@ export async function getTestimonials() {
       .orderBy(asc(testimonialComment.createdAt)),
   ]);
 
-  return rows.map((r) => ({
-    ...r,
-    likes: likes.filter((l) => l.testimonialId === r.id).map((l) => l.userId),
-    comments: comments.filter((c) => c.testimonialId === r.id),
-  }));
+  return rows.map((r) => {
+    const myLikes = likes.filter((l) => l.testimonialId === r.id);
+    const reactionMap = new Map<string, string[]>();
+    for (const l of myLikes) {
+      const arr = reactionMap.get(l.emoji) ?? [];
+      arr.push(l.userId);
+      reactionMap.set(l.emoji, arr);
+    }
+    const reactions = Array.from(reactionMap.entries()).map(([emoji, userIds]) => ({
+      emoji,
+      count: userIds.length,
+      userIds,
+    }));
+
+    return {
+      ...r,
+      reactions,
+      comments: comments.filter((c) => c.testimonialId === r.id),
+    };
+  });
 }
 
 export async function createTestimonial(data: {
@@ -61,9 +79,9 @@ export async function createTestimonial(data: {
 
 export async function toggleTestimonialLike(
   testimonialId: string,
-  userId: string
+  userId: string,
+  emoji: string = "❤️"
 ) {
-  // Verifica se já curtiu
   const existing = await db
     .select()
     .from(testimonialLike)
@@ -75,21 +93,33 @@ export async function toggleTestimonialLike(
     );
 
   if (existing.length > 0) {
-    await db
-      .delete(testimonialLike)
-      .where(
-        and(
-          eq(testimonialLike.testimonialId, testimonialId),
-          eq(testimonialLike.userId, userId)
-        )
-      );
-    return false; // removeu like
+    if (existing[0].emoji === emoji) {
+      // Mesmo emoji → remove reação
+      await db
+        .delete(testimonialLike)
+        .where(
+          and(
+            eq(testimonialLike.testimonialId, testimonialId),
+            eq(testimonialLike.userId, userId)
+          )
+        );
+      return { reacted: false, emoji: null };
+    } else {
+      // Emoji diferente → troca
+      await db
+        .update(testimonialLike)
+        .set({ emoji })
+        .where(
+          and(
+            eq(testimonialLike.testimonialId, testimonialId),
+            eq(testimonialLike.userId, userId)
+          )
+        );
+      return { reacted: true, emoji };
+    }
   } else {
-    await db
-      .insert(testimonialLike)
-      .values({ testimonialId, userId })
-      .onConflictDoNothing();
-    return true; // adicionou like
+    await db.insert(testimonialLike).values({ testimonialId, userId, emoji });
+    return { reacted: true, emoji };
   }
 }
 

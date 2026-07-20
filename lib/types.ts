@@ -238,6 +238,8 @@ export type PrayerRequestDetail = {
   isAnonymous: boolean;
   isAnswered: boolean;
   prayerCount: number;         // total de interações
-  userHasPrayed: boolean;      // se o usuário logado já orou
+  userHasPrayed: boolean;      // se o usuário logado já reagiu
+  userReaction: string | null; // emoji escolhido pelo usuário logado
+  reactions: { emoji: string; count: number }[]; // contagem por emoji
   createdAt: string;
 };

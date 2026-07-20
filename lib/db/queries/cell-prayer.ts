@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { prayerInteraction, prayerRequest, user } from "../schema";
 
@@ -21,28 +21,31 @@ export async function getPrayerRequestsByCell(cellId: string, userId: string) {
     .where(eq(prayerRequest.cellId, cellId))
     .orderBy(desc(prayerRequest.createdAt));
 
-  // contar interações e verificar se o usuário já orou
   const withCounts = await Promise.all(
     requests.map(async (r) => {
-      const [{ total }] = await db
-        .select({ total: count() })
+      const interactions = await db
+        .select({ userId: prayerInteraction.userId, emoji: prayerInteraction.emoji })
         .from(prayerInteraction)
         .where(eq(prayerInteraction.prayerRequestId, r.id));
 
-      const userPrayed = await db
-        .select()
-        .from(prayerInteraction)
-        .where(
-          and(
-            eq(prayerInteraction.prayerRequestId, r.id),
-            eq(prayerInteraction.userId, userId)
-          )
-        );
+      // Agrupa reações por emoji
+      const reactionMap = new Map<string, number>();
+      for (const i of interactions) {
+        reactionMap.set(i.emoji, (reactionMap.get(i.emoji) ?? 0) + 1);
+      }
+      const reactions = Array.from(reactionMap.entries()).map(([emoji, count]) => ({
+        emoji,
+        count,
+      }));
+
+      const userRow = interactions.find((i) => i.userId === userId);
 
       return {
         ...r,
-        prayerCount: total,
-        userHasPrayed: userPrayed.length > 0,
+        reactions,
+        prayerCount: interactions.length,
+        userHasPrayed: !!userRow,
+        userReaction: userRow?.emoji ?? null,
       };
     })
   );
@@ -62,7 +65,8 @@ export async function createPrayerRequest(data: {
 
 export async function togglePrayerInteraction(
   prayerRequestId: string,
-  userId: string
+  userId: string,
+  emoji: string = "🙏"
 ) {
   const existing = await db
     .select()
@@ -75,19 +79,34 @@ export async function togglePrayerInteraction(
     );
 
   if (existing.length > 0) {
-    await db
-      .delete(prayerInteraction)
-      .where(
-        and(
-          eq(prayerInteraction.prayerRequestId, prayerRequestId),
-          eq(prayerInteraction.userId, userId)
-        )
-      );
-    return { praying: false };
+    if (existing[0].emoji === emoji) {
+      // Mesmo emoji → remove
+      await db
+        .delete(prayerInteraction)
+        .where(
+          and(
+            eq(prayerInteraction.prayerRequestId, prayerRequestId),
+            eq(prayerInteraction.userId, userId)
+          )
+        );
+      return { praying: false, emoji: null };
+    } else {
+      // Emoji diferente → troca
+      await db
+        .update(prayerInteraction)
+        .set({ emoji })
+        .where(
+          and(
+            eq(prayerInteraction.prayerRequestId, prayerRequestId),
+            eq(prayerInteraction.userId, userId)
+          )
+        );
+      return { praying: true, emoji };
+    }
   }
 
-  await db.insert(prayerInteraction).values({ prayerRequestId, userId });
-  return { praying: true };
+  await db.insert(prayerInteraction).values({ prayerRequestId, userId, emoji });
+  return { praying: true, emoji };
 }
 
 export async function markPrayerAnswered(id: string) {

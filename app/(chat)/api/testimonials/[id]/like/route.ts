@@ -2,9 +2,9 @@ import { auth } from '@/app/(auth)/auth';
 import { toggleTestimonialLike } from '@/lib/db/queries';
 import { NextRequest } from 'next/server';
 
-// POST /api/testimonials/[id]/like — toggle like
+// POST /api/testimonials/[id]/like — toggle emoji reaction
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
@@ -13,6 +13,9 @@ export async function POST(
   }
 
   const { id } = await params;
-  const liked = await toggleTestimonialLike(id, session.user.id);
-  return Response.json({ liked });
+  const body = await req.json().catch(() => ({}));
+  const emoji: string = body?.emoji ?? '❤️';
+
+  const result = await toggleTestimonialLike(id, session.user.id, emoji);
+  return Response.json(result);
 }

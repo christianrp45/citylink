@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { PrayerRequestDetail } from '@/lib/types';
 
+const PRAYER_EMOJIS = ['🙏', '❤️', '💪'] as const;
+
 export default function PrayerPage() {
   const { cellId } = useParams<{ cellId: string }>();
   const [requests, setRequests] = useState<PrayerRequestDetail[]>([]);
@@ -38,18 +40,42 @@ export default function PrayerPage() {
     load();
   };
 
-  const handlePray = async (id: string) => {
-    await fetch(`/api/mdc/prayer/${id}/pray`, { method: 'POST' });
+  const handleReact = async (id: string, emoji: string) => {
+    const res = await fetch(`/api/mdc/prayer/${id}/pray`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emoji }),
+    });
+    if (!res.ok) return;
+    const { praying, emoji: newEmoji } = await res.json();
+
     setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              userHasPrayed: !r.userHasPrayed,
-              prayerCount: r.userHasPrayed ? r.prayerCount - 1 : r.prayerCount + 1,
-            }
-          : r
-      )
+      prev.map((r) => {
+        if (r.id !== id) return r;
+
+        // Remove reação anterior do usuário
+        const withoutMe = r.reactions
+          .map((rx) => ({ ...rx, count: rx.count - (r.userReaction === rx.emoji ? 1 : 0) }))
+          .filter((rx) => rx.count > 0);
+
+        if (!praying || !newEmoji) {
+          return { ...r, reactions: withoutMe, userHasPrayed: false, userReaction: null, prayerCount: r.prayerCount - 1 };
+        }
+
+        const existing = withoutMe.find((rx) => rx.emoji === newEmoji);
+        const newReactions = existing
+          ? withoutMe.map((rx) => rx.emoji === newEmoji ? { ...rx, count: rx.count + 1 } : rx)
+          : [...withoutMe, { emoji: newEmoji, count: 1 }];
+
+        const delta = r.userReaction ? 0 : 1;
+        return {
+          ...r,
+          reactions: newReactions,
+          userHasPrayed: true,
+          userReaction: newEmoji,
+          prayerCount: r.prayerCount + delta,
+        };
+      })
     );
   };
 
@@ -72,7 +98,6 @@ export default function PrayerPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-        {/* Formulário */}
         {showForm && (
           <div className="bg-white rounded-xl shadow-sm p-4 space-y-3 border border-indigo-100">
             <h3 className="font-semibold text-gray-900">Compartilhar pedido</h3>
@@ -110,7 +135,6 @@ export default function PrayerPage() {
           </div>
         )}
 
-        {/* Pedidos ativos */}
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -135,41 +159,53 @@ export default function PrayerPage() {
                 </p>
                 {active.map((r) => (
                   <div key={r.id} className="bg-white rounded-xl shadow-sm p-4">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
                       <div className="flex-1">
                         {!r.isAnonymous && r.authorName && (
-                          <p className="text-xs font-semibold text-indigo-600 mb-1">
-                            {r.authorName}
-                          </p>
+                          <p className="text-xs font-semibold text-indigo-600 mb-1">{r.authorName}</p>
                         )}
                         {r.isAnonymous && (
                           <p className="text-xs text-gray-400 mb-1">Anônimo</p>
                         )}
                         <p className="text-sm text-gray-800 leading-relaxed">{r.content}</p>
                         <p className="text-xs text-gray-400 mt-2">
-                          {new Date(r.createdAt).toLocaleDateString('pt-BR', {
-                            day: 'numeric', month: 'short',
-                          })}
+                          {new Date(r.createdAt).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}
                         </p>
+                        {/* Reações */}
+                        <div className="flex items-center gap-2 mt-3 flex-wrap">
+                          {PRAYER_EMOJIS.map((emoji) => {
+                            const rx = r.reactions.find((x) => x.emoji === emoji);
+                            const active = r.userReaction === emoji;
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleReact(r.id, emoji)}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-sm transition-all ${
+                                  active
+                                    ? 'bg-indigo-100 text-indigo-700 font-semibold scale-110'
+                                    : 'bg-gray-100 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'
+                                }`}
+                              >
+                                {emoji}
+                                {rx && rx.count > 0 && (
+                                  <span className="text-xs">{rx.count}</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                          {r.prayerCount > 0 && (
+                            <span className="text-xs text-gray-400 ml-1">
+                              {r.prayerCount} {r.prayerCount === 1 ? 'pessoa orou' : 'pessoas oraram'}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handlePray(r.id)}
-                        className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition flex-shrink-0 ${
-                          r.userHasPrayed
-                            ? 'bg-indigo-100 text-indigo-700'
-                            : 'bg-gray-100 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'
-                        }`}
-                      >
-                        <span className="text-lg">🙏</span>
-                        <span className="text-xs font-semibold">{r.prayerCount}</span>
-                      </button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Orações respondidas */}
             {answered.length > 0 && (
               <div className="space-y-3">
                 <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
@@ -186,7 +222,6 @@ export default function PrayerPage() {
           </>
         )}
       </div>
-
     </div>
   );
 }

@@ -36,6 +36,8 @@ type CommunityMemberItem = {
   approvedAt: string | null;
 };
 
+type TestimonialReaction = { emoji: string; count: number; userIds: string[] };
+
 type TestimonialItem = {
   id: string;
   userId: string;
@@ -44,7 +46,7 @@ type TestimonialItem = {
   title: string;
   content: string;
   createdAt: string;
-  likes: string[];
+  reactions: TestimonialReaction[];
   comments: { id: string; userId: string; authorName: string | null; content: string; createdAt: string }[];
 };
 
@@ -955,7 +957,7 @@ function TestimonialsTab({ myId }: { myId: string }) {
       });
       if (res.ok) {
         const created = await res.json();
-        setItems((prev) => [{ ...created, likes: [], comments: [], authorName: null, authorAvatar: null }, ...prev]);
+        setItems((prev) => [{ ...created, reactions: [], comments: [], authorName: null, authorAvatar: null }, ...prev]);
         setNewTitle(''); setNewContent(''); setShowForm(false);
       }
     } finally {
@@ -963,13 +965,37 @@ function TestimonialsTab({ myId }: { myId: string }) {
     }
   }
 
-  async function handleLike(id: string) {
-    const res = await fetch(`/api/testimonials/${id}/like`, { method: 'POST' });
+  const REACTION_EMOJIS = ['❤️', '🙌', '🎉', '🔥'] as const;
+
+  async function handleReact(id: string, emoji: string) {
+    const res = await fetch(`/api/testimonials/${id}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emoji }),
+    });
     if (res.ok) {
-      const { liked } = await res.json();
+      const { reacted, emoji: newEmoji } = await res.json();
       setItems((prev) => prev.map((t) => {
         if (t.id !== id) return t;
-        return { ...t, likes: liked ? [...t.likes, myId] : t.likes.filter((uid) => uid !== myId) };
+        // Remove reação anterior do usuário, depois adiciona a nova
+        const withoutMe = t.reactions.map((r) => ({
+          ...r,
+          userIds: r.userIds.filter((uid) => uid !== myId),
+          count: r.userIds.filter((uid) => uid !== myId).length,
+        })).filter((r) => r.count > 0);
+
+        if (!reacted || !newEmoji) return { ...t, reactions: withoutMe };
+
+        const existing = withoutMe.find((r) => r.emoji === newEmoji);
+        if (existing) {
+          return {
+            ...t,
+            reactions: withoutMe.map((r) =>
+              r.emoji === newEmoji ? { ...r, count: r.count + 1, userIds: [...r.userIds, myId] } : r
+            ),
+          };
+        }
+        return { ...t, reactions: [...withoutMe, { emoji: newEmoji, count: 1, userIds: [myId] }] };
       }));
     }
   }
@@ -1016,7 +1042,7 @@ function TestimonialsTab({ myId }: { myId: string }) {
       {loading && <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-purple-400" /></div>}
 
       {items.map((t) => {
-        const liked = t.likes.includes(myId);
+        const myReaction = t.reactions.find((r) => r.userIds.includes(myId))?.emoji ?? null;
         const showComments = expandedComments === t.id;
         return (
           <div key={t.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
@@ -1029,11 +1055,28 @@ function TestimonialsTab({ myId }: { myId: string }) {
             </div>
             <h3 className="font-bold text-slate-800">🙌 {t.title}</h3>
             <p className="text-sm text-slate-600 leading-relaxed">{t.content}</p>
-            <div className="flex items-center gap-4 pt-1">
-              <button onClick={() => handleLike(t.id)} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${liked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-400'}`}>
-                {liked ? '❤️' : '🤍'} {t.likes.length}
-              </button>
-              <button onClick={() => setExpandedComments(showComments ? null : t.id)} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-indigo-500 transition-colors">
+            <div className="flex items-center gap-3 pt-1 flex-wrap">
+              {REACTION_EMOJIS.map((emoji) => {
+                const reaction = t.reactions.find((r) => r.emoji === emoji);
+                const active = myReaction === emoji;
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => handleReact(t.id, emoji)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-all ${
+                      active
+                        ? 'bg-rose-100 text-rose-600 font-semibold scale-110'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    }`}
+                  >
+                    {emoji}
+                    {reaction && reaction.count > 0 && (
+                      <span className="text-xs">{reaction.count}</span>
+                    )}
+                  </button>
+                );
+              })}
+              <button onClick={() => setExpandedComments(showComments ? null : t.id)} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-indigo-500 transition-colors ml-1">
                 💬 {t.comments.length}
               </button>
             </div>

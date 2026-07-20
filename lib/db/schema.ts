@@ -522,6 +522,7 @@ export const prayerInteraction = pgTable(
     userId: uuid("userId")
       .notNull()
       .references(() => user.id),
+    emoji: varchar("emoji", { length: 10 }).notNull().default("🙏"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (table) => ({
@@ -594,6 +595,7 @@ export const testimonialLike = pgTable(
     userId: uuid("userId")
       .notNull()
       .references(() => user.id),
+    emoji: varchar("emoji", { length: 10 }).notNull().default("❤️"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (table) => ({

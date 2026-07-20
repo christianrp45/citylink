@@ -3,7 +3,7 @@ import { togglePrayerInteraction } from "@/lib/db/queries-cells";
 import { awardPoints } from "@/lib/gamification";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
@@ -12,7 +12,10 @@ export async function POST(
   }
 
   const { id } = await params;
-  const result = await togglePrayerInteraction(id, session.user.id);
+  const body = await request.json().catch(() => ({}));
+  const emoji: string = body?.emoji ?? "🙏";
+
+  const result = await togglePrayerInteraction(id, session.user.id, emoji);
 
   if (result?.praying) void awardPoints(session.user.id, "pray_for_someone");
 
