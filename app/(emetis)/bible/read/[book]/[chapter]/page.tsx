@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Loader2, BookmarkPlus, X, Send, Moon, Sun, Share2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, BookmarkPlus, X, Send, Moon, Sun, Share2, WifiOff } from 'lucide-react';
 import Link from 'next/link';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
@@ -48,6 +48,7 @@ export default function ChapterPage() {
   const [data, setData] = useState<ChapterData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isOffline, setIsOffline] = useState(false);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
   const [savingHighlight, setSavingHighlight] = useState(false);
@@ -147,12 +148,18 @@ export default function ChapterPage() {
   const loadChapter = useCallback(async () => {
     setLoading(true);
     setError('');
+    setIsOffline(false);
     setSelectedVerse(null);
     try {
       const [chRes, hlRes] = await Promise.all([
         fetch(`/api/bible/chapter?book=${book}&chapter=${chapterNum}`),
         fetch(`/api/bible/highlights?book=${book}&chapter=${chapterNum}`),
       ]);
+      if (chRes.status === 503) {
+        const body = await chRes.json().catch(() => ({}));
+        setIsOffline(true);
+        throw new Error(body.error ?? 'Sem conexão com a internet.');
+      }
       if (!chRes.ok) throw new Error('Capítulo não encontrado');
       setData(await chRes.json());
       if (hlRes.ok) setHighlights(await hlRes.json());
@@ -255,10 +262,13 @@ export default function ChapterPage() {
   if (error || !data) {
     return (
       <div className={`flex flex-col items-center justify-center h-64 gap-3 px-6 text-center ${dm ? 'bg-gray-950' : ''}`}>
+        {isOffline && <WifiOff size={32} className="text-slate-400" />}
         <p className={`text-sm ${dm ? 'text-gray-400' : 'text-slate-500'}`}>{error || 'Erro desconhecido'}</p>
-        <button onClick={loadChapter} className="text-indigo-400 text-sm font-medium">
-          Tentar novamente
-        </button>
+        {!isOffline && (
+          <button onClick={loadChapter} className="text-indigo-400 text-sm font-medium">
+            Tentar novamente
+          </button>
+        )}
       </div>
     );
   }
