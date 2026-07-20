@@ -1348,6 +1348,15 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Dashboard Pastoral (admin) */}
+        <Link
+          href="/admin"
+          className="w-full py-3 rounded-2xl border border-indigo-200 text-indigo-600 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-50 transition-colors"
+        >
+          <Shield size={16} />
+          Dashboard Pastoral
+        </Link>
+
         {/* Sair */}
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
