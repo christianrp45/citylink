@@ -962,3 +962,18 @@ export const businessRecommendation = pgTable("BusinessRecommendation", {
 
 export type BusinessRecommendation = InferSelectModel<typeof businessRecommendation>;
 
+// ─── UserTalent ────────────────────────────────────────────────────────────────
+export const userTalent = pgTable("UserTalent", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull(),
+  isActive: boolean("isActive").notNull().default(true),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type UserTalent = InferSelectModel<typeof userTalent>;
+

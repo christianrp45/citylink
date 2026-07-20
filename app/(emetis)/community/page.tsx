@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   HandHeart,
+  Handshake,
   Loader2,
   MessageCircle,
   Search,
@@ -12,6 +13,7 @@ import {
   UserPlus,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
 import VisitRequestModal from '@/components/visit-request-modal';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -397,6 +399,25 @@ export default function CommunityPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50 pb-24">
+      {/* Card Troca de Talentos */}
+      <div className="px-4 pt-4 pb-1">
+        <Link
+          href="/talents"
+          className="flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl px-4 py-3.5 shadow-sm active:scale-95 transition-transform"
+        >
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+            <Handshake size={22} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm">Troca de Talentos</p>
+            <p className="text-emerald-100 text-xs leading-tight">
+              Ofereça e encontre habilidades na comunidade
+            </p>
+          </div>
+          <span className="text-white/70 text-lg">›</span>
+        </Link>
+      </div>
+
       {/* Barra de busca + tabs */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm px-4 py-3 space-y-3">
         <div className="relative">
