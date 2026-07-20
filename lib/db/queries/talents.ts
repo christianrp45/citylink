@@ -57,6 +57,26 @@ export async function createTalent(data: {
   return row;
 }
 
+export async function getTalentById(id: string) {
+  const [row] = await db
+    .select({
+      id: userTalent.id,
+      title: userTalent.title,
+      description: userTalent.description,
+      category: userTalent.category,
+      isActive: userTalent.isActive,
+      createdAt: userTalent.createdAt,
+      userId: userTalent.userId,
+      userName: user.name,
+      userAvatar: user.avatar,
+      userProfession: user.profession,
+    })
+    .from(userTalent)
+    .innerJoin(user, eq(userTalent.userId, user.id))
+    .where(eq(userTalent.id, id));
+  return row ?? null;
+}
+
 export async function deleteTalent(id: string, userId: string) {
   const [row] = await db
     .delete(userTalent)

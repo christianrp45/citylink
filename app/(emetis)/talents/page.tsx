@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Plus, X, Loader2, MessageCircle, Handshake } from 'lucide-react';
+import { Plus, X, Loader2, MessageCircle, Handshake, Share2 } from 'lucide-react';
 import Link from 'next/link';
 
 const CATEGORIES = [
@@ -164,6 +164,13 @@ export default function TalentsPage() {
 
                 {/* Ações */}
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  <Link
+                    href={`/talents/${talent.id}`}
+                    className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                    title="Ver e compartilhar"
+                  >
+                    <Share2 size={14} />
+                  </Link>
                   {talent.userId === session?.user?.id ? (
                     <button
                       onClick={() => handleDelete(talent.id)}
@@ -173,7 +180,7 @@ export default function TalentsPage() {
                     </button>
                   ) : (
                     <Link
-                      href={`/messages/${talent.userId}`}
+                      href={`/chat?with=${talent.userId}`}
                       className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-100 transition-colors"
                     >
                       <MessageCircle size={13} /> Contato
