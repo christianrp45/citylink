@@ -65,18 +65,18 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/bible/highlights/route.ts": {
-    "mtime": 1784368337.1473186,
-    "ast_hash": "4614e1a4f3867d40dc7999ff743de13a",
+    "mtime": 1784512708.829208,
+    "ast_hash": "63133168dc3bf251a56aebadd9b74725",
     "semantic_hash": ""
   },
   "app/(chat)/api/bible/plans/route.ts": {
-    "mtime": 1784368337.148321,
-    "ast_hash": "4abe7eb17f0ac357d7a5bbe28795a138",
+    "mtime": 1784512759.6774805,
+    "ast_hash": "6add2884ee205c798e623b110e3310f6",
     "semantic_hash": ""
   },
   "app/(chat)/api/bible/verse-of-day/route.ts": {
-    "mtime": 1784368337.1493232,
-    "ast_hash": "25e676544822df445956daca2ae9fa31",
+    "mtime": 1784580742.225996,
+    "ast_hash": "4302a602323575c2cac631679189bd57",
     "semantic_hash": ""
   },
   "app/(chat)/api/chat/[id]/stream/route.ts": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/hospitality/route.ts": {
-    "mtime": 1784368337.164357,
-    "ast_hash": "ad02b2357c7cab4cf4c22ca59c162c2a",
+    "mtime": 1784512869.1792085,
+    "ast_hash": "23958dad4a6b834705b2885de6826371",
     "semantic_hash": ""
   },
   "app/(chat)/api/invite/[code]/route.ts": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/messages/[userId]/route.ts": {
-    "mtime": 1783199002.21338,
-    "ast_hash": "0bf3cf4a55250795911aa2fc9ded29d2",
+    "mtime": 1784512846.840968,
+    "ast_hash": "4984dfafe22344ebe6de9587ec885a34",
     "semantic_hash": ""
   },
   "app/(chat)/api/messages/route.ts": {
@@ -250,13 +250,13 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/testimonials/[id]/like/route.ts": {
-    "mtime": 1783199398.744354,
-    "ast_hash": "9a230105dee82e39ac7c26e6814d9eb3",
+    "mtime": 1784580176.5242352,
+    "ast_hash": "a4d80a2659641c13e5901937e35629e1",
     "semantic_hash": ""
   },
   "app/(chat)/api/testimonials/route.ts": {
-    "mtime": 1783199391.301162,
-    "ast_hash": "db045b08c52fd6049fd37c5e3082c9aa",
+    "mtime": 1784512827.0230725,
+    "ast_hash": "7929f1d1abc52e011b5c1a71ef12573c",
     "semantic_hash": ""
   },
   "app/(chat)/api/users/delete-account/route.ts": {
@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/users/me/route.ts": {
-    "mtime": 1783196943.5720115,
-    "ast_hash": "5f4c7ba3ad0724f02b4d48a34bf66e0f",
+    "mtime": 1784515637.3849938,
+    "ast_hash": "da3c3f9a33dd5fd5eaf43ff37efb3cbc",
     "semantic_hash": ""
   },
   "app/(chat)/api/users/nearby/route.ts": {
@@ -320,13 +320,13 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/visits/respond/route.ts": {
-    "mtime": 1784368337.224257,
-    "ast_hash": "4a9bf83687407a0139cd72e4e64d04a2",
+    "mtime": 1784512788.5676374,
+    "ast_hash": "008a895dec8ff918b3acd11ddf18673e",
     "semantic_hash": ""
   },
   "app/(chat)/api/visits/route.ts": {
-    "mtime": 1783199035.8309453,
-    "ast_hash": "41585b38991aa065e73b53dc82a165c5",
+    "mtime": 1784512777.2744272,
+    "ast_hash": "4f13e1547ae8069197fd56822dd9b125",
     "semantic_hash": ""
   },
   "app/(chat)/api/volunteer/[id]/enroll/route.ts": {
@@ -585,8 +585,8 @@
     "semantic_hash": ""
   },
   "components/emetis-bottom-nav.tsx": {
-    "mtime": 1784475291.556466,
-    "ast_hash": "b24a2dd5965cc8e432935c015cb5f362",
+    "mtime": 1784513867.600524,
+    "ast_hash": "c6fcdd3252b79952f50418b6b02629c5",
     "semantic_hash": ""
   },
   "components/emetis-header.tsx": {
@@ -930,8 +930,8 @@
     "semantic_hash": ""
   },
   "lib/ai/prompts.ts": {
-    "mtime": 1784482004.43024,
-    "ast_hash": "65c30190d44b3edf1514fb0908aedd5b",
+    "mtime": 1784483672.31474,
+    "ast_hash": "348aeaa3b79ce27c16f6604eb9651d96",
     "semantic_hash": ""
   },
   "lib/ai/providers.ts": {
@@ -1235,8 +1235,8 @@
     "semantic_hash": ""
   },
   "lib/db/migrations/meta/_journal.json": {
-    "mtime": 1784368338.582549,
-    "ast_hash": "9d4ac63893b79253e2ec3d40b787a73c",
+    "mtime": 1784580944.9832354,
+    "ast_hash": "8533e7e5110847d3d08c806d73e42057",
     "semantic_hash": ""
   },
   "lib/db/queries-cells.ts": {
@@ -1245,8 +1245,8 @@
     "semantic_hash": ""
   },
   "lib/db/queries.ts": {
-    "mtime": 1784368338.5972557,
-    "ast_hash": "c12fb5bff360eb8d1a69e8c7f4825411",
+    "mtime": 1784581224.6070642,
+    "ast_hash": "cbdd6544824d9b99a9c89928eb66d671",
     "semantic_hash": ""
   },
   "lib/db/queries/account.ts": {
@@ -1335,13 +1335,13 @@
     "semantic_hash": ""
   },
   "lib/db/queries/push.ts": {
-    "mtime": 1784368338.7597115,
-    "ast_hash": "a6c5bf1fe456ec94607d43c0be82c05a",
+    "mtime": 1784580754.3495424,
+    "ast_hash": "0005590e198f90e29b1ff3101fb3820f",
     "semantic_hash": ""
   },
   "lib/db/queries/testimonials.ts": {
-    "mtime": 1784368338.7672415,
-    "ast_hash": "eb820cbbe4aeeada73a3e5ade4cafa3e",
+    "mtime": 1784580114.8985243,
+    "ast_hash": "30152d2dd09d21893d2629df4750336b",
     "semantic_hash": ""
   },
   "lib/db/queries/users.ts": {
@@ -1360,8 +1360,8 @@
     "semantic_hash": ""
   },
   "lib/db/schema.ts": {
-    "mtime": 1784475535.6930497,
-    "ast_hash": "74945e4e4f3c96fa966574bed4e15ed5",
+    "mtime": 1784580975.1467807,
+    "ast_hash": "85d58f6120622d3ff86ddb485442efd7",
     "semantic_hash": ""
   },
   "lib/db/utils.ts": {
@@ -1415,8 +1415,8 @@
     "semantic_hash": ""
   },
   "lib/types.ts": {
-    "mtime": 1784475536.8530643,
-    "ast_hash": "be33594b07a42ed6ba2777c2de948c10",
+    "mtime": 1784580204.8996284,
+    "ast_hash": "25a809a124bb84592efad1c3d4e673e5",
     "semantic_hash": ""
   },
   "lib/utils.ts": {
@@ -1435,8 +1435,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1784474653.383113,
-    "ast_hash": "a776cb74847c21288802d20aab587bf6",
+    "mtime": 1784484098.433769,
+    "ast_hash": "455290caa96d644075f9f14cf7725103",
     "semantic_hash": ""
   },
   "playwright.config.ts": {
@@ -1520,8 +1520,8 @@
     "semantic_hash": ""
   },
   "vercel.json": {
-    "mtime": 1784368338.9979846,
-    "ast_hash": "03d08935e18482e8de8c6bb3ffdb8cb7",
+    "mtime": 1784580783.7453735,
+    "ast_hash": "9947b70c3e05804b0928892e2d545b7b",
     "semantic_hash": ""
   },
   "DOCUMENTACAO.md": {
@@ -1530,8 +1530,8 @@
     "semantic_hash": ""
   },
   "PLANEJAMENTO_NOVAS_FUNCIONALIDADES.md": {
-    "mtime": 1784481509.0443816,
-    "ast_hash": "91693b61d31559c7688f46f85448b3e9",
+    "mtime": 1784513229.4893003,
+    "ast_hash": "b0d4a25583bb5daf529a2702b50133ea",
     "semantic_hash": ""
   },
   "README.md": {
@@ -1715,8 +1715,8 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/mdc/meetings/[meetingId]/attendance/route.ts": {
-    "mtime": 1783048356.139892,
-    "ast_hash": "d89c2447480d19938380ec33de2b739c",
+    "mtime": 1784512682.9203017,
+    "ast_hash": "5469bbf2860dabf71d8213aaf85655ba",
     "semantic_hash": ""
   },
   "app/(chat)/api/mdc/meetings/[meetingId]/guide/route.ts": {
@@ -1740,8 +1740,8 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/mdc/prayer/[id]/pray/route.ts": {
-    "mtime": 1783048384.4973786,
-    "ast_hash": "23b7ed32228d49197a6fcc83461bae07",
+    "mtime": 1784580189.3427036,
+    "ast_hash": "389f831899be610e3813eb15734aa2ca",
     "semantic_hash": ""
   },
   "app/(chat)/api/mdc/prayer/route.ts": {
@@ -1750,8 +1750,8 @@
     "semantic_hash": ""
   },
   "app/(chat)/api/teo/route.ts": {
-    "mtime": 1784474809.6389623,
-    "ast_hash": "1dca122e2aa763ad1c5f382887a9a235",
+    "mtime": 1784483686.5991795,
+    "ast_hash": "36702c85977c16f02c991453a040cd42",
     "semantic_hash": ""
   },
   "app/(emetis)/bible/layout.tsx": {
@@ -1765,8 +1765,8 @@
     "semantic_hash": ""
   },
   "app/(emetis)/bible/read/[book]/[chapter]/page.tsx": {
-    "mtime": 1784474996.9903147,
-    "ast_hash": "eba5e302a7f1e3e032359d548d522e31",
+    "mtime": 1784512021.5862854,
+    "ast_hash": "4c3031648eb643fc5c4d5d947012875a",
     "semantic_hash": ""
   },
   "app/(emetis)/businesses/page.tsx": {
@@ -1780,8 +1780,8 @@
     "semantic_hash": ""
   },
   "app/(emetis)/community/page.tsx": {
-    "mtime": 1784368337.228271,
-    "ast_hash": "7063cc7910d9c1fbd49910247ef9b0b6",
+    "mtime": 1784513974.2838285,
+    "ast_hash": "6288886e661dc2e7ad6715ab5c7e72de",
     "semantic_hash": ""
   },
   "app/(emetis)/error.tsx": {
@@ -1800,8 +1800,8 @@
     "semantic_hash": ""
   },
   "app/(emetis)/layout.tsx": {
-    "mtime": 1784368337.2433753,
-    "ast_hash": "df68e4a78f162cbe05d8601d5a7e21e4",
+    "mtime": 1784485245.3224404,
+    "ast_hash": "26c9e23fe62f9eafff8ca2e6cb514616",
     "semantic_hash": ""
   },
   "app/(emetis)/loading.tsx": {
@@ -1810,8 +1810,8 @@
     "semantic_hash": ""
   },
   "app/(emetis)/map/page.tsx": {
-    "mtime": 1784368337.2497933,
-    "ast_hash": "500585785dd7da085a816b6a11fa79a2",
+    "mtime": 1784515346.5577104,
+    "ast_hash": "cffa4bbb43c9f31370edd43f6285d018",
     "semantic_hash": ""
   },
   "app/(emetis)/mdc/cells/[cellId]/history/page.tsx": {
@@ -1835,13 +1835,13 @@
     "semantic_hash": ""
   },
   "app/(emetis)/mdc/cells/[cellId]/page.tsx": {
-    "mtime": 1784475284.0869107,
-    "ast_hash": "0d376f532a9e0918445300b0d383321f",
+    "mtime": 1784581376.4922738,
+    "ast_hash": "bd0a6a97e384f3165e5fb5bf5ce09cce",
     "semantic_hash": ""
   },
   "app/(emetis)/mdc/cells/[cellId]/prayer/page.tsx": {
-    "mtime": 1784475284.3629043,
-    "ast_hash": "2cd947da5fd9f38967a01bc5b3d6411e",
+    "mtime": 1784580350.4588916,
+    "ast_hash": "003f0ed770c44421708ebd5a047bb27e",
     "semantic_hash": ""
   },
   "app/(emetis)/mdc/cells/new/page.tsx": {
@@ -1855,13 +1855,13 @@
     "semantic_hash": ""
   },
   "app/(emetis)/mdc/page.tsx": {
-    "mtime": 1784482012.0879457,
-    "ast_hash": "562a8127add891fe935a9c08b94d278c",
+    "mtime": 1784580269.948349,
+    "ast_hash": "04ea500cbe363a527e30c4ab733bbc4d",
     "semantic_hash": ""
   },
   "app/(emetis)/profile/page.tsx": {
-    "mtime": 1784368337.3264072,
-    "ast_hash": "1c06f434d9513463a2ef6f7a953af3f3",
+    "mtime": 1784581361.3751264,
+    "ast_hash": "cbe29a9d74bfc729ed849a9aaed83976",
     "semantic_hash": ""
   },
   "lib/data/quebra-gelos.ts": {
@@ -1890,8 +1890,8 @@
     "semantic_hash": ""
   },
   "lib/db/queries/cell-prayer.ts": {
-    "mtime": 1784368338.657404,
-    "ast_hash": "74f18678cd67e339f103d871c00331aa",
+    "mtime": 1784580143.2476442,
+    "ast_hash": "1a462ced0382556ebcf7ae5b47a63120",
     "semantic_hash": ""
   },
   "lib/db/queries/cells.ts": {
@@ -1922,6 +1922,206 @@
   "QUEBRA-GELOS E DIN\u00c2MICAS.md": {
     "mtime": 1784368337.0904765,
     "ast_hash": "a69cf5402dc418c67d0ee694a38d4a76",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/admin/route.ts": {
+    "mtime": 1784514309.967465,
+    "ast_hash": "2789a330b940d4f25923f855e3bebe0a",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/cron/birthdays/route.ts": {
+    "mtime": 1784515675.657255,
+    "ast_hash": "f2fa74d3c303b917aa829a6647b37870",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/cron/weekly-report/route.ts": {
+    "mtime": 1784514515.8975925,
+    "ast_hash": "e45ae8da2bd54fe7469d546477428240",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/mdc/dashboard/route.ts": {
+    "mtime": 1784511773.7305677,
+    "ast_hash": "6ebd8965cb5cd8ac204a871e006a69eb",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/messages/unread/route.ts": {
+    "mtime": 1784513705.32716,
+    "ast_hash": "dd2dd8ff92c93e2f99e5377ad9d67ffd",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/missions/route.ts": {
+    "mtime": 1784512931.3400621,
+    "ast_hash": "86c60cadeee107cd160acd9a037d4c3f",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/notifications/route.ts": {
+    "mtime": 1784515106.8260663,
+    "ast_hash": "c2196616d6638b94a78ec30a9e3eebf5",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/search/route.ts": {
+    "mtime": 1784515293.5005796,
+    "ast_hash": "88ec983efd07b8ec20a1c1040d88de23",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/talents/[id]/route.ts": {
+    "mtime": 1784581559.095904,
+    "ast_hash": "2d046508db2085cb710923103c9f5423",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/talents/route.ts": {
+    "mtime": 1784512801.7755628,
+    "ast_hash": "a6b6d6257b34888a4d01aa9991295dcf",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/users/[userId]/route.ts": {
+    "mtime": 1784514917.9561863,
+    "ast_hash": "0d10311f96075bbc8f7f432a4c84c360",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/admin/page.tsx": {
+    "mtime": 1784514372.8272128,
+    "ast_hash": "dcd336d0cb5ce4de30da9507024a9a42",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/connect/[userId]/page.tsx": {
+    "mtime": 1784514955.4291413,
+    "ast_hash": "83a8ee917ee5fa414393b02c498efcd3",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/mdc/dashboard/page.tsx": {
+    "mtime": 1784511821.1793654,
+    "ast_hash": "9354fc00d8463ca00b15834701530c6f",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/notifications/page.tsx": {
+    "mtime": 1784515148.858674,
+    "ast_hash": "b17744c2a8a069e2ce8103ed53d9dcd4",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/search/page.tsx": {
+    "mtime": 1784515327.9654083,
+    "ast_hash": "d60cb637ce2faf151adbb00b0fbb15e2",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/talents/page.tsx": {
+    "mtime": 1784581626.4656644,
+    "ast_hash": "1d1b896feeba53523138d9fc35cb4b8a",
+    "semantic_hash": ""
+  },
+  "components/share-verse-modal.tsx": {
+    "mtime": 1784511961.6792524,
+    "ast_hash": "4e8135fd0276702da64ee77f3f70ae06",
+    "semantic_hash": ""
+  },
+  "components/teo-fab.tsx": {
+    "mtime": 1784485087.6386771,
+    "ast_hash": "779b5eda283bfb627deddee495b511be",
+    "semantic_hash": ""
+  },
+  "components/teo-new-user-sheet.tsx": {
+    "mtime": 1784484649.1700797,
+    "ast_hash": "c1adcef7005efea99f6611900f5a051a",
+    "semantic_hash": ""
+  },
+  "components/welcome-modal.tsx": {
+    "mtime": 1784514129.828676,
+    "ast_hash": "99d2a751832707469d3487b7ff2eb21b",
+    "semantic_hash": ""
+  },
+  "lib/db/migrations/0027_user_talents.sql": {
+    "mtime": 1784511247.4532616,
+    "ast_hash": "b5bd64e9244778818e70c95098bb0fd5",
+    "semantic_hash": ""
+  },
+  "lib/db/migrations/0028_gamification.sql": {
+    "mtime": 1784512507.4926322,
+    "ast_hash": "be73485bc9be9c4ac6191ecc170c3568",
+    "semantic_hash": ""
+  },
+  "lib/db/migrations/0029_birth_date.sql": {
+    "mtime": 1784515553.80413,
+    "ast_hash": "5e57b4c22215f82cdef7c91e4ca4e6c8",
+    "semantic_hash": ""
+  },
+  "lib/db/queries/admin-dashboard.ts": {
+    "mtime": 1784514278.25185,
+    "ast_hash": "decf97bbce055bab87e66b784f90699f",
+    "semantic_hash": ""
+  },
+  "lib/db/queries/leader-dashboard.ts": {
+    "mtime": 1784511720.879902,
+    "ast_hash": "20d2e9b9290cafc8bdc10e4da1cd593c",
+    "semantic_hash": ""
+  },
+  "lib/db/queries/talents.ts": {
+    "mtime": 1784581530.0938869,
+    "ast_hash": "868b21dcfb215467c5988013bed297ad",
+    "semantic_hash": ""
+  },
+  "lib/db/queries/weekly-report.ts": {
+    "mtime": 1784514486.9707346,
+    "ast_hash": "17b2ad45892a4aaf96f16442a005b2f6",
+    "semantic_hash": ""
+  },
+  "lib/gamification.ts": {
+    "mtime": 1784512608.5030246,
+    "ast_hash": "b952a3827621aba4c08990dd3485bef6",
+    "semantic_hash": ""
+  },
+  "lib/db/migrations/0030_reactions.sql": {
+    "mtime": 1784580031.6003494,
+    "ast_hash": "454612ac9b105c1dfeb85d9908472d6b",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/cron/daily-verse/route.ts": {
+    "mtime": 1784580773.3439102,
+    "ast_hash": "832e60787a3724d7f9a1e7d3ccd12ae6",
+    "semantic_hash": ""
+  },
+  "lib/bible/verses-of-day.ts": {
+    "mtime": 1784580714.8496158,
+    "ast_hash": "89e92ac7a5111cb3e958f6b674d21bd4",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/mdc/cells/[cellId]/chat/route.ts": {
+    "mtime": 1784581031.7766192,
+    "ast_hash": "604f62cc4f84975015de3a9a73bd6aaf",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/mdc/cells/[cellId]/chat/page.tsx": {
+    "mtime": 1784581072.413794,
+    "ast_hash": "8faeb0e5d7011f1b8d65ad34cd18726e",
+    "semantic_hash": ""
+  },
+  "lib/db/migrations/0031_cell_message.sql": {
+    "mtime": 1784580936.881005,
+    "ast_hash": "cbf8a8217f1ca8afc6911ead30709053",
+    "semantic_hash": ""
+  },
+  "lib/db/queries/cell-chat.ts": {
+    "mtime": 1784580983.139184,
+    "ast_hash": "955cfd59dfe562dc6d3e5dd42ba9c52e",
+    "semantic_hash": ""
+  },
+  "app/(chat)/api/ranking/route.ts": {
+    "mtime": 1784581243.7410855,
+    "ast_hash": "cbb6780c8dc521cb2980c7671f80e6c4",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/ranking/page.tsx": {
+    "mtime": 1784581339.0835865,
+    "ast_hash": "ae81a74af0f0bb9323b2abc1f922be6a",
+    "semantic_hash": ""
+  },
+  "lib/db/queries/leaderboard.ts": {
+    "mtime": 1784581211.2157724,
+    "ast_hash": "9db18b24cf18b28c0dc08dbde622bceb",
+    "semantic_hash": ""
+  },
+  "app/(emetis)/talents/[id]/page.tsx": {
+    "mtime": 1784581602.1630127,
+    "ast_hash": "945694b764b8e3c08cf2d620e77f4753",
     "semantic_hash": ""
   }
 }

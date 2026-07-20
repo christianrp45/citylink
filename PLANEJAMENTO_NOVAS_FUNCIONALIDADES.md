@@ -1,6 +1,6 @@
 # Emetis — Planejamento e Estado do Projeto
 
-**Versão:** 10.0
+**Versão:** 11.0
 **Atualizado:** 2026-07-20
 **Stack:** Next.js 16 + App Router + Drizzle ORM (Neon PostgreSQL) + NextAuth 5 + Vercel AI SDK v6 + Leaflet + Tailwind CSS 4 + SambaNova (Meta-Llama-3.3-70B)
 **Deploy:** [app.emetis.com.br](https://app.emetis.com.br)
@@ -15,7 +15,7 @@
 | Item | Status |
 |---|---|
 | Banco Neon PostgreSQL conectado | ✅ |
-| Drizzle ORM com migrações (0001–0028) | ✅ |
+| Drizzle ORM com migrações (0001–0031) | ✅ |
 | NextAuth 5 com sessão real | ✅ |
 | Vercel AI SDK v6 (useChat v3, DefaultChatTransport, sendMessage) | ✅ |
 | Deploy Vercel automático via GitHub push | ✅ |
@@ -25,6 +25,9 @@
 | Loading state (`app/(emetis)/loading.tsx`) | ✅ |
 | PWA manifest + ícones `icon-192.png` e `icon-512.png` | ✅ |
 | Push Notifications (VAPID, service worker, subscribe/unsubscribe) | ✅ |
+| Cron de proximidade diário às 8h | ✅ |
+| **Cron de aniversários diário às 8h** | ✅ |
+| **Cron de versículo do dia às 6h** | ✅ |
 
 ### Módulo Mapa / Uber Humano
 
@@ -63,12 +66,13 @@
 | Renomear célula (líder) | `mdc/cells/[cellId]/page.tsx` | ✅ |
 | Agendar reunião | `mdc/cells/[cellId]/meeting/new/page.tsx` | ✅ |
 | Encerrar reunião, RSVP, lista de presença | `api/mdc/meetings/` | ✅ |
-| Pedidos de oração com "Orei por isso 🙏" | `mdc/cells/[cellId]/prayer/page.tsx` | ✅ |
+| Pedidos de oração com reações emoji (🙏❤️💪) | `mdc/cells/[cellId]/prayer/page.tsx` | ✅ |
 | Roteiro MDC 7 seções com geração IA (SambaNova) | `api/mdc/ai/generate-guide/` | ✅ |
 | PDF do roteiro (gerado no cliente) | `guide/page.tsx` | ✅ |
 | Histórico de roteiros | `mdc/cells/[cellId]/history/page.tsx` | ✅ |
 | Push ao publicar roteiro | `api/mdc/meetings/[meetingId]/guide/` | ✅ |
 | **Dashboard do Líder** — presença histórica, inativos, pedidos de oração | `mdc/dashboard/page.tsx` | ✅ |
+| **Chat em grupo da célula** (WhatsApp-style, polling 5s) | `mdc/cells/[cellId]/chat/page.tsx` | ✅ |
 
 ### Módulo Bíblia
 
@@ -82,16 +86,19 @@
 | Seleção de texto → barra flutuante "Perguntar ao Teo" | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
 | Toque em versículo → opção "Perguntar ao Teo" | `bible/read/[book]/[chapter]/page.tsx` | ✅ |
 | **Versículo compartilhável como imagem** (Canvas 1080×1080, 4 temas, Web Share API) | `components/share-verse-modal.tsx` | ✅ |
+| **Push diário com versículo do dia** (cron às 6h, 32 versículos rotativos) | `api/cron/daily-verse/`, `lib/bible/verses-of-day.ts` | ✅ |
 
 ### Módulo Comunidade e Negócios
 
 | Feature | Arquivo | Status |
 |---|---|---|
-| Feed de testemunhos com curtidas e comentários | `community/page.tsx` | ✅ |
+| Feed de testemunhos com reações emoji (❤️🙌🎉🔥) | `community/page.tsx`, `mdc/page.tsx` | ✅ |
 | Alertas Samaritano | `community/page.tsx` | ✅ |
 | Comunidades, grupos de oração, voluntariado | `api/communities/`, `api/prayer-groups/`, `api/volunteer/` | ✅ |
 | Página de Negócios com "Irmão Indica Irmão" | `businesses/page.tsx` | ✅ |
 | **Troca de Talentos** — oferecer e encontrar habilidades | `talents/page.tsx`, `api/talents/` | ✅ |
+| **Talento compartilhável** — página pública por link | `talents/[id]/page.tsx`, `api/talents/[id]/` (GET público) | ✅ |
+| **Ranking / Leaderboard** — global e por célula | `ranking/page.tsx`, `api/ranking/` | ✅ |
 
 ### Módulo Perfil e Conta
 
@@ -99,6 +106,7 @@
 |---|---|---|
 | Foto, bio, status disponibilidade, profissão | `profile/page.tsx` | ✅ |
 | Edição de nome, telefone, profissão | `api/users/me/` PATCH | ✅ |
+| **Data de aniversário** (campo birthDate, push para amigos no dia) | `profile/page.tsx`, `api/cron/birthdays/` | ✅ |
 | Visitas pendentes e confirmadas | `profile/page.tsx` | ✅ |
 | Notificações push (subscribe/unsubscribe) | `profile/page.tsx` | ✅ |
 | Círculos de Confiança | `profile/page.tsx` | ✅ |
@@ -106,6 +114,7 @@
 | Alertas de Proximidade (toggle, raio, cooldown) | `profile/page.tsx` | ✅ |
 | QR Code pessoal de conexão | `profile/page.tsx` | ✅ |
 | **Missões semanais e pontos** (10 missões, 5 níveis) | `profile/page.tsx`, `api/missions/` | ✅ |
+| **Link para Ranking Geral** no card de missões | `profile/page.tsx` | ✅ |
 | Configurações de privacidade, exportar dados, excluir conta | `api/users/` | ✅ |
 | Onboarding (consentimento LGPD) | `app/(onboarding)/onboarding/page.tsx` | ✅ |
 
@@ -142,6 +151,9 @@
 | 0026 | entryMode na Cell |
 | 0027 | UserTalent (Troca de Talentos) |
 | 0028 | UserPoints + UserMission (Gamificação) |
+| **0029** | `birthDate date` no User (aniversários) |
+| **0030** | `emoji varchar(10)` em TestimonialLike (default ❤️) e PrayerInteraction (default 🙏) |
+| **0031** | CellMessage (chat em grupo de célula — uuid, cellId, fromUserId, content, createdAt) |
 
 ---
 
@@ -206,6 +218,13 @@ return createUIMessageStreamResponse({
 void awardPoints(session.user.id, "attend_meeting");
 ```
 
+### Reações emoji — toggle com upsert
+
+```typescript
+// Mesma emoji → remove; emoji diferente → atualiza
+// Padrão aplicado em TestimonialLike e PrayerInteraction
+```
+
 ### Comunicação cross-component — Teo
 
 ```typescript
@@ -214,6 +233,16 @@ window.dispatchEvent(new CustomEvent('teo:ask', { detail: { text: '[João 3:16] 
 
 // TeoFAB escuta e abre automaticamente
 window.addEventListener('teo:ask', onTeoRequest as EventListener);
+```
+
+### Chat em grupo — polling
+
+```typescript
+// Polling a cada 5s (mesmo padrão do chat 1:1)
+useEffect(() => {
+  const id = setInterval(fetchMessages, 5000);
+  return () => clearInterval(id);
+}, [cellId]);
 ```
 
 ### Next.js 16
@@ -226,7 +255,10 @@ window.addEventListener('teo:ask', onTeoRequest as EventListener);
 
 - Push para `main` → Vercel deploy automático
 - Migrações: `tsx lib/db/migrate && next build`
-- Cron de proximidade: `0 8 * * *` (diário às 8h)
+- Crons ativos:
+  - `0 6 * * *` — versículo do dia (push para todos os usuários)
+  - `0 8 * * *` — proximidade (alertas de localização)
+  - `0 8 * * *` — aniversários (push para amigos do aniversariante)
 - Graphify: rodar `graphify update .` após modificar código
 
 ---
@@ -238,6 +270,10 @@ window.addEventListener('teo:ask', onTeoRequest as EventListener);
 | `lib/db/schema.ts` | Schema completo de todas as tabelas |
 | `lib/db/queries.ts` | Barrel de queries (importar sempre daqui) |
 | `lib/db/queries-cells.ts` | Queries de células, reuniões, guias, orações |
+| `lib/db/queries/cell-chat.ts` | `getCellMessages`, `createCellMessage` |
+| `lib/db/queries/leaderboard.ts` | `getLeaderboard(cellId?, limit)` |
+| `lib/db/queries/talents.ts` | `getTalents`, `createTalent`, `getTalentById`, `deleteTalent` |
+| `lib/bible/verses-of-day.ts` | `DAILY_VERSES` (32 versículos) + `getVerseOfDay()` |
 | `lib/ai/prompts.ts` | Prompts: teoPrompt, teoWithPassagePrompt, newUserTeoPrompt, pastoralPrompt |
 | `lib/gamification.ts` | MISSIONS, awardPoints(), getUserMissionsProgress(), níveis |
 | `lib/reading-plans.ts` | 3 planos de leitura estáticos |
@@ -247,8 +283,11 @@ window.addEventListener('teo:ask', onTeoRequest as EventListener);
 | `components/teo-new-user-sheet.tsx` | Chat intro do Teo para novo usuário |
 | `components/emetis-bottom-nav.tsx` | Navegação inferior (5 abas) |
 | `app/(emetis)/layout.tsx` | Layout raiz com auth + TeoFAB |
+| `app/(emetis)/ranking/page.tsx` | Leaderboard com tabs Global/Célula |
+| `app/(emetis)/talents/[id]/page.tsx` | Página pública de talento compartilhável |
+| `app/(emetis)/mdc/cells/[cellId]/chat/page.tsx` | Chat em grupo da célula |
 | `next.config.ts` | Config Next.js com headers e cacheComponents |
-| `vercel.json` | Build command + cron schedule |
+| `vercel.json` | Build command + cron schedules |
 
 ---
 
@@ -261,6 +300,9 @@ window.addEventListener('teo:ask', onTeoRequest as EventListener);
 
 **Páginas adicionais acessíveis por navegação interna:**
 - `/talents` — Troca de Talentos (link na página /community)
+- `/talents/[id]` — Talento compartilhável (público, sem login)
+- `/ranking` — Ranking global (`?cellId=xxx` para ranking da célula)
+- `/mdc/cells/[cellId]/chat` — Chat em grupo da célula (card na página da célula)
 - `/mdc/dashboard` — Dashboard do Líder (card na página da célula, só para líderes)
 - `/connect/[userId]` — Perfil público pós-scan de QR Code
 - `/join/[code]` — Entrada via convite
@@ -279,3 +321,8 @@ window.addEventListener('teo:ask', onTeoRequest as EventListener);
 | 2026-07-19 | Teo cross-component via CustomEvent `teo:ask` | Evita estado global complexo |
 | 2026-07-20 | Gamificação com `awardPoints()` fire-and-forget | Zero impacto na latência dos handlers existentes |
 | 2026-07-20 | Canvas API para imagem de versículo (client-side) | Sem dependências novas, funciona offline |
+| 2026-07-20 | Reações emoji: mesma emoji remove, diferente atualiza | Comportamento intuitivo tipo Slack/WhatsApp |
+| 2026-07-20 | Versículos do dia: array estático + modulo por dia do ano | Sem API externa, determinístico, funciona offline |
+| 2026-07-20 | Chat de célula via polling 5s (não WebSocket) | Consistência com chat 1:1 existente, zero infra nova |
+| 2026-07-20 | Leaderboard filtra célula por INNER JOIN CellMember | Evita trazer todos os usuários para filtrar em memória |
+| 2026-07-20 | Página pública `/talents/[id]` sem autenticação | Permitir compartilhamento externo e SEO futuro |
