@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar } from 'lucide-react';
+import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar, Bell } from 'lucide-react';
 import Link from 'next/link';
 import VisitRequestModal from '@/components/visit-request-modal';
 import { WelcomeModal } from '@/components/welcome-modal';
@@ -672,9 +672,18 @@ export default function MapPage() {
         </div>
       </div>
 
+      {/* Botão notificações */}
+      <Link
+        href="/notifications"
+        className="absolute top-4 right-4 z-[1400] w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-50 transition-colors"
+        aria-label="Notificações"
+      >
+        <Bell size={18} className="text-slate-600" />
+      </Link>
+
       {/* Banner: visita aceita */}
       {acceptedVisit && (
-        <div className="absolute top-4 left-4 right-4 z-[1500] bg-green-500 text-white rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
+        <div className="absolute top-4 left-4 right-16 z-[1500] bg-green-500 text-white rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
           <CheckCircle size={20} className="flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold leading-tight">Visita aceita! ✅</p>
