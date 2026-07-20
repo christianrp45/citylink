@@ -702,6 +702,12 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
+            <Link
+              href="/ranking"
+              className="block w-full mt-2 py-2 text-center text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
+            >
+              🏆 Ver Ranking Geral
+            </Link>
           </div>
         )}
 

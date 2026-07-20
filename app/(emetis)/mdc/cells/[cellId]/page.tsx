@@ -290,6 +290,19 @@ export default function CellDetailPage() {
           </Link>
         </div>
 
+        {/* Ranking da Célula */}
+        <Link
+          href={`/ranking?cellId=${cellId}`}
+          className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-sm border border-slate-100 hover:shadow-md transition"
+        >
+          <span className="text-2xl">🏆</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-slate-800 text-sm">Ranking da Célula</p>
+            <p className="text-slate-500 text-xs">Top membros por pontos esta semana</p>
+          </div>
+          <span className="text-slate-400 text-lg">›</span>
+        </Link>
+
         {/* Dashboard do Líder */}
         {isLeader && (
           <Link
