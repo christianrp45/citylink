@@ -2,13 +2,11 @@ import {
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
-  stepCountIs,
   streamText,
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
 import { teoPrompt, teoWithPassagePrompt, newUserTeoPrompt } from "@/lib/ai/prompts";
 import { getFreeModel } from "@/lib/ai/providers";
-import { buscarCapitulo, versiculoDoDia } from "@/lib/ai/tools/teo-tools";
 import { searchTheology } from "@/lib/ai/theological-search";
 import { getMessageCountByUserId } from "@/lib/db/queries";
 
@@ -71,11 +69,6 @@ export async function POST(request: Request) {
         model: getFreeModel(),
         system: systemPrompt,
         messages: modelMessages,
-        tools: {
-          buscarCapitulo,
-          versiculoDoDia,
-        },
-        stopWhen: stepCountIs(5),
       });
       writer.merge(result.toUIMessageStream());
     },
