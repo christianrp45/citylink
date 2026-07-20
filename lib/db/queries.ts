@@ -24,4 +24,5 @@ export * from "./queries/business";
 export * from "./queries/talents";
 export * from "./queries/leader-dashboard";
 export * from "./queries/admin-dashboard";
+export * from "./queries/weekly-report";
 export * from "./queries-cells";
