@@ -8,7 +8,7 @@ import {
 import { auth } from "@/app/(auth)/auth";
 import { teoPrompt, teoWithPassagePrompt, newUserTeoPrompt } from "@/lib/ai/prompts";
 import { getFreeModel } from "@/lib/ai/providers";
-import { buscarCapitulo, versiculoDoDia } from "@/lib/ai/tools/teo-tools";
+import { buscarCapitulo, versiculoDoDia, buscarTeologia } from "@/lib/ai/tools/teo-tools";
 import { getMessageCountByUserId } from "@/lib/db/queries";
 
 export const maxDuration = 60;
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
         tools: {
           buscarCapitulo,
           versiculoDoDia,
+          buscarTeologia,
         },
         stopWhen: stepCountIs(5),
       });
