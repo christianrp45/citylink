@@ -1,5 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { getAttendanceByMeeting, markAttendance } from "@/lib/db/queries-cells";
+import { awardPoints } from "@/lib/gamification";
 
 export async function GET(
   _request: Request,
@@ -32,6 +33,8 @@ export async function POST(
   }
 
   await markAttendance(meetingId, userId, attended);
+
+  if (attended) void awardPoints(userId, "attend_meeting");
 
   return Response.json({ success: true });
 }

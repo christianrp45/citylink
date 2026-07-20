@@ -977,3 +977,25 @@ export const userTalent = pgTable("UserTalent", {
 
 export type UserTalent = InferSelectModel<typeof userTalent>;
 
+// ─── Gamificação ───────────────────────────────────────────────────────────────
+export const userPoints = pgTable("UserPoints", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId").notNull().unique().references(() => user.id, { onDelete: "cascade" }),
+  total: integer("total").notNull().default(0),
+  level: varchar("level", { length: 20 }).notNull().default("semente"),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserPoints = InferSelectModel<typeof userPoints>;
+
+export const userMission = pgTable("UserMission", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId").notNull().references(() => user.id, { onDelete: "cascade" }),
+  action: varchar("action", { length: 50 }).notNull(),
+  weekKey: varchar("weekKey", { length: 10 }).notNull(),
+  completedAt: timestamp("completedAt"),
+  pointsAwarded: integer("pointsAwarded").notNull().default(0),
+});
+
+export type UserMission = InferSelectModel<typeof userMission>;
+

@@ -6,6 +6,7 @@ import {
   getUserPushSubscriptions,
 } from "@/lib/db/queries";
 import { sendPush } from "@/lib/push";
+import { awardPoints } from "@/lib/gamification";
 
 // POST /api/visits — solicitar visita
 export async function POST(request: Request) {
@@ -60,6 +61,8 @@ export async function POST(request: Request) {
       if (!ok) await deletePushSubscription(sub.endpoint);
     })
   );
+
+  void awardPoints(session.user.id, "send_visit");
 
   return Response.json({ ...visit, autoAccepted }, { status: 201 });
 }

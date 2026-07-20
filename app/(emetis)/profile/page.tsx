@@ -185,6 +185,11 @@ export default function ProfilePage() {
   const [deletingLocId, setDeletingLocId] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [missions, setMissions] = useState<{
+    total: number; level: string; weekPoints: number;
+    nextLevelName: string | null; nextLevelMin: number | null;
+    missions: { action: string; label: string; points: number; emoji: string; completed: boolean }[];
+  } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const connectUrl = typeof window !== 'undefined' && profile
@@ -210,6 +215,13 @@ export default function ProfilePage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Carregar missões semanais
+  useEffect(() => {
+    if (!isGuest) {
+      fetch('/api/missions').then((r) => r.json()).then(setMissions).catch(() => {});
+    }
+  }, [isGuest]);
 
   // Carregar visitas pendentes e confirmadas
   useEffect(() => {
@@ -628,6 +640,68 @@ export default function ProfilePage() {
             ))}
           </div>
         </div>
+
+        {/* Missões Semanais */}
+        {missions && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                🎯 Missões da Semana
+              </h3>
+              <span className="text-xs font-bold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full">
+                {missions.weekPoints} pts esta semana
+              </span>
+            </div>
+
+            {/* Nível */}
+            <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-indigo-700 capitalize">
+                  {['semente','broto','árvore','fruto','luz'].includes(missions.level)
+                    ? { semente:'🌱', broto:'🌿', árvore:'🌳', fruto:'🍎', luz:'✨' }[missions.level as 'semente'|'broto'|'árvore'|'fruto'|'luz']
+                    : '🌱'
+                  } Nível {missions.level}
+                </span>
+                <span className="text-xs text-slate-500">{missions.total} pts total</span>
+              </div>
+              {missions.nextLevelMin && (
+                <div className="w-full bg-indigo-100 rounded-full h-2">
+                  <div
+                    className="bg-indigo-500 h-2 rounded-full transition-all"
+                    style={{ width: `${Math.min((missions.total / missions.nextLevelMin) * 100, 100)}%` }}
+                  />
+                </div>
+              )}
+              {missions.nextLevelName && (
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Próximo nível: <span className="capitalize font-medium">{missions.nextLevelName}</span> ({missions.nextLevelMin} pts)
+                </p>
+              )}
+            </div>
+
+            {/* Lista de missões */}
+            <div className="space-y-2">
+              {missions.missions.map((m) => (
+                <div
+                  key={m.action}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
+                    m.completed
+                      ? 'bg-emerald-50 border border-emerald-100'
+                      : 'bg-slate-50 border border-slate-100'
+                  }`}
+                >
+                  <span className="text-lg flex-shrink-0">{m.emoji}</span>
+                  <p className={`flex-1 text-xs leading-tight ${m.completed ? 'text-emerald-700 line-through' : 'text-slate-600'}`}>
+                    {m.label}
+                  </p>
+                  <span className={`text-xs font-bold flex-shrink-0 ${m.completed ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {m.completed ? '✓' : `+${m.points}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Bio / Como posso ajudar */}
         <div className="bg-white rounded-2xl border border-slate-100 p-4">

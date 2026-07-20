@@ -1,5 +1,6 @@
 import { auth } from '@/app/(auth)/auth';
 import { getTalents, createTalent, TALENT_CATEGORIES } from '@/lib/db/queries';
+import { awardPoints } from '@/lib/gamification';
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -37,6 +38,8 @@ export async function POST(request: Request) {
     description: description?.trim() || undefined,
     category,
   });
+
+  void awardPoints(session.user.id, "offer_talent");
 
   return Response.json(talent, { status: 201 });
 }

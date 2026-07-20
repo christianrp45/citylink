@@ -8,6 +8,7 @@ import {
   deletePushSubscription,
 } from "@/lib/db/queries";
 import { sendPush } from "@/lib/push";
+import { awardPoints } from "@/lib/gamification";
 
 // GET /api/messages/[userId] — histórico com um usuário
 export async function GET(
@@ -79,6 +80,8 @@ export async function POST(
       if (!ok) await deletePushSubscription(sub.endpoint);
     })
   );
+
+  void awardPoints(session.user.id, "encourage_someone");
 
   return Response.json(msg, { status: 201 });
 }

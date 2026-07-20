@@ -10,6 +10,7 @@ import {
   deletePushSubscription,
 } from "@/lib/db/queries";
 import { sendPush } from "@/lib/push";
+import { awardPoints } from "@/lib/gamification";
 
 export async function GET() {
   const session = await auth();
@@ -66,6 +67,8 @@ export async function POST(req: Request) {
       })
     );
   }
+
+  void awardPoints(session.user.id, "open_hospitality");
 
   return Response.json(created, { status: 201 });
 }

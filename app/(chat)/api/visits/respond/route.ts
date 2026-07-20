@@ -5,6 +5,7 @@ import {
   deletePushSubscription,
 } from "@/lib/db/queries";
 import { sendPush } from "@/lib/push";
+import { awardPoints } from "@/lib/gamification";
 
 const PUSH_MESSAGES = {
   accepted: {
@@ -69,6 +70,8 @@ export async function POST(request: Request) {
       if (!ok) await deletePushSubscription(sub.endpoint);
     })
   );
+
+  if (status === "accepted") void awardPoints(session.user.id, "accept_visit");
 
   return Response.json(updated);
 }

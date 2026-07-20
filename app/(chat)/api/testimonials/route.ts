@@ -1,6 +1,7 @@
 import { auth } from '@/app/(auth)/auth';
 import { createTestimonial, getTestimonials } from '@/lib/db/queries';
 import { NextRequest } from 'next/server';
+import { awardPoints } from '@/lib/gamification';
 
 export async function GET() {
   const session = await auth();
@@ -27,6 +28,8 @@ export async function POST(req: NextRequest) {
     title,
     content,
   });
+
+  void awardPoints(session.user.id, "share_testimony");
 
   return Response.json(created, { status: 201 });
 }

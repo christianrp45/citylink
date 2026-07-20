@@ -10,6 +10,7 @@ import {
   deleteHighlight,
 } from "@/lib/db/queries";
 import { NextRequest } from "next/server";
+import { awardPoints } from "@/lib/gamification";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -55,6 +56,8 @@ export async function POST(req: NextRequest) {
     note: typeof note === "string" ? note : undefined,
     version: typeof version === "string" ? version : "nvi",
   });
+
+  void awardPoints(session.user.id, "bible_highlight");
 
   return Response.json(highlight, { status: 201 });
 }

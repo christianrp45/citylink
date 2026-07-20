@@ -1,5 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { READING_PLANS } from "@/lib/reading-plans";
+import { awardPoints } from "@/lib/gamification";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { readingPlanProgress } from "@/lib/db/schema";
@@ -91,6 +92,8 @@ export async function POST(request: Request) {
         )
       )
       .returning();
+
+    void awardPoints(session.user.id, "reading_plan");
     return Response.json(result);
   }
 
