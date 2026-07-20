@@ -8,7 +8,6 @@ export async function GET() {
     const { text } = await generateText({
       model: getFreeModel(),
       prompt: "Responda apenas: OK",
-      maxTokens: 10,
     });
     return Response.json({ ok: true, text });
   } catch (e: unknown) {

@@ -29,12 +29,12 @@ export const myProvider = isTestEnvironment
   : null;
 
 // Provedor SambaNova — OpenAI-compatible, usa SAMBANOVA_API_KEY
-// compatibility: 'compatible' força Chat Completions API (não usa Responses API da OpenAI)
-const sambaNova = createOpenAI({
+// .chat() força Chat Completions API (SambaNova não suporta Responses API da OpenAI)
+const _sambaNova = createOpenAI({
   baseURL: "https://api.sambanova.ai/v1",
   apiKey: process.env.SAMBANOVA_API_KEY ?? "",
-  compatibility: "compatible",
 });
+const sambaNova = (modelId: string) => _sambaNova.chat(modelId);
 
 export function getLanguageModel(modelId: string) {
   if (isTestEnvironment && myProvider) {
