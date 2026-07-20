@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { UserCheck, MessageCircle, MapPin, Loader2, UserPlus } from 'lucide-react';
+import { UserCheck, MessageCircle, MapPin, Loader2, UserPlus, Users, Heart } from 'lucide-react';
+
+interface CellInfo { id: string; name: string; neighborhood: string | null; }
+interface LevelInfo { name: string; emoji: string; total: number; }
 
 interface PublicProfile {
   id: string;
@@ -11,6 +14,9 @@ interface PublicProfile {
   profession: string | null;
   bio: string | null;
   availabilityStatus: 'mesa-posta' | 'requer-aviso' | 'offline' | null;
+  lastTestimonial: { id: string; title: string; excerpt: string; createdAt: string } | null;
+  cells: CellInfo[];
+  level: LevelInfo | null;
 }
 
 const STATUS_LABEL: Record<string, { label: string; color: string; dot: string }> = {
@@ -53,10 +59,6 @@ export default function ConnectPage() {
     }
   }
 
-  async function handleRequestVisit() {
-    router.push(`/map?visit=${userId}`);
-  }
-
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -88,16 +90,30 @@ export default function ConnectPage() {
       {/* Header */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-700 pt-10 pb-16 px-4 text-center">
         <p className="text-indigo-200 text-sm mb-4">Você escaneou o QR Code de</p>
-        <div className="w-24 h-24 rounded-full border-4 border-white shadow-xl overflow-hidden mx-auto">
-          <img src={avatarUrl} alt={profile.name ?? ''} className="w-full h-full object-cover" />
+        <div className="relative w-24 h-24 mx-auto">
+          <img
+            src={avatarUrl}
+            alt={profile.name ?? ''}
+            className="w-24 h-24 rounded-full border-4 border-white shadow-xl object-cover"
+          />
+          {profile.level && (
+            <span className="absolute -bottom-1 -right-1 text-xl leading-none">
+              {profile.level.emoji}
+            </span>
+          )}
         </div>
         <h1 className="text-2xl font-bold text-white mt-3">{profile.name ?? 'Usuário'}</h1>
         {profile.profession && (
           <p className="text-indigo-200 text-sm mt-1">{profile.profession}</p>
         )}
+        {profile.level && (
+          <p className="text-indigo-300 text-xs mt-1">
+            {profile.level.emoji} {profile.level.name.charAt(0).toUpperCase() + profile.level.name.slice(1)} · {profile.level.total} pts
+          </p>
+        )}
       </div>
 
-      {/* Card central */}
+      {/* Card principal */}
       <div className="mx-4 -mt-8 bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4">
         {/* Status */}
         <div className="flex items-center gap-2">
@@ -111,7 +127,7 @@ export default function ConnectPage() {
         )}
 
         {/* Ações */}
-        <div className="space-y-3 pt-2">
+        <div className="space-y-3 pt-1">
           {sent ? (
             <div className="flex items-center gap-2 justify-center py-3 bg-green-50 rounded-xl text-green-700 text-sm font-semibold">
               <UserCheck size={18} />
@@ -130,7 +146,7 @@ export default function ConnectPage() {
 
           {profile.availabilityStatus === 'mesa-posta' && (
             <button
-              onClick={handleRequestVisit}
+              onClick={() => router.push(`/map?visit=${userId}`)}
               className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 active:scale-95 transition-all"
             >
               <MapPin size={18} />
@@ -139,7 +155,7 @@ export default function ConnectPage() {
           )}
 
           <button
-            onClick={() => router.push(`/chat?userId=${userId}`)}
+            onClick={() => router.push(`/chat?with=${userId}`)}
             className="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 active:scale-95 transition-all"
           >
             <MessageCircle size={18} />
@@ -148,8 +164,45 @@ export default function ConnectPage() {
         </div>
       </div>
 
-      {/* Rodapé Emetis */}
-      <p className="text-center text-xs text-slate-400 mt-6 px-4">
+      {/* Células */}
+      {profile.cells.length > 0 && (
+        <div className="mx-4 mt-3 bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Grupos</p>
+          <div className="space-y-2">
+            {profile.cells.map((c) => (
+              <div key={c.id} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <Users size={15} className="text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate">{c.name}</p>
+                  {c.neighborhood && (
+                    <p className="text-xs text-slate-400 truncate">{c.neighborhood}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Último testemunho */}
+      {profile.lastTestimonial && (
+        <div className="mx-4 mt-3 bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+            <Heart size={12} className="text-rose-400" /> Último testemunho
+          </p>
+          <p className="text-sm font-semibold text-slate-800 mb-1">{profile.lastTestimonial.title}</p>
+          <p className="text-xs text-slate-500 leading-relaxed">{profile.lastTestimonial.excerpt}</p>
+          <p className="text-[10px] text-slate-400 mt-2">
+            {new Date(profile.lastTestimonial.createdAt).toLocaleDateString('pt-BR', {
+              day: '2-digit', month: 'short', year: 'numeric',
+            })}
+          </p>
+        </div>
+      )}
+
+      <p className="text-center text-xs text-slate-400 mt-6 mb-4 px-4">
         Conectado pelo Emetis — reconexão humana real
       </p>
     </div>
