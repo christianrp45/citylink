@@ -5,8 +5,9 @@ import {
   streamText,
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
-import { teoPrompt } from "@/lib/ai/prompts";
+import { teoPrompt, teoWithPassagePrompt, newUserTeoPrompt } from "@/lib/ai/prompts";
 import { getFreeModel } from "@/lib/ai/providers";
+import { searchTheology } from "@/lib/ai/theological-search";
 import { getMessageCountByUserId } from "@/lib/db/queries";
 
 export const maxDuration = 60;
@@ -31,25 +32,41 @@ export async function POST(request: Request) {
     );
   }
 
-  const { messages } = await request.json();
+  const { messages, context } = await request.json();
+  const modelMessages = await convertToModelMessages(messages);
 
-  let modelMessages;
-  try {
-    modelMessages = await convertToModelMessages(messages);
-  } catch (e) {
-    console.error("[Teo] convertToModelMessages error:", e);
-    return Response.json({ error: "Erro ao processar mensagens." }, { status: 400 });
+  // Seleciona o prompt base conforme o contexto
+  let systemPrompt = teoPrompt;
+  if (context?.isNewUser) {
+    systemPrompt = newUserTeoPrompt;
+  } else if (context?.bookName && context?.chapter) {
+    systemPrompt = teoWithPassagePrompt(context.bookName, context.chapter);
+  }
+
+  // Pre-retrieval: injeta contexto teológico BM25 no system prompt
+  const lastUserText = messages
+    .filter((m: { role: string }) => m.role === "user")
+    .at(-1)
+    ?.parts?.find((p: { type: string }) => p.type === "text")?.text ?? "";
+
+  if (lastUserText) {
+    const theological = searchTheology(lastUserText, 2);
+    if (theological.length > 0) {
+      const ctx = theological
+        .map((r) =>
+          `**${r.title}** (${r.topic})\n${r.content.slice(0, 600)}…\nFontes: ${r.sources.join("; ")}`
+        )
+        .join("\n\n---\n\n");
+      systemPrompt += `\n\n── CONTEXTO TEOLÓGICO (use se relevante) ──\n${ctx}`;
+    }
   }
 
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
       const result = streamText({
         model: getFreeModel(),
-        system: teoPrompt,
+        system: systemPrompt,
         messages: modelMessages,
-        onError: (err) => {
-          console.error("[Teo] streamText error:", JSON.stringify(err));
-        },
       });
       writer.merge(result.toUIMessageStream());
     },
