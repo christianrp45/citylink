@@ -280,6 +280,23 @@ export default function CellDetailPage() {
           </Link>
         </div>
 
+        {/* Dashboard do Líder */}
+        {isLeader && (
+          <Link
+            href="/mdc/dashboard"
+            className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl px-4 py-3.5 shadow-sm active:scale-95 transition-transform"
+          >
+            <span className="text-2xl">📊</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-white text-sm">Dashboard do Líder</p>
+              <p className="text-indigo-200 text-xs leading-tight">
+                Presença, membros inativos e pedidos de oração
+              </p>
+            </div>
+            <span className="text-white/70 text-lg">›</span>
+          </Link>
+        )}
+
         {/* Botão Convidar — visível apenas para líder / co-líder */}
         {isLeader && (
           <div className="bg-white rounded-xl shadow-sm p-4">

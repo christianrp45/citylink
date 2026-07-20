@@ -22,4 +22,5 @@ export * from "./queries/invite";
 export * from "./queries/locations";
 export * from "./queries/business";
 export * from "./queries/talents";
+export * from "./queries/leader-dashboard";
 export * from "./queries-cells";
