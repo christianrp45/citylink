@@ -62,8 +62,8 @@ export function TeoFAB() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-20 right-4 z-[9990] w-13 h-13 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-xl flex items-center justify-center active:scale-95 transition-all"
-          style={{ width: 52, height: 52 }}
+          className="fixed right-4 z-[9990] bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-xl flex items-center justify-center active:scale-95 transition-all"
+          style={{ width: 52, height: 52, bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0px))' }}
           aria-label="Abrir Teo"
         >
           <span className="text-xl font-bold" style={{ fontFamily: 'serif' }}>τ</span>
