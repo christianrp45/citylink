@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { EmetisIcon } from "@/components/emetis-icon";
 import { signIn, useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
@@ -12,6 +12,7 @@ import { type RegisterActionState, register } from "../actions";
 
 export default function Page() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSuccessful, setIsSuccessful] = useState(false);
   const [accountType, setAccountType] = useState<"individual" | "institution">("individual");
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +36,21 @@ export default function Page() {
       toast({ type: "success", description: "Conta criada com sucesso!" });
       setIsSuccessful(true);
       updateSession();
+
+      // Registrar referral após o cadastro (query param ou localStorage)
+      const refCode = searchParams.get("ref") ?? (() => {
+        try { return localStorage.getItem("emetis_ref"); } catch { return null; }
+      })();
+      if (refCode) {
+        fetch("/api/users/referral", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: refCode }),
+        }).then(() => {
+          try { localStorage.removeItem("emetis_ref"); } catch {}
+        }).catch(() => {});
+      }
+
       router.refresh();
     }
   }, [state.status]);

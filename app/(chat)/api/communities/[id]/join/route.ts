@@ -1,5 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { getCommunityById, joinCommunity, leaveCommunity } from "@/lib/db/queries";
+import { awardPoints } from "@/lib/gamification";
 
 export async function POST(
   _request: Request,
@@ -17,6 +18,7 @@ export async function POST(
   }
 
   await joinCommunity(id, session.user.id, community.requireApproval ?? false);
+  if (!community.requireApproval) void awardPoints(session.user.id, "join_group");
 
   const message = community.requireApproval
     ? "Solicitação enviada, aguardando aprovação"

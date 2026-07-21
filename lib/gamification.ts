@@ -18,6 +18,8 @@ export const MISSIONS = {
   encourage_someone:   { label: "Envie uma mensagem de encorajamento", points: 10, emoji: "💌" },
   open_hospitality:    { label: "Ative a Mesa Posta",                  points: 30, emoji: "🍽️" },
   pray_for_someone:    { label: "Ore por alguém na célula",            points: 20, emoji: "🙏" },
+  join_group:          { label: "Entre em uma célula ou comunidade",   points: 30, emoji: "👥" },
+  invite_accepted:     { label: "Convide alguém que entrou no Emetis", points: 50, emoji: "🎉" },
 } as const;
 
 export type MissionAction = keyof typeof MISSIONS;

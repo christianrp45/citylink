@@ -32,6 +32,8 @@ export const user = pgTable("User", {
   lng: varchar("lng", { length: 20 }),
   primaryChurchId: uuid("primaryChurchId"),
   birthDate: date("birthDate"),
+  referredBy: uuid("referredBy"),
+  personalInviteCode: varchar("personalInviteCode", { length: 10 }),
   updatedAt: timestamp("updatedAt").defaultNow(),
 });
 

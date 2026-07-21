@@ -5,6 +5,7 @@ import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellO
 import QRCode from 'react-qr-code';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { ShareInviteButton } from '@/components/share-invite-button';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 type AvailabilityStatus = 'mesa-posta' | 'requer-aviso' | 'offline';
@@ -641,6 +642,17 @@ export default function ProfilePage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Convidar amigos */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            🎉 Convidar amigos
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Compartilhe seu link e ganhe <strong>+50 pontos</strong> para cada amigo que entrar no Emetis pelo seu convite.
+          </p>
+          <ShareInviteButton />
         </div>
 
         {/* Missões Semanais */}

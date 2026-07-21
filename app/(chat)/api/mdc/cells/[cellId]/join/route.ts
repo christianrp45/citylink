@@ -1,5 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { getCellById, getCellMemberCount, joinCell } from "@/lib/db/queries-cells";
+import { awardPoints } from "@/lib/gamification";
 
 export async function POST(
   _request: Request,
@@ -30,6 +31,7 @@ export async function POST(
   }
 
   await joinCell(cellId, session.user.id);
+  void awardPoints(session.user.id, "join_group");
 
   return Response.json({ success: true, message: "Você entrou na célula!" });
 }
