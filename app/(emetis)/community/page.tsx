@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   CalendarDays,
+  Check,
   HandHeart,
   Handshake,
+  Heart,
   Loader2,
   MessageCircle,
   Search,
@@ -25,6 +27,15 @@ type Friend = {
   avatar: string | null;
   profession: string | null;
   availabilityStatus: string | null;
+  circle?: string | null;
+};
+
+type PendingRequest = {
+  senderId: string;
+  senderName: string | null;
+  senderAvatar: string | null;
+  senderProfession: string | null;
+  createdAt: string;
 };
 
 type DiscoverUser = {
@@ -72,33 +83,132 @@ function avatarSrc(u: { name: string | null; avatar: string | null }) {
 
 // ─── Cards ────────────────────────────────────────────────────────────────────
 
+function PendingRequestCard({
+  req,
+  onAccept,
+  onReject,
+}: {
+  req: PendingRequest;
+  onAccept: (id: string) => void;
+  onReject: (id: string) => void;
+}) {
+  const [status, setStatus] = useState<'idle' | 'accepting' | 'rejecting'>('idle');
+
+  async function handleAccept() {
+    setStatus('accepting');
+    try {
+      await fetch('/api/friends/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId: req.senderId }),
+      });
+      onAccept(req.senderId);
+    } finally {
+      setStatus('idle');
+    }
+  }
+
+  async function handleReject() {
+    setStatus('rejecting');
+    try {
+      await fetch('/api/friends/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId: req.senderId }),
+      });
+      onReject(req.senderId);
+    } finally {
+      setStatus('idle');
+    }
+  }
+
+  return (
+    <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
+      <div className="flex items-center gap-3">
+        <img
+          src={req.senderAvatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(req.senderName ?? 'U')}&background=6366f1&color=fff`}
+          alt={req.senderName ?? 'Usuário'}
+          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-800 text-sm truncate">{req.senderName ?? 'Usuário'}</p>
+          {req.senderProfession && (
+            <p className="text-xs text-slate-500 mt-0.5">{req.senderProfession}</p>
+          )}
+          <p className="text-[11px] text-indigo-500 mt-0.5">Quer se conectar com você</p>
+        </div>
+        <div className="flex gap-1.5 flex-shrink-0">
+          <button
+            onClick={handleAccept}
+            disabled={status !== 'idle'}
+            className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+          >
+            {status === 'accepting' ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+            Aceitar
+          </button>
+          <button
+            onClick={handleReject}
+            disabled={status !== 'idle'}
+            className="p-1.5 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-colors disabled:opacity-50"
+          >
+            {status === 'rejecting' ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FriendCard({
   user,
   onVisit,
   onChat,
   onRemove,
+  onCircleChange,
 }: {
   user: Friend;
   onVisit: (u: Friend) => void;
   onChat: (id: string) => void;
   onRemove: (id: string) => void;
+  onCircleChange: (id: string, circle: 'family' | 'friends') => void;
 }) {
   const [removing, setRemoving] = useState(false);
+  const [updatingCircle, setUpdatingCircle] = useState(false);
+  const isFamily = user.circle === 'family';
 
   async function handleRemove() {
     setRemoving(true);
     try {
-      await fetch(`/api/friends?friendId=${user.id}`, { method: 'DELETE' });
+      await fetch('/api/friends', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId: user.id }),
+      });
       onRemove(user.id);
     } finally {
       setRemoving(false);
     }
   }
 
+  async function toggleFamily() {
+    setUpdatingCircle(true);
+    const newCircle = isFamily ? 'friends' : 'family';
+    try {
+      await fetch(`/api/friends/${user.id}/circle`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ circle: newCircle }),
+      });
+      onCircleChange(user.id, newCircle);
+    } finally {
+      setUpdatingCircle(false);
+    }
+  }
+
   const isOnline = user.availabilityStatus !== 'offline';
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+    <div className={`bg-white rounded-2xl shadow-sm border p-4 ${isFamily ? 'border-rose-200' : 'border-slate-100'}`}>
       <div className="flex items-center gap-3">
         <div className="relative flex-shrink-0">
           <img
@@ -116,6 +226,11 @@ function FriendCard({
             <p className="font-semibold text-slate-800 text-sm truncate">
               {user.name ?? 'Usuário'}
             </p>
+            {isFamily && (
+              <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5">
+                <Heart size={8} className="fill-rose-500 text-rose-500" /> Família
+              </span>
+            )}
             {user.availabilityStatus === 'mesa-posta' && (
               <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-semibold">
                 Mesa Posta
@@ -140,6 +255,18 @@ function FriendCard({
               className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
             >
               <MessageCircle size={14} />
+            </button>
+            <button
+              onClick={toggleFamily}
+              disabled={updatingCircle}
+              title={isFamily ? 'Remover da família' : 'Marcar como família'}
+              className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                isFamily
+                  ? 'bg-rose-100 text-rose-500 hover:bg-rose-200'
+                  : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-400'
+              }`}
+            >
+              {updatingCircle ? <Loader2 size={14} className="animate-spin" /> : <Heart size={14} className={isFamily ? 'fill-rose-500' : ''} />}
             </button>
             <button
               onClick={handleRemove}
@@ -321,6 +448,7 @@ export default function CommunityPage() {
   const [search, setSearch] = useState('');
 
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [discover, setDiscover] = useState<DiscoverUser[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -337,8 +465,12 @@ export default function CommunityPage() {
 
   const fetchFriends = useCallback(async () => {
     try {
-      const res = await fetch('/api/friends');
-      if (res.ok) setFriends(await res.json());
+      const [friendsRes, pendingRes] = await Promise.all([
+        fetch('/api/friends'),
+        fetch('/api/friends/pending'),
+      ]);
+      if (friendsRes.ok) setFriends(await friendsRes.json());
+      if (pendingRes.ok) setPendingRequests(await pendingRes.json());
     } catch {}
   }, []);
 
@@ -382,6 +514,33 @@ export default function CommunityPage() {
 
   function handleAdded(id: string) {
     setDiscover((prev) => prev.filter((u) => u.id !== id));
+  }
+
+  function handleAcceptRequest(senderId: string) {
+    // Move da lista de pendentes para amigos
+    const req = pendingRequests.find((r) => r.senderId === senderId);
+    setPendingRequests((prev) => prev.filter((r) => r.senderId !== senderId));
+    if (req) {
+      setFriends((prev) => [
+        ...prev,
+        {
+          id: req.senderId,
+          name: req.senderName,
+          avatar: req.senderAvatar,
+          profession: req.senderProfession,
+          availabilityStatus: null,
+          circle: 'friends',
+        },
+      ]);
+    }
+  }
+
+  function handleRejectRequest(senderId: string) {
+    setPendingRequests((prev) => prev.filter((r) => r.senderId !== senderId));
+  }
+
+  function handleCircleChange(id: string, circle: 'family' | 'friends') {
+    setFriends((prev) => prev.map((f) => (f.id === id ? { ...f, circle } : f)));
   }
 
   const filteredFriends = friends.filter(
@@ -461,7 +620,7 @@ export default function CommunityPage() {
               }`}
             >
               {t === 'friends'
-                ? `Amigos (${friends.length})`
+                ? `Amigos${pendingRequests.length > 0 ? ` · ${pendingRequests.length} pedido${pendingRequests.length > 1 ? 's' : ''}` : ` (${friends.length})`}`
                 : t === 'discover'
                 ? 'Descobrir'
                 : `Alertas ${alerts.length > 0 ? `(${alerts.length})` : ''}`}
@@ -481,7 +640,24 @@ export default function CommunityPage() {
         {/* Amigos */}
         {!loading && tab === 'friends' && (
           <>
-            {filteredFriends.length === 0 && (
+            {/* Pedidos de amizade pendentes */}
+            {pendingRequests.length > 0 && (
+              <div className="space-y-2 mb-4">
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide px-1">
+                  Pedidos de amizade ({pendingRequests.length})
+                </p>
+                {pendingRequests.map((req) => (
+                  <PendingRequestCard
+                    key={req.senderId}
+                    req={req}
+                    onAccept={handleAcceptRequest}
+                    onReject={handleRejectRequest}
+                  />
+                ))}
+              </div>
+            )}
+
+            {filteredFriends.length === 0 && pendingRequests.length === 0 && (
               <div className="text-center py-16 text-slate-400">
                 <p className="text-4xl mb-2">👥</p>
                 <p className="text-sm">Nenhum amigo ainda. Explore para conectar!</p>
@@ -503,6 +679,7 @@ export default function CommunityPage() {
                 }
                 onChat={(id) => router.push(`/chat?with=${id}`)}
                 onRemove={handleRemoveFriend}
+                onCircleChange={handleCircleChange}
               />
             ))}
           </>

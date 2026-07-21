@@ -155,7 +155,9 @@ export default function MapPage() {
   const [savingWindow, setSavingWindow] = useState(false);
   const locationSaved = useRef(false);
   const [activeSavedLoc, setActiveSavedLoc] = useState<{ lat: number; lng: number } | null>(null);
-  const seenAcceptedIds = useRef<Set<string>>(new Set());
+  const seenAcceptedIds = useRef<Set<string>>(new Set(
+    (() => { try { return JSON.parse(localStorage.getItem('emetis_seen_visits') ?? '[]') as string[]; } catch { return [] as string[]; } })()
+  ));
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Salvar localização no banco e buscar usuários próximos
@@ -328,6 +330,7 @@ export default function MapPage() {
           const newest = list.find((v) => !seenAcceptedIds.current.has(v.id));
           if (newest) {
             seenAcceptedIds.current.add(newest.id);
+            try { localStorage.setItem('emetis_seen_visits', JSON.stringify([...seenAcceptedIds.current])); } catch {}
             setAcceptedVisit({ toUserName: newest.toUserName });
           }
         })

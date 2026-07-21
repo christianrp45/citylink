@@ -70,7 +70,7 @@ export async function getFriends(userId: string) {
       })
       .from(friendship)
       .innerJoin(user, eq(user.id, friendship.friendId))
-      .where(eq(friendship.userId, userId))
+      .where(and(eq(friendship.userId, userId), eq(friendship.status, "accepted")))
       .orderBy(asc(user.name));
     return rows;
   } catch (_error) {
