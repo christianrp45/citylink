@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EmetisIcon } from "@/components/emetis-icon";
 import { signIn, useSession } from "next-auth/react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, Suspense } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
 import { type RegisterActionState, register } from "../actions";
 
-export default function Page() {
+// Componente interno que usa useSearchParams — deve estar dentro de <Suspense>
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSuccessful, setIsSuccessful] = useState(false);
@@ -123,7 +124,6 @@ export default function Page() {
 
         {/* Form */}
         <form action={formAction} className="flex flex-col gap-4">
-          {/* Campo oculto com tipo de conta */}
           <input type="hidden" name="accountType" value={accountType} />
 
           {/* Nome */}
@@ -231,5 +231,15 @@ export default function Page() {
         </form>
       </div>
     </div>
+  );
+}
+
+// Página exportada envolve o formulário em Suspense (exigido pelo Next.js quando
+// useSearchParams é usado dentro de um componente filho)
+export default function Page() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }
