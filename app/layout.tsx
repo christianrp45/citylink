@@ -99,7 +99,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Emetis" />
-        <link rel="apple-touch-icon" href="/images/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="icon" type="image/svg+xml" href="/emetis-icon.svg" />
       </head>
       <body className="antialiased" style={{ fontFamily: 'var(--font-brand)' }}>
         <ThemeProvider

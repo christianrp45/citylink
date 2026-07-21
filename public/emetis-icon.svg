@@ -1,36 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <!-- Fundo azul com cantos arredondados (PWA icon) -->
-  <rect width="512" height="512" rx="96" fill="#1D4ED8"/>
-
-  <!-- Gradiente sutil no fundo -->
   <defs>
-    <radialGradient id="bg" cx="35%" cy="30%" r="70%">
-      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#1E40AF" stop-opacity="0"/>
-    </radialGradient>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <!-- Fundo azul com cantos arredondados -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
 
   <!--
-    Mark escalado para 512x512.
-    Original viewBox: 64x90 — centralizado em 512x512
-    Scale = 4.5  →  width=288, height=405
-    Offset x = (512-288)/2 = 112
-    Offset y = (512-405)/2 = 53.5 ≈ 54
+    Torre de sinal centralizada:
+    Pilar vertical central + arcos em ambos os lados
+    Centro: 256, 256
   -->
-  <g transform="translate(112, 54) scale(4.5)">
-    <!-- Pilar -->
-    <rect x="8" y="6" width="11" height="64" rx="5.5" fill="white"/>
-    <!-- Ponto base -->
-    <circle cx="13.5" cy="76" r="5" fill="white"/>
-    <!-- Arco 1 — pessoal -->
-    <path d="M 19 42 A 12 12 0 0 1 19 58"
-          stroke="rgba(255,255,255,0.96)" stroke-width="1.67" stroke-linecap="round"/>
-    <!-- Arco 2 — célula -->
-    <path d="M 19 30 A 22 22 0 0 1 19 70"
-          stroke="rgba(255,255,255,0.70)" stroke-width="1.33" stroke-linecap="round"/>
-    <!-- Arco 3 — igreja -->
-    <path d="M 19 16 A 34 34 0 0 1 19 84"
-          stroke="rgba(255,255,255,0.40)" stroke-width="1.11" stroke-linecap="round"/>
-  </g>
+
+  <!-- Pilar vertical centralizado -->
+  <rect x="233" y="96" width="46" height="240" rx="23" fill="white"/>
+
+  <!-- Ponto base — a pessoa, o indivíduo -->
+  <circle cx="256" cy="374" r="26" fill="white"/>
+
+  <!-- Arco 1 esquerdo — fé pessoal -->
+  <path d="M 233 192 A 60 60 0 0 0 233 272"
+        stroke="white" stroke-opacity="0.95" stroke-width="22" stroke-linecap="round"/>
+  <!-- Arco 1 direito — fé pessoal -->
+  <path d="M 279 192 A 60 60 0 0 1 279 272"
+        stroke="white" stroke-opacity="0.95" stroke-width="22" stroke-linecap="round"/>
+
+  <!-- Arco 2 esquerdo — célula -->
+  <path d="M 233 148 A 108 108 0 0 0 233 316"
+        stroke="white" stroke-opacity="0.60" stroke-width="16" stroke-linecap="round"/>
+  <!-- Arco 2 direito — célula -->
+  <path d="M 279 148 A 108 108 0 0 1 279 316"
+        stroke="white" stroke-opacity="0.60" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- Arco 3 esquerdo — Igreja -->
+  <path d="M 233 102 A 154 154 0 0 0 233 362"
+        stroke="white" stroke-opacity="0.28" stroke-width="12" stroke-linecap="round"/>
+  <!-- Arco 3 direito — Igreja -->
+  <path d="M 279 102 A 154 154 0 0 1 279 362"
+        stroke="white" stroke-opacity="0.28" stroke-width="12" stroke-linecap="round"/>
 </svg>
