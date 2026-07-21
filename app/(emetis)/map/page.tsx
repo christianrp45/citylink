@@ -15,7 +15,34 @@ const Marker = dynamic(() => import('react-leaflet').then(m => m.Marker), { ssr:
 const Popup = dynamic(() => import('react-leaflet').then(m => m.Popup), { ssr: false });
 const Circle = dynamic(() => import('react-leaflet').then(m => m.Circle), { ssr: false });
 
+// Componente interno que força re-centralização quando a localização muda
+// (em react-leaflet v3+, a prop "center" do MapContainer é estática após o mount)
+const MapCenterController = dynamic(
+  () => import('react-leaflet').then((m) => {
+    function Controller({ lat, lng }: { lat: number; lng: number }) {
+      const map = m.useMap();
+      useEffect(() => { map.setView([lat, lng], map.getZoom()); }, [lat, lng, map]);
+      return null;
+    }
+    return { default: Controller };
+  }),
+  { ssr: false }
+);
+
 const CURITIBA = { lat: -25.4284, lng: -49.2733 };
+const LOC_STORAGE_KEY = 'emetis_last_loc';
+
+// Lê a última localização salva no localStorage (fallback para Curitiba)
+function getInitialCenter(): [number, number] {
+  try {
+    const raw = localStorage.getItem(LOC_STORAGE_KEY);
+    if (raw) {
+      const { lat, lng } = JSON.parse(raw);
+      if (typeof lat === 'number' && typeof lng === 'number') return [lat, lng];
+    }
+  } catch {}
+  return [CURITIBA.lat, CURITIBA.lng];
+}
 const NEARBY_RADIUS = 2000;
 
 function formatDistance(m: number) {
@@ -106,7 +133,7 @@ export default function MapPage() {
   }, []);
 
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
-  const [center, setCenter] = useState<[number, number]>([CURITIBA.lat, CURITIBA.lng]);
+  const [center, setCenter] = useState<[number, number]>(getInitialCenter);
   const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedUser, setSelectedUser] = useState<ReturnType<typeof toModalUser> | null>(null);
@@ -135,6 +162,9 @@ export default function MapPage() {
   const onLocationObtained = useCallback(async (loc: { lat: number; lng: number }) => {
     setUserLoc(loc);
     setCenter([loc.lat, loc.lng]);
+
+    // Persistir no localStorage para próxima abertura do mapa
+    try { localStorage.setItem(LOC_STORAGE_KEY, JSON.stringify(loc)); } catch {}
 
     // Salvar no banco (uma vez por sessão)
     if (!locationSaved.current) {
@@ -446,6 +476,8 @@ export default function MapPage() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution="OpenStreetMap"
             />
+            {/* Força re-centralização quando GPS retorna a posição real */}
+            {userLoc && <MapCenterController lat={userLoc.lat} lng={userLoc.lng} />}
             {userLoc && leaflet && (
               <>
                 <Marker position={[userLoc.lat, userLoc.lng]} icon={meIcon()}>
