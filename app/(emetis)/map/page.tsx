@@ -528,30 +528,7 @@ export default function MapPage() {
                   position={[parseFloat(u.lat), parseFloat(u.lng)]}
                   icon={userIcon(u)}
                   eventHandlers={{ click: () => setSelectedUser(toModalUser(u)) }}
-                >
-                  <Popup>
-                    <div style={{ textAlign: 'center', minWidth: 140 }}>
-                      <img
-                        src={u.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name ?? 'U')}&background=3b82f6&color=fff`}
-                        alt={u.name ?? 'Usuário'}
-                        style={{ width: 48, height: 48, borderRadius: '50%', margin: '0 auto 4px', objectFit: 'cover' }}
-                      />
-                      <p style={{ fontWeight: 600, fontSize: 14 }}>{u.name ?? 'Usuário'}</p>
-                      {u.profession && (
-                        <p style={{ fontSize: 12, color: '#6b7280' }}>{u.profession}</p>
-                      )}
-                      <p style={{ fontSize: 11, color: u.availabilityStatus === 'mesa-posta' ? '#10b981' : '#f59e0b', marginTop: 2 }}>
-                        {u.availabilityStatus === 'mesa-posta' ? '🟢 Mesa Posta' : '🟡 Requer Aviso'}
-                      </p>
-                      <button
-                        onClick={() => setSelectedUser(toModalUser(u))}
-                        style={{ marginTop: 8, width: '100%', fontSize: 12, background: '#2563eb', color: 'white', padding: '6px', borderRadius: 8, border: 'none', cursor: 'pointer' }}
-                      >
-                        Solicitar Visita
-                      </button>
-                    </div>
-                  </Popup>
-                </Marker>
+                />
               ))}
           </MapContainer>
         )}
