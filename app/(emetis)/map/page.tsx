@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar, Bell, Search } from 'lucide-react';
+import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar, Bell, Search, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import VisitRequestModal from '@/components/visit-request-modal';
 import { WelcomeModal } from '@/components/welcome-modal';
@@ -129,6 +129,7 @@ export default function MapPage() {
   const locationSaved = useRef(false);
   const [activeSavedLoc, setActiveSavedLoc] = useState<{ lat: number; lng: number } | null>(null);
   const seenAcceptedIds = useRef<Set<string>>(new Set());
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Salvar localização no banco e buscar usuários próximos
   const onLocationObtained = useCallback(async (loc: { lat: number; lng: number }) => {
@@ -527,149 +528,208 @@ export default function MapPage() {
         </button>
       </div>
 
-      {/* Painel inferior */}
-      <div className="bg-white border-t border-slate-200 px-4 pt-3 pb-20 flex-shrink-0">
-        {/* Botão disponibilidade + janela de hospitalidade unificados */}
-        {available ? (
-          <div className="mb-3">
-            <div className="w-full flex items-center gap-2 bg-green-500 rounded-t-xl px-4 py-2.5">
-              <Zap size={16} className="fill-white text-white flex-shrink-0" />
-              <p className="text-white font-semibold text-sm flex-1">Mesa Posta — você está disponível</p>
-              <button
-                onClick={handleSetAvailable}
-                disabled={settingAvailable}
-                className="text-white/80 hover:text-white text-xs font-medium"
-              >
-                {settingAvailable ? <Loader2 size={12} className="animate-spin" /> : 'Desligar'}
-              </button>
-            </div>
-            {myWindow && (
-              <div className="w-full flex items-center gap-2 bg-green-50 border border-green-200 border-t-0 rounded-b-xl px-3 py-1.5">
-                <Home size={12} className="text-green-600 flex-shrink-0" />
-                <p className="text-xs text-green-700 flex-1 truncate">{myWindow.title}</p>
-                <p className="text-[10px] text-green-500">
-                  até {new Date(myWindow.endsAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={handleSetAvailable}
-            disabled={settingAvailable}
-            className="w-full flex items-center justify-center gap-2 mb-3 py-2.5 rounded-xl font-semibold text-sm bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors"
-          >
-            {settingAvailable ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Zap size={16} />
-            )}
-            Estou disponível agora
-          </button>
-        )}
+      {/* Gaveta inferior colapsável */}
+      <div
+        className="flex-shrink-0 bg-white rounded-t-2xl shadow-xl overflow-hidden"
+        style={{
+          maxHeight: drawerOpen ? '420px' : '148px',
+          transition: 'max-height 0.32s cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
+        {/* Handle + barra de resumo — sempre visível */}
+        <button
+          onClick={() => setDrawerOpen((o) => !o)}
+          className="w-full flex flex-col items-center pt-2 pb-0 focus:outline-none"
+          aria-label={drawerOpen ? 'Recolher painel' : 'Expandir painel'}
+        >
+          <div className="w-8 h-1 bg-slate-300 rounded-full mb-2" />
+        </button>
 
-        {/* Botão janela de hospitalidade personalizada (apenas quando não disponível) */}
-        {!available && (
-          myWindow ? (
-            <div className="w-full flex items-center gap-2 mb-3 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2">
-              <Home size={14} className="text-indigo-600 flex-shrink-0" />
-              <p className="text-xs font-semibold text-indigo-700 flex-1 truncate">🏠 {myWindow.title}</p>
-              <button
-                onClick={handleCancelWindow}
-                className="text-xs text-red-400 hover:text-red-600 font-medium"
-              >
-                Cancelar
-              </button>
+        {/* Barra de resumo (collapsada) */}
+        <div
+          className="flex items-center gap-2 px-4 pb-3 cursor-pointer"
+          onClick={() => setDrawerOpen((o) => !o)}
+        >
+          {/* Status de disponibilidade */}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
+              available ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+            }`}
+          >
+            <div className={`w-2 h-2 rounded-full ${available ? 'bg-green-500' : 'bg-slate-400'}`} />
+            {available ? 'Mesa Posta' : 'Offline'}
+          </div>
+
+          {/* Pessoas próximas */}
+          <div className="flex items-center gap-1 text-xs text-slate-500">
+            {loadingUsers
+              ? <Loader2 size={12} className="animate-spin" />
+              : <Users size={12} />}
+            <span>{nearbyUsers.length} próximos</span>
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Botão rápido disponibilidade */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleSetAvailable(); }}
+            disabled={settingAvailable}
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-colors flex-shrink-0 ${
+              available
+                ? 'bg-green-500 text-white'
+                : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+            }`}
+          >
+            {settingAvailable ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}
+            {available ? 'Disponível' : 'Disponível?'}
+          </button>
+
+          {/* Chevron */}
+          <ChevronUp
+            size={16}
+            className={`text-slate-400 transition-transform duration-300 flex-shrink-0 ${drawerOpen ? '' : 'rotate-180'}`}
+          />
+        </div>
+
+        {/* Conteúdo completo — visível quando expandido */}
+        <div className="px-4">
+          {/* Botão disponibilidade + janela de hospitalidade */}
+          {available ? (
+            <div className="mb-3">
+              <div className="w-full flex items-center gap-2 bg-green-500 rounded-t-xl px-4 py-2.5">
+                <Zap size={16} className="fill-white text-white flex-shrink-0" />
+                <p className="text-white font-semibold text-sm flex-1">Mesa Posta — você está disponível</p>
+                <button
+                  onClick={handleSetAvailable}
+                  disabled={settingAvailable}
+                  className="text-white/80 hover:text-white text-xs font-medium"
+                >
+                  {settingAvailable ? <Loader2 size={12} className="animate-spin" /> : 'Desligar'}
+                </button>
+              </div>
+              {myWindow && (
+                <div className="w-full flex items-center gap-2 bg-green-50 border border-green-200 border-t-0 rounded-b-xl px-3 py-1.5">
+                  <Home size={12} className="text-green-600 flex-shrink-0" />
+                  <p className="text-xs text-green-700 flex-1 truncate">{myWindow.title}</p>
+                  <p className="text-[10px] text-green-500">
+                    até {new Date(myWindow.endsAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <button
-              onClick={() => setShowCreateWindow(true)}
-              className="w-full flex items-center justify-center gap-2 mb-3 py-2 rounded-xl text-sm font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
+              onClick={handleSetAvailable}
+              disabled={settingAvailable}
+              className="w-full flex items-center justify-center gap-2 mb-3 py-2.5 rounded-xl font-semibold text-sm bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors"
             >
-              <Home size={16} />
-              Criar Janela de Hospitalidade
-            </button>
-          )
-        )}
-
-        {/* Botões: Pedir Ajuda + Eventos + Alertas */}
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => setShowCreateAlert(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
-          >
-            <Plus size={13} />
-            Pedir Ajuda
-          </button>
-          <Link
-            href="/events"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
-          >
-            <Calendar size={13} />
-            Eventos
-          </Link>
-          {alerts.length > 0 && (
-            <button
-              onClick={() => setSelectedAlert(alerts[0])}
-              className="flex-1 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"
-            >
-              <AlertTriangle size={13} className="text-amber-500 flex-shrink-0" />
-              <p className="text-xs font-semibold text-amber-700">
-                {alerts.length} {alerts.length === 1 ? 'alerta' : 'alertas'}
-              </p>
+              {settingAvailable ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+              Estou disponível agora
             </button>
           )}
-        </div>
 
-        <div className="flex items-center gap-2 mb-2">
-          <Users size={14} className="text-indigo-600" />
-          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-            Pessoas próximas ({nearbyUsers.length})
-          </p>
-          {loadingUsers && <Loader2 size={12} className="animate-spin text-blue-500" />}
-        </div>
-
-        {nearbyUsers.length === 0 && !loadingUsers && (
-          <p className="text-xs text-slate-400 py-2">
-            {userLoc
-              ? 'Nenhuma pessoa encontrada num raio de 2km.'
-              : 'Permitindo localização para encontrar pessoas próximas…'}
-          </p>
-        )}
-
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {nearbyUsers.map((u) => (
-            <div key={u.id} className="flex-shrink-0 flex flex-col items-center gap-1">
-              <button onClick={() => setSelectedUser(toModalUser(u))}>
-                <div className="relative">
-                  <img
-                    src={u.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name ?? 'U')}&background=3b82f6&color=fff`}
-                    alt={u.name ?? 'Usuário'}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-blue-300"
-                  />
-                  <div
-                    className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${
-                      u.availabilityStatus === 'mesa-posta' ? 'bg-green-500' : 'bg-amber-400'
-                    }`}
-                  />
-                </div>
-              </button>
-              <span className="text-xs text-slate-600 max-w-[52px] truncate">
-                {(u.name ?? 'Usuário').split(' ')[0]}
-              </span>
-              <span className="text-[10px] text-blue-500">
-                {formatDistance(u.distance)}
-              </span>
+          {/* Janela de hospitalidade personalizada (apenas quando não disponível) */}
+          {!available && (
+            myWindow ? (
+              <div className="w-full flex items-center gap-2 mb-3 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2">
+                <Home size={14} className="text-indigo-600 flex-shrink-0" />
+                <p className="text-xs font-semibold text-indigo-700 flex-1 truncate">🏠 {myWindow.title}</p>
+                <button onClick={handleCancelWindow} className="text-xs text-red-400 hover:text-red-600 font-medium">
+                  Cancelar
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={() => router.push(`/chat?with=${u.id}`)}
-                className="flex items-center gap-0.5 text-[10px] text-indigo-500 hover:text-indigo-700"
+                onClick={() => setShowCreateWindow(true)}
+                className="w-full flex items-center justify-center gap-2 mb-3 py-2 rounded-xl text-sm font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
               >
-                <MessageCircle size={10} />
-                Msg
+                <Home size={16} />
+                Criar Janela de Hospitalidade
               </button>
-            </div>
-          ))}
+            )
+          )}
+
+          {/* Pedir Ajuda + Eventos + Alertas */}
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={() => setShowCreateAlert(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
+            >
+              <Plus size={13} />
+              Pedir Ajuda
+            </button>
+            <Link
+              href="/events"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
+            >
+              <Calendar size={13} />
+              Eventos
+            </Link>
+            {alerts.length > 0 && (
+              <button
+                onClick={() => setSelectedAlert(alerts[0])}
+                className="flex-1 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"
+              >
+                <AlertTriangle size={13} className="text-amber-500 flex-shrink-0" />
+                <p className="text-xs font-semibold text-amber-700">
+                  {alerts.length} {alerts.length === 1 ? 'alerta' : 'alertas'}
+                </p>
+              </button>
+            )}
+          </div>
+
+          {/* Pessoas próximas */}
+          <div className="flex items-center gap-2 mb-2">
+            <Users size={14} className="text-indigo-600" />
+            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+              Pessoas próximas ({nearbyUsers.length})
+            </p>
+            {loadingUsers && <Loader2 size={12} className="animate-spin text-blue-500" />}
+          </div>
+
+          {nearbyUsers.length === 0 && !loadingUsers && (
+            <p className="text-xs text-slate-400 py-2">
+              {userLoc
+                ? 'Nenhuma pessoa encontrada num raio de 2km.'
+                : 'Permitindo localização para encontrar pessoas próximas…'}
+            </p>
+          )}
+
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {nearbyUsers.map((u) => (
+              <div key={u.id} className="flex-shrink-0 flex flex-col items-center gap-1">
+                <button onClick={() => setSelectedUser(toModalUser(u))}>
+                  <div className="relative">
+                    <img
+                      src={u.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name ?? 'U')}&background=3b82f6&color=fff`}
+                      alt={u.name ?? 'Usuário'}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-blue-300"
+                    />
+                    <div
+                      className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${
+                        u.availabilityStatus === 'mesa-posta' ? 'bg-green-500' : 'bg-amber-400'
+                      }`}
+                    />
+                  </div>
+                </button>
+                <span className="text-xs text-slate-600 max-w-[52px] truncate">
+                  {(u.name ?? 'Usuário').split(' ')[0]}
+                </span>
+                <span className="text-[10px] text-blue-500">{formatDistance(u.distance)}</span>
+                <button
+                  onClick={() => router.push(`/chat?with=${u.id}`)}
+                  className="flex items-center gap-0.5 text-[10px] text-indigo-500 hover:text-indigo-700"
+                >
+                  <MessageCircle size={10} />
+                  Msg
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Espaço para a nav bar fixa */}
+        <div className="h-20" />
       </div>
 
       {/* Botões flutuantes: busca + notificações */}
