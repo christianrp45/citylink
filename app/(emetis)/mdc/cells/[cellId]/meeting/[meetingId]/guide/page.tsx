@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import type { CellGuideDetail, StudyPoint, YoutubeLink } from '@/lib/types';
 import { EmetisIcon } from '@/components/emetis-icon';
@@ -156,12 +156,11 @@ function parseSermonText(text: string): Partial<GuideForm> {
 
 export default function GuidePage() {
   const { cellId, meetingId } = useParams<{ cellId: string; meetingId: string }>();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session } = useSession();
   const [guide, setGuide] = useState<CellGuideDetail | null>(null);
   const [form, setForm] = useState<GuideForm>(EMPTY_FORM);
-  const [editing, setEditing] = useState(searchParams.get('edit') === 'true');
+  const [editing, setEditing] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -178,6 +177,13 @@ export default function GuidePage() {
   const [savedOffline, setSavedOffline] = useState(false);
   const [offlineSaved, setOfflineSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Abre direto em modo edição se ?edit=true estiver na URL
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('edit') === 'true') {
+      setEditing(true);
+    }
+  }, []);
 
   // Verifica se o usuário é líder ou co-líder da célula
   useEffect(() => {
