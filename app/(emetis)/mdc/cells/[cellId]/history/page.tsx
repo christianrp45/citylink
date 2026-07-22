@@ -27,6 +27,7 @@ export default function CellHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [isLeader, setIsLeader] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!cellId) return;
@@ -46,12 +47,11 @@ export default function CellHistoryPage() {
   }, [cellId, session?.user?.id]);
 
   const handleDelete = async (meetingId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este roteiro? Esta ação não pode ser desfeita.')) return;
+    setConfirmDeleteId(null);
     setDeleting(meetingId);
     try {
       const res = await fetch(`/api/mdc/meetings/${meetingId}/guide`, { method: 'DELETE' });
       if (res.ok) {
-        // Limpa cache offline para o roteiro não reaparecer ao navegar de volta
         localStorage.removeItem(`emetis-guide-${meetingId}`);
         setGuides((prev) => prev.filter((g) => g.meetingId !== meetingId));
       }
@@ -69,6 +69,29 @@ export default function CellHistoryPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50 pb-24">
+      {/* Modal de confirmação de exclusão */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl mx-4 p-6 max-w-sm w-full space-y-4">
+            <p className="text-base font-bold text-gray-900">Excluir roteiro?</p>
+            <p className="text-sm text-gray-500">Esta ação não pode ser desfeita.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDeleteId)}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -111,7 +134,7 @@ export default function CellHistoryPage() {
                     cellId={cellId}
                     isLeader={isLeader}
                     deleting={deleting}
-                    onDelete={handleDelete}
+                    onRequestDelete={setConfirmDeleteId}
                     accent="indigo"
                   />
                 ))}
@@ -129,7 +152,7 @@ export default function CellHistoryPage() {
                     cellId={cellId}
                     isLeader={isLeader}
                     deleting={deleting}
-                    onDelete={handleDelete}
+                    onRequestDelete={setConfirmDeleteId}
                     accent="gray"
                   />
                 ))}
@@ -147,14 +170,14 @@ function GuideCard({
   cellId,
   isLeader,
   deleting,
-  onDelete,
+  onRequestDelete,
   accent,
 }: {
   item: GuideHistoryItem;
   cellId: string;
   isLeader: boolean;
   deleting: string | null;
-  onDelete: (meetingId: string) => void;
+  onRequestDelete: (meetingId: string) => void;
   accent: 'indigo' | 'gray';
 }) {
   const [isAvailableOffline, setIsAvailableOffline] = useState(false);
@@ -228,7 +251,7 @@ function GuideCard({
                 ✏️ Editar
               </Link>
               <button
-                onClick={() => onDelete(item.meetingId)}
+                onClick={() => onRequestDelete(item.meetingId)}
                 disabled={deleting === item.meetingId}
                 className="px-3 py-2 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition disabled:opacity-50"
               >

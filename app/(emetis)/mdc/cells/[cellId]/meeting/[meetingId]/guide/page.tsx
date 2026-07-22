@@ -177,6 +177,8 @@ export default function GuidePage() {
   const [savedOffline, setSavedOffline] = useState(false);
   const [offlineSaved, setOfflineSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Abre direto em modo edição se ?edit=true estiver na URL
   useEffect(() => {
@@ -330,7 +332,7 @@ export default function GuidePage() {
 
   const handleGenerate = async () => {
     if (!form.biblePassage && !form.sermonContent) {
-      alert('Informe a passagem bíblica ou cole o conteúdo da pregação');
+      setErrorMsg('Informe a passagem bíblica ou cole o conteúdo da pregação');
       return;
     }
     setGenerating(true);
@@ -407,22 +409,21 @@ export default function GuidePage() {
       setGuide(data);
       setEditing(false);
     } else {
-      alert(data.error ?? 'Erro ao salvar roteiro');
+      setErrorMsg(data.error ?? 'Erro ao salvar roteiro');
     }
     setSaving(false);
   };
 
   const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir este roteiro? Esta ação não pode ser desfeita.')) return;
+    setConfirmDeleteOpen(false);
     setDeleting(true);
     try {
       const res = await fetch(`/api/mdc/meetings/${meetingId}/guide`, { method: 'DELETE' });
       if (res.ok) {
-        // Limpa cache offline para o roteiro não reaparecer ao navegar de volta
         if (offlineKey) localStorage.removeItem(offlineKey);
         router.push(`/mdc/cells/${cellId}`);
       } else {
-        alert('Erro ao excluir roteiro. Tente novamente.');
+        setErrorMsg('Erro ao excluir roteiro. Tente novamente.');
       }
     } finally {
       setDeleting(false);
@@ -457,6 +458,36 @@ export default function GuidePage() {
 
     return (
       <div className="h-full overflow-y-auto bg-gray-100 pb-24 print-root">
+        {/* Modal de confirmação de exclusão */}
+        {confirmDeleteOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 no-print">
+            <div className="bg-white rounded-2xl shadow-xl mx-4 p-6 max-w-sm w-full space-y-4">
+              <p className="text-base font-bold text-gray-900">Excluir roteiro?</p>
+              <p className="text-sm text-gray-500">Esta ação não pode ser desfeita.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmDeleteOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Banner de erro */}
+        {errorMsg && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg no-print">
+            {errorMsg}
+            <button onClick={() => setErrorMsg('')} className="ml-3 underline text-xs">fechar</button>
+          </div>
+        )}
         {/* Estilos de impressão */}
         <style>{`
           @media print {
@@ -517,7 +548,7 @@ export default function GuidePage() {
                     Editar
                   </button>
                   <button
-                    onClick={handleDelete}
+                    onClick={() => setConfirmDeleteOpen(true)}
                     disabled={deleting}
                     className="text-sm text-red-500 font-medium disabled:opacity-50"
                   >
@@ -787,6 +818,13 @@ export default function GuidePage() {
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50 pb-24">
+      {/* Banner de erro no modo edição */}
+      {errorMsg && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
+          {errorMsg}
+          <button onClick={() => setErrorMsg('')} className="ml-3 underline text-xs">fechar</button>
+        </div>
+      )}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <button onClick={() => guide && setEditing(false)} className="text-gray-500 hover:text-gray-700">←</button>

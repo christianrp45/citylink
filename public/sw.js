@@ -1,5 +1,5 @@
-// Emetis Service Worker — v2
-const CACHE_NAME = 'emetis-v2';
+// Emetis Service Worker — v3
+const CACHE_NAME = 'emetis-v3';
 
 // Cache dedicado para conteúdo bíblico (persiste entre versões do app)
 const BIBLE_CACHE = 'emetis-bible-v1';

@@ -29,6 +29,7 @@ export default function MeetingDetailPage() {
   const [isLeader, setIsLeader] = useState(false);
   const [meetingStatus, setMeetingStatus] = useState<string>('scheduled');
   const [closingMeeting, setClosingMeeting] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
 
   useEffect(() => {
     if (!meetingId || !cellId) return;
@@ -72,7 +73,7 @@ export default function MeetingDetailPage() {
   const maybe = attendance.filter((a) => a.rsvpStatus === 'maybe').length;
 
   const handleCloseMeeting = async () => {
-    if (!confirm('Encerrar este encontro? Ele será arquivado no histórico da célula.')) return;
+    setConfirmClose(false);
     setClosingMeeting(true);
     try {
       const res = await fetch(`/api/mdc/meetings/${meetingId}`, {
@@ -88,6 +89,29 @@ export default function MeetingDetailPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50 pb-24">
+      {/* Modal de confirmação de encerramento */}
+      {confirmClose && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl mx-4 p-6 max-w-sm w-full space-y-4">
+            <p className="text-base font-bold text-gray-900">Encerrar este encontro?</p>
+            <p className="text-sm text-gray-500">Ele será arquivado no histórico. O roteiro continuará acessível.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmClose(false)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCloseMeeting}
+                className="flex-1 py-2.5 rounded-xl bg-gray-700 text-white text-sm font-semibold hover:bg-gray-800 transition"
+              >
+                Encerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -174,7 +198,7 @@ export default function MeetingDetailPage() {
               Marque como concluído para arquivar no histórico. O roteiro continuará acessível para todos os membros.
             </p>
             <button
-              onClick={handleCloseMeeting}
+              onClick={() => setConfirmClose(true)}
               disabled={closingMeeting}
               className="w-full py-2.5 bg-gray-700 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
             >
