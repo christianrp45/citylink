@@ -215,16 +215,24 @@ function GuideCard({
             href={`/mdc/cells/${cellId}/meeting/${item.meetingId}/guide`}
             className="flex-1 text-center px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition"
           >
-            📖 Ver roteiro
+            📖 Ver
           </Link>
           {isLeader && (
-            <button
-              onClick={() => onDelete(item.meetingId)}
-              disabled={deleting === item.meetingId}
-              className="px-3 py-2 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition disabled:opacity-50"
-            >
-              {deleting === item.meetingId ? '...' : 'Excluir'}
-            </button>
+            <>
+              <Link
+                href={`/mdc/cells/${cellId}/meeting/${item.meetingId}/guide?edit=true`}
+                className="px-3 py-2 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition"
+              >
+                ✏️ Editar
+              </Link>
+              <button
+                onClick={() => onDelete(item.meetingId)}
+                disabled={deleting === item.meetingId}
+                className="px-3 py-2 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition disabled:opacity-50"
+              >
+                {deleting === item.meetingId ? '...' : '🗑️'}
+              </button>
+            </>
           )}
         </div>
       </div>

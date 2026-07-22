@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import type { CellGuideDetail, StudyPoint, YoutubeLink } from '@/lib/types';
 import { EmetisIcon } from '@/components/emetis-icon';
@@ -156,10 +156,12 @@ function parseSermonText(text: string): Partial<GuideForm> {
 
 export default function GuidePage() {
   const { cellId, meetingId } = useParams<{ cellId: string; meetingId: string }>();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { data: session } = useSession();
   const [guide, setGuide] = useState<CellGuideDetail | null>(null);
   const [form, setForm] = useState<GuideForm>(EMPTY_FORM);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(searchParams.get('edit') === 'true');
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -175,6 +177,7 @@ export default function GuidePage() {
   const [isOffline, setIsOffline] = useState(false);
   const [savedOffline, setSavedOffline] = useState(false);
   const [offlineSaved, setOfflineSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Verifica se o usuário é líder ou co-líder da célula
   useEffect(() => {
@@ -403,6 +406,21 @@ export default function GuidePage() {
     setSaving(false);
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Tem certeza que deseja excluir este roteiro? Esta ação não pode ser desfeita.')) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/mdc/meetings/${meetingId}/guide`, { method: 'DELETE' });
+      if (res.ok) {
+        router.push(`/mdc/cells/${cellId}`);
+      } else {
+        alert('Erro ao excluir roteiro. Tente novamente.');
+      }
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const addYoutubeLink = () => {
     if (!newYtUrl) return;
     setForm((f) => ({
@@ -483,7 +501,21 @@ export default function GuidePage() {
             </div>
             <div className="flex items-center gap-2">
               {isLeader && (
-                <button onClick={() => setEditing(true)} className="text-sm text-indigo-600 font-medium">Editar</button>
+                <>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="text-sm text-indigo-600 font-medium"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="text-sm text-red-500 font-medium disabled:opacity-50"
+                  >
+                    {deleting ? '...' : 'Excluir'}
+                  </button>
+                </>
               )}
             </div>
           </div>
