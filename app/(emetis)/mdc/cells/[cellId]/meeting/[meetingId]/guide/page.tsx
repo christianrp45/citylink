@@ -412,6 +412,8 @@ export default function GuidePage() {
     try {
       const res = await fetch(`/api/mdc/meetings/${meetingId}/guide`, { method: 'DELETE' });
       if (res.ok) {
+        // Limpa cache offline para o roteiro não reaparecer ao navegar de volta
+        if (offlineKey) localStorage.removeItem(offlineKey);
         router.push(`/mdc/cells/${cellId}`);
       } else {
         alert('Erro ao excluir roteiro. Tente novamente.');

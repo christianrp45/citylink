@@ -51,6 +51,8 @@ export default function CellHistoryPage() {
     try {
       const res = await fetch(`/api/mdc/meetings/${meetingId}/guide`, { method: 'DELETE' });
       if (res.ok) {
+        // Limpa cache offline para o roteiro não reaparecer ao navegar de volta
+        localStorage.removeItem(`emetis-guide-${meetingId}`);
         setGuides((prev) => prev.filter((g) => g.meetingId !== meetingId));
       }
     } finally {
