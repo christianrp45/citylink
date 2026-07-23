@@ -262,11 +262,22 @@ export default function GuidePage() {
     return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); };
   }, []);
 
+  // Helpers para localStorage sem crash (iOS Safari pode lançar SecurityError)
+  const lsGet = (key: string): string | null => {
+    try { return localStorage.getItem(key); } catch { return null; }
+  };
+  const lsSet = (key: string, value: string) => {
+    try { localStorage.setItem(key, value); } catch { /* ignora quota/security */ }
+  };
+  const lsRemove = (key: string) => {
+    try { localStorage.removeItem(key); } catch { /* ignora */ }
+  };
+
   // Verifica se já foi salvo offline
   useEffect(() => {
     if (!offlineKey) return;
-    setSavedOffline(!!localStorage.getItem(offlineKey));
-  }, [offlineKey]);
+    setSavedOffline(!!lsGet(offlineKey));
+  }, [offlineKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!meetingId) return;
@@ -276,7 +287,7 @@ export default function GuidePage() {
         if (data) {
           // Auto-salva no localStorage sempre que carregar online
           if (offlineKey) {
-            localStorage.setItem(offlineKey, JSON.stringify(data));
+            lsSet(offlineKey, JSON.stringify(data));
             setSavedOffline(true);
           }
           setGuide(data);
@@ -306,13 +317,15 @@ export default function GuidePage() {
         } else {
           // Tenta carregar do cache offline
           if (offlineKey) {
-            const cached = localStorage.getItem(offlineKey);
-            if (cached) {
-              const data: CellGuideDetail = JSON.parse(cached);
-              setGuide(data);
-              setIsOffline(true);
-              return;
-            }
+            try {
+              const cached = lsGet(offlineKey);
+              if (cached) {
+                const cachedData: CellGuideDetail = JSON.parse(cached);
+                setGuide(cachedData);
+                setIsOffline(true);
+                return;
+              }
+            } catch { /* cache corrompido — ignora */ }
           }
           setEditing(true);
         }
@@ -320,15 +333,17 @@ export default function GuidePage() {
       .catch(() => {
         // Sem conexão — tenta o cache
         if (offlineKey) {
-          const cached = localStorage.getItem(offlineKey);
-          if (cached) {
-            const data: CellGuideDetail = JSON.parse(cached);
-            setGuide(data);
-            setIsOffline(true);
-          }
+          try {
+            const cached = lsGet(offlineKey);
+            if (cached) {
+              const cachedData: CellGuideDetail = JSON.parse(cached);
+              setGuide(cachedData);
+              setIsOffline(true);
+            }
+          } catch { /* cache corrompido — ignora */ }
         }
       });
-  }, [meetingId, offlineKey]);
+  }, [meetingId, offlineKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGenerate = async () => {
     if (!form.biblePassage && !form.sermonContent) {
@@ -420,7 +435,7 @@ export default function GuidePage() {
     try {
       const res = await fetch(`/api/mdc/meetings/${meetingId}/guide`, { method: 'DELETE' });
       if (res.ok) {
-        if (offlineKey) localStorage.removeItem(offlineKey);
+        if (offlineKey) lsRemove(offlineKey);
         router.push(`/mdc/cells/${cellId}`);
       } else {
         setErrorMsg('Erro ao excluir roteiro. Tente novamente.');
@@ -569,7 +584,7 @@ export default function GuidePage() {
             <button
               onClick={() => {
                 if (offlineKey && guide) {
-                  localStorage.setItem(offlineKey, JSON.stringify(guide));
+                  lsSet(offlineKey, JSON.stringify(guide));
                   setSavedOffline(true);
                   setOfflineSaved(true);
                   setTimeout(() => setOfflineSaved(false), 2000);

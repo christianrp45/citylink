@@ -52,7 +52,7 @@ export default function CellHistoryPage() {
     try {
       const res = await fetch(`/api/mdc/meetings/${meetingId}/guide`, { method: 'DELETE' });
       if (res.ok) {
-        localStorage.removeItem(`emetis-guide-${meetingId}`);
+        try { localStorage.removeItem(`emetis-guide-${meetingId}`); } catch { /* ignora */ }
         setGuides((prev) => prev.filter((g) => g.meetingId !== meetingId));
       }
     } finally {
@@ -183,7 +183,7 @@ function GuideCard({
   const [isAvailableOffline, setIsAvailableOffline] = useState(false);
 
   useEffect(() => {
-    setIsAvailableOffline(!!localStorage.getItem(`emetis-guide-${item.meetingId}`));
+    try { setIsAvailableOffline(!!localStorage.getItem(`emetis-guide-${item.meetingId}`)); } catch { /* ignora */ }
   }, [item.meetingId]);
 
   const date = new Date(item.scheduledAt);
