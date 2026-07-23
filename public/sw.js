@@ -1,23 +1,15 @@
-// Emetis Service Worker — v3
-const CACHE_NAME = 'emetis-v3';
+// Emetis Service Worker — v4
+const CACHE_NAME = 'emetis-v4';
 
 // Cache dedicado para conteúdo bíblico (persiste entre versões do app)
 const BIBLE_CACHE = 'emetis-bible-v1';
 
-// Arquivos essenciais para cache offline
-const PRECACHE = ['/map', '/chat', '/community', '/events', '/bible'];
-
-// ── Install ────────────────────────────────────────────────────────────────────
+// ── Install — sem precache de páginas (Next.js App Router gera RSC) ───────────
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
-// ── Activate — limpa caches antigos, mantém BIBLE_CACHE ───────────────────────
+// ── Activate — limpa todos os caches antigos, mantém BIBLE_CACHE ─────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
@@ -36,15 +28,31 @@ self.addEventListener('activate', (event) => {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function isBibleRequest(url) {
-  // Capítulos bíblicos e versículo do dia — cache separado e persistente
   return (
     url.pathname === '/api/bible/chapter' ||
     url.pathname === '/api/bible/verse-of-day'
   );
 }
 
-function isApiRequest(url) {
-  return url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/');
+// Requisições RSC do Next.js App Router: payload JSON/binário, NÃO são HTML.
+// Se o SW interceptar e devolver cache com Content-Type errado,
+// o Safari trata como download de arquivo.
+function isRscOrNextInternal(request, url) {
+  // Parâmetro _rsc indica React Server Component fetch
+  if (url.searchParams.has('_rsc')) return true;
+  // Header Rsc: 1 (Next.js 13+)
+  if (request.headers.get('Rsc') === '1') return true;
+  // Next.js internals: chunks, HMR, etc.
+  if (url.pathname.startsWith('/_next/')) return true;
+  // APIs da aplicação
+  if (url.pathname.startsWith('/api/')) return true;
+  return false;
+}
+
+// Verifica se é uma navegação HTML real (clique em link, abertura da PWA)
+function isHtmlNavigation(request) {
+  return request.mode === 'navigate' ||
+    (request.method === 'GET' && request.headers.get('Accept')?.includes('text/html'));
 }
 
 // ── Fetch ──────────────────────────────────────────────────────────────────────
@@ -53,9 +61,15 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
+  // Ignora origens externas
+  if (url.origin !== self.location.origin) return;
+
+  // ── RSC / Next.js internals / APIs: nunca interceptar ─────────────────────
+  // Evita o bug de download no Safari/iPad onde o SW devolve RSC payload
+  // como se fosse a página HTML.
+  if (isRscOrNextInternal(event.request, url)) return;
+
   // ── Bíblia: Cache-first com atualização em background ──────────────────────
-  // Capítulos já lidos ficam disponíveis offline imediatamente.
-  // Quando há internet, atualiza o cache silenciosamente.
   if (isBibleRequest(url)) {
     event.respondWith(
       caches.open(BIBLE_CACHE).then(async (cache) => {
@@ -67,13 +81,11 @@ self.addEventListener('fetch', (event) => {
           })
           .catch(() => null);
 
-        // Se há cache, entrega imediatamente e atualiza em background
         if (cached) {
           event.waitUntil(fetchPromise);
           return cached;
         }
 
-        // Sem cache: aguarda a rede; se falhar, retorna erro offline
         const res = await fetchPromise;
         if (res) return res;
 
@@ -86,19 +98,45 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Outras APIs: deixa passar sem cache ────────────────────────────────────
-  if (isApiRequest(url)) return;
-
-  // ── Páginas e assets: Network-first, cache fallback ───────────────────────
-  event.respondWith(
-    fetch(event.request)
-      .then((res) => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+  // ── Assets estáticos (imagens, fontes, manifest): cache-first ─────────────
+  if (
+    url.pathname.startsWith('/images/') ||
+    url.pathname.startsWith('/icons/') ||
+    url.pathname === '/manifest.json' ||
+    /\.(png|jpg|jpeg|svg|webp|ico|woff2?|ttf)$/.test(url.pathname)
+  ) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        const res = await fetch(event.request);
+        if (res.ok) cache.put(event.request, res.clone());
         return res;
       })
-      .catch(() => caches.match(event.request))
-  );
+    );
+    return;
+  }
+
+  // ── Navegações HTML: network-first, cache fallback ────────────────────────
+  // Apenas para navegações reais (mode: navigate), não para RSC fetches.
+  if (isHtmlNavigation(event.request)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          // Só cacheia respostas HTML válidas
+          const ct = res.headers.get('Content-Type') ?? '';
+          if (res.ok && ct.includes('text/html')) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Qualquer outra coisa: deixa o browser lidar normalmente
 });
 
 // ── Mensagem do cliente: limpar cache bíblico ─────────────────────────────────
