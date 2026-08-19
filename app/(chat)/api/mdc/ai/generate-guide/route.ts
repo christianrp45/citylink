@@ -117,9 +117,14 @@ ${quebraGelosList}`;
 
   const MODELS_FALLBACK = [
     "Meta-Llama-3.3-70B-Instruct",
+    "Llama-4-Scout-17B-16E-Instruct",
     "Meta-Llama-3.1-405B-Instruct",
+    "Llama-4-Maverick-17B-128E-Instruct",
     "Meta-Llama-3.1-8B-Instruct",
   ];
+
+  const RETRYABLE = new Set([429, 410]);
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   async function callSambaNova(model: string) {
     return fetch("https://api.sambanova.ai/v1/chat/completions", {
@@ -142,13 +147,18 @@ ${quebraGelosList}`;
     let usedModel = "";
 
     for (const model of MODELS_FALLBACK) {
-      aiRes = await callSambaNova(model);
-      if (aiRes.status !== 429 && aiRes.status !== 410) {
-        usedModel = model;
-        break;
+      // Tenta cada modelo até 2 vezes com pausa de 3s
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        aiRes = await callSambaNova(model);
+        if (!RETRYABLE.has(aiRes.status)) {
+          usedModel = model;
+          break;
+        }
+        console.warn(`[generate-guide] ${aiRes.status} no modelo ${model} (tentativa ${attempt})`);
+        aiRes = null;
+        if (attempt < 2) await sleep(3000);
       }
-      console.warn(`[generate-guide] ${aiRes.status} no modelo ${model}, tentando próximo...`);
-      aiRes = null;
+      if (aiRes) break;
     }
 
     if (!aiRes) {
