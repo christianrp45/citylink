@@ -117,8 +117,8 @@ ${quebraGelosList}`;
 
   const MODELS_FALLBACK = [
     "Meta-Llama-3.3-70B-Instruct",
-    "Qwen3-32B",
     "Meta-Llama-3.1-405B-Instruct",
+    "Meta-Llama-3.1-8B-Instruct",
   ];
 
   async function callSambaNova(model: string) {
@@ -143,11 +143,11 @@ ${quebraGelosList}`;
 
     for (const model of MODELS_FALLBACK) {
       aiRes = await callSambaNova(model);
-      if (aiRes.status !== 429) {
+      if (aiRes.status !== 429 && aiRes.status !== 410) {
         usedModel = model;
         break;
       }
-      console.warn(`[generate-guide] 429 no modelo ${model}, tentando próximo...`);
+      console.warn(`[generate-guide] ${aiRes.status} no modelo ${model}, tentando próximo...`);
       aiRes = null;
     }
 

@@ -33,12 +33,6 @@ export const chatModels: ChatModel[] = [
     provider: "sambanova",
     description: "Alta performance geral",
   },
-  {
-    id: "Qwen3-32B",
-    name: "Qwen 3 32B",
-    provider: "sambanova",
-    description: "Multilingual com bom desempenho em português",
-  },
 ];
 
 // Group models by provider for UI
