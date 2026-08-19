@@ -115,20 +115,48 @@ ${quebraGelosList}`;
     return Response.json({ error: "Chave da API SambaNova não configurada no servidor." }, { status: 500 });
   }
 
-  try {
-    const aiRes = await fetch("https://api.sambanova.ai/v1/chat/completions", {
+  const MODELS_FALLBACK = [
+    "Meta-Llama-3.3-70B-Instruct",
+    "Qwen3-32B",
+    "Meta-Llama-3.1-405B-Instruct",
+  ];
+
+  async function callSambaNova(model: string) {
+    return fetch("https://api.sambanova.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "Meta-Llama-3.3-70B-Instruct",
+        model,
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
         max_tokens: 6000,
       }),
     });
+  }
+
+  try {
+    let aiRes: Response | null = null;
+    let usedModel = "";
+
+    for (const model of MODELS_FALLBACK) {
+      aiRes = await callSambaNova(model);
+      if (aiRes.status !== 429) {
+        usedModel = model;
+        break;
+      }
+      console.warn(`[generate-guide] 429 no modelo ${model}, tentando próximo...`);
+      aiRes = null;
+    }
+
+    if (!aiRes) {
+      return Response.json(
+        { error: "Serviço de IA com alta demanda no momento. Aguarde alguns segundos e tente novamente." },
+        { status: 503 }
+      );
+    }
 
     if (!aiRes.ok) {
       const errBody = await aiRes.text();
@@ -138,6 +166,8 @@ ${quebraGelosList}`;
         { status: 500 }
       );
     }
+
+    console.log(`[generate-guide] roteiro gerado com modelo: ${usedModel}`);
 
     const groqData = await aiRes.json();
     const text: string = groqData.choices?.[0]?.message?.content ?? "";
