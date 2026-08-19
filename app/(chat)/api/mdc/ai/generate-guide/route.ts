@@ -117,10 +117,11 @@ ${quebraGelosList}`;
 
   const MODELS_FALLBACK = [
     "Meta-Llama-3.3-70B-Instruct",
-    "Llama-4-Scout-17B-16E-Instruct",
-    "Meta-Llama-3.1-405B-Instruct",
-    "Llama-4-Maverick-17B-128E-Instruct",
-    "Meta-Llama-3.1-8B-Instruct",
+    "DeepSeek-V3-0324",
+    "MiniMax-M2.7",
+    "gpt-oss-120b",
+    "gemma-4-31B-it",
+    "DeepSeek-R1",
   ];
 
   const RETRYABLE = new Set([429, 410]);
