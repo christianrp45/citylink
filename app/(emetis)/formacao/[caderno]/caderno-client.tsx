@@ -11,7 +11,7 @@ type CorClasses = {
   bg: string; text: string; border: string; badge: string; light: string;
 };
 
-type Turma = { id: string; cellId: string; cellName?: string; enrolled: boolean };
+type Turma = { id: string; caderno: string; cellId: string; cellName?: string; enrolled: boolean };
 
 interface Props {
   meta: CadernoMeta;
@@ -45,7 +45,7 @@ export function CadernoClient({ meta, sections, cor }: Props) {
     fetch('/api/formacao/minhas-turmas')
       .then((r) => r.ok ? r.json() : [])
       .then((turmas: Turma[]) => {
-        const found = turmas.find((t: { caderno?: string }) => t.caderno === meta.slug);
+        const found = turmas.find((t) => t.caderno === meta.slug);
         if (found) setTurma(found);
       })
       .catch(() => {});
