@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Award, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Award, ClipboardList, GraduationCap } from 'lucide-react';
 import type { CadernoMeta } from '@/lib/data/formacao';
 import type { FormacaoSection } from '@/lib/formacao-parser';
 
 type CorClasses = {
   bg: string; text: string; border: string; badge: string; light: string;
 };
+
+type Turma = { id: string; cellId: string; cellName?: string; enrolled: boolean };
 
 interface Props {
   meta: CadernoMeta;
@@ -21,6 +23,8 @@ export function CadernoClient({ meta, sections, cor }: Props) {
   const router = useRouter();
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [quizPassed, setQuizPassed] = useState(false);
+  const [turma, setTurma] = useState<Turma | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
     const done = new Set<string>();
@@ -37,7 +41,23 @@ export function CadernoClient({ meta, sections, cor }: Props) {
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.passed) setQuizPassed(true); })
       .catch(() => {});
+    // Busca turma ativa do usuário para este caderno
+    fetch('/api/formacao/minhas-turmas')
+      .then((r) => r.ok ? r.json() : [])
+      .then((turmas: Turma[]) => {
+        const found = turmas.find((t: { caderno?: string }) => t.caderno === meta.slug);
+        if (found) setTurma(found);
+      })
+      .catch(() => {});
   }, [meta.slug]);
+
+  async function handleEnroll() {
+    if (!turma) return;
+    setEnrolling(true);
+    await fetch(`/api/formacao/turma/${turma.id}/enroll`, { method: 'POST' });
+    setTurma((prev) => prev ? { ...prev, enrolled: true } : prev);
+    setEnrolling(false);
+  }
 
   // Agrupa por groupTitulo
   const groups = useMemo(() => {
@@ -88,6 +108,27 @@ export function CadernoClient({ meta, sections, cor }: Props) {
         <p className="text-white/70 text-[10px] mt-1">
           {totalConcluidos} de {sections.length} {meta.unidade.toLowerCase()}s concluídos · {pct}%
         </p>
+
+        {/* Banner de turma / matrícula */}
+        {turma && !turma.enrolled && (
+          <div className="mt-3 bg-white/15 rounded-xl px-3 py-2.5 flex items-center gap-2">
+            <GraduationCap size={14} className="text-white/80 flex-shrink-0" />
+            <p className="text-white/80 text-xs flex-1">Há uma turma ativa para este caderno</p>
+            <button
+              onClick={handleEnroll}
+              disabled={enrolling}
+              className="bg-white text-indigo-700 text-[10px] font-bold px-2.5 py-1 rounded-lg flex-shrink-0 disabled:opacity-60"
+            >
+              {enrolling ? '…' : 'Matricular-se'}
+            </button>
+          </div>
+        )}
+        {turma?.enrolled && (
+          <div className="mt-3 bg-white/15 rounded-xl px-3 py-2 flex items-center gap-2">
+            <GraduationCap size={14} className="text-white/80 flex-shrink-0" />
+            <p className="text-white/80 text-xs">Matriculado neste caderno</p>
+          </div>
+        )}
 
         {/* Ações: Quiz / Certificado */}
         {(allDone || quizPassed) && (

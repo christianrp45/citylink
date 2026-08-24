@@ -3,7 +3,15 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { CADERNOS, COR_CLASSES } from '@/lib/data/formacao';
-import { ChevronRight, BookOpen, Trophy } from 'lucide-react';
+import { ChevronRight, BookOpen, Trophy, GraduationCap } from 'lucide-react';
+
+type MinhasTurmas = {
+  turmaId: string;
+  caderno: string;
+  cellId: string;
+  cellName: string;
+  meta: { numero: string; titulo: string; emoji: string; cor: string } | null;
+}[];
 
 function useFormacaoProgress() {
   const [progress, setProgress] = useState<Record<string, number>>({});
@@ -25,10 +33,15 @@ function useFormacaoProgress() {
 export default function FormacaoPage() {
   const progress = useFormacaoProgress();
   const [allPassed, setAllPassed] = useState(false);
+  const [minhasTurmas, setMinhasTurmas] = useState<MinhasTurmas>([]);
 
   useEffect(() => {
     fetch('/api/formacao/certificate')
       .then((r) => { if (r.ok) setAllPassed(true); })
+      .catch(() => {});
+    fetch('/api/formacao/minhas-turmas')
+      .then((r) => r.ok ? r.json() : [])
+      .then(setMinhasTurmas)
       .catch(() => {});
   }, []);
 
@@ -42,6 +55,32 @@ export default function FormacaoPage() {
         </h1>
         <p className="text-xs text-slate-400 mt-0.5">Formação Batista — 8 cadernos</p>
       </div>
+
+      {/* Minhas matrículas */}
+      {minhasTurmas.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+            <GraduationCap size={13} /> Minhas matrículas
+          </p>
+          {minhasTurmas.map((t) => {
+            const cor = COR_CLASSES[t.meta?.cor ?? 'indigo'];
+            return (
+              <Link
+                key={t.turmaId}
+                href={`/formacao/${t.caderno}`}
+                className={`flex items-center gap-3 bg-white rounded-2xl border ${cor.border} px-4 py-3 shadow-sm hover:shadow-md active:scale-[0.98] transition-all`}
+              >
+                <span className="text-2xl">{t.meta?.emoji ?? '📖'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-slate-400 font-semibold">Caderno {t.meta?.numero} · {t.cellName}</p>
+                  <p className="text-sm font-bold text-slate-800 truncate">{t.meta?.titulo ?? t.caderno}</p>
+                </div>
+                <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       {/* Crédito da fonte */}
       <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">

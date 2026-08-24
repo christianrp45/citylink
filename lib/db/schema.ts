@@ -1046,3 +1046,28 @@ export const formacaoQuizResult = pgTable("FormacaoQuizResult", {
 
 export type FormacaoQuizResult = InferSelectModel<typeof formacaoQuizResult>;
 
+/** Turma de formação criada pelo líder dentro de uma célula */
+export const formacaoTurma = pgTable("FormacaoTurma", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  cellId: uuid("cellId").notNull().references(() => cell.id, { onDelete: "cascade" }),
+  caderno: varchar("caderno", { length: 60 }).notNull(),
+  createdBy: uuid("createdBy").notNull().references(() => user.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  active: boolean("active").notNull().default(true),
+});
+
+export type FormacaoTurma = InferSelectModel<typeof formacaoTurma>;
+
+/** Matrícula de um membro em uma turma */
+export const formacaoMatricula = pgTable(
+  "FormacaoMatricula",
+  {
+    turmaId: uuid("turmaId").notNull().references(() => formacaoTurma.id, { onDelete: "cascade" }),
+    userId: uuid("userId").notNull().references(() => user.id, { onDelete: "cascade" }),
+    enrolledAt: timestamp("enrolledAt").notNull().defaultNow(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.turmaId, t.userId] }) }),
+);
+
+export type FormacaoMatricula = InferSelectModel<typeof formacaoMatricula>;
+

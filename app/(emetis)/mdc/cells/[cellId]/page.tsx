@@ -290,6 +290,19 @@ export default function CellDetailPage() {
           </Link>
         </div>
 
+        {/* Formação Batista */}
+        <Link
+          href={`/mdc/cells/${cellId}/formacao`}
+          className="flex items-center gap-3 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl px-4 py-3.5 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+        >
+          <span className="text-2xl">📚</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm">Formação Batista</p>
+            <p className="text-indigo-100 text-xs">Série Integrar — turmas da célula</p>
+          </div>
+          <span className="text-white/70 text-lg">›</span>
+        </Link>
+
         {/* Ranking da Célula */}
         <Link
           href={`/ranking?cellId=${cellId}`}
