@@ -162,13 +162,64 @@ function processInline(text: string): string {
     .replace(/_(.+?)_/g, '<em>$1</em>');
 }
 
+// ── Helpers para detecção de elementos interativos ────────────────────────────
+
+/** Linha é um item de checkbox: `[ ] texto` ou `- [ ] texto` */
+function isCheckboxLine(line: string): boolean {
+  const t = line.trim();
+  return /^\[[ xX]\]\s/.test(t) || /^[-*]\s+\[[ xX]\]\s/.test(t);
+}
+
+/** Extrai o texto de um checkbox */
+function checkboxText(line: string): string {
+  return line.trim().replace(/^[-*]\s+/, '').replace(/^\[[ xX]\]\s*/, '').trim();
+}
+
+/** Linha é uma pergunta que exige resposta escrita */
+function isQuestion(line: string): boolean {
+  const t = line.trim();
+  if (!t || t.length < 8) return false;
+  if (/^#{1,4}\s/.test(t)) return false;   // headings não são perguntas
+  if (isCheckboxLine(t)) return false;
+  // Termina com ? → pergunta direta
+  if (t.endsWith('?')) return true;
+  // Verbos que pedem resposta descritiva
+  if (/^(Conte |Descreva |Explique )/i.test(t)) return true;
+  return false;
+}
+
+/** Linhas que explicitamente pedem um campo de escrita (textarea grande) */
+function isWriteHere(line: string): boolean {
+  const lower = line.trim().toLowerCase();
+  return (
+    lower.includes('escreva aqui') ||
+    lower.includes('registre aqui') ||
+    lower.includes('anote aqui') ||
+    lower.startsWith('falando com deus') ||
+    lower.startsWith('guardando a palavra') ||
+    (lower.startsWith('anote') && lower.includes('dúvidas'))
+  );
+}
+
+/** Procura próxima linha não-vazia e retorna se é checkbox */
+function nextNonEmptyIsCheckbox(lines: string[], idx: number): boolean {
+  for (let i = idx + 1; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (!t) continue;
+    return isCheckboxLine(lines[i]);
+  }
+  return false;
+}
+
 export function markdownToHtml(md: string): string {
-  const lines = md.split('\n');
+  const lines = md.split('\n').map((l) => l.trimEnd());
   const out: string[] = [];
   let inUl = false;
   let inOl = false;
   let inBq = false;
+  let inCbGroup = false;
   let para: string[] = [];
+  let qNum = 0; // contador de questões numeradas
 
   const flushPara = () => {
     if (para.length) {
@@ -184,31 +235,34 @@ export function markdownToHtml(md: string): string {
   const flushBq = () => {
     if (inBq) { out.push('</blockquote>'); inBq = false; }
   };
+  const flushCbGroup = () => {
+    if (inCbGroup) { out.push('</div>'); inCbGroup = false; }
+  };
 
-  for (const raw of lines) {
-    const line = raw.trimEnd();
-    const t = line.trim();
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const t = raw.trim();
 
-    // Heading
+    // ── Heading ───────────────────────────────────────────────────────────────
     const hm = t.match(/^(#{1,4})\s+(.*)/);
     if (hm) {
-      flushPara(); flushList(); flushBq();
-      const lvl = Math.min(hm[1].length + 1, 5); // h2–h5 (h1 é o título do caderno)
+      flushPara(); flushList(); flushBq(); flushCbGroup();
+      const lvl = Math.min(hm[1].length + 1, 5);
       out.push(`<h${lvl}>${processInline(hm[2])}</h${lvl}>`);
       continue;
     }
 
-    // Horizontal rule
+    // ── HR ────────────────────────────────────────────────────────────────────
     if (/^[-*_]{3,}$/.test(t)) {
-      flushPara(); flushList(); flushBq();
+      flushPara(); flushList(); flushBq(); flushCbGroup();
       out.push('<hr>');
       continue;
     }
 
-    // Blockquote
+    // ── Blockquote ────────────────────────────────────────────────────────────
     const bqm = t.match(/^>\s*(.*)/);
     if (bqm) {
-      flushPara(); flushList();
+      flushPara(); flushList(); flushCbGroup();
       if (!inBq) { out.push('<blockquote>'); inBq = true; }
       const inner = bqm[1].trim();
       if (inner) out.push(`<p>${processInline(inner)}</p>`);
@@ -217,7 +271,57 @@ export function markdownToHtml(md: string): string {
       flushBq();
     }
 
-    // Unordered list
+    // ── Checkbox item [ ] ─────────────────────────────────────────────────────
+    if (isCheckboxLine(raw)) {
+      flushPara(); flushList(); flushBq();
+      if (!inCbGroup) {
+        out.push('<div class="fm-cb-group">');
+        inCbGroup = true;
+      }
+      const cbT = processInline(checkboxText(raw));
+      out.push(
+        `<label class="fm-cb-label"><input type="checkbox" class="fm-cb"> <span>${cbT}</span></label>`,
+      );
+      continue;
+    } else {
+      flushCbGroup();
+    }
+
+    // ── Prompt "escreva aqui" (textarea grande sem número) ───────────────────
+    if (isWriteHere(t)) {
+      flushPara(); flushList();
+      out.push(
+        `<div class="fm-write">` +
+        `<p class="fm-write-label">${processInline(t)}</p>` +
+        `<textarea class="fm-textarea fm-textarea-lg" placeholder="Escreva aqui…"></textarea>` +
+        `</div>`,
+      );
+      continue;
+    }
+
+    // ── Pergunta com resposta ─────────────────────────────────────────────────
+    if (isQuestion(t)) {
+      flushPara(); flushList();
+      qNum++;
+      const followedByCheckbox = nextNonEmptyIsCheckbox(lines, i);
+      if (followedByCheckbox) {
+        // Apenas numera como label — o grupo de checkboxes vem a seguir
+        out.push(
+          `<p class="fm-q-label"><span class="fm-q-num">${qNum}</span>${processInline(t)}</p>`,
+        );
+      } else {
+        // Pergunta aberta → textarea
+        out.push(
+          `<div class="fm-question">` +
+          `<p class="fm-q-label"><span class="fm-q-num">${qNum}</span>${processInline(t)}</p>` +
+          `<textarea class="fm-textarea" placeholder="Sua resposta…"></textarea>` +
+          `</div>`,
+        );
+      }
+      continue;
+    }
+
+    // ── Lista não-ordenada ────────────────────────────────────────────────────
     const ulm = t.match(/^[-*]\s+(.*)/);
     if (ulm) {
       flushPara();
@@ -227,7 +331,7 @@ export function markdownToHtml(md: string): string {
       continue;
     }
 
-    // Ordered list
+    // ── Lista ordenada ────────────────────────────────────────────────────────
     const olm = t.match(/^\d+[.)]\s+(.*)/);
     if (olm) {
       flushPara();
@@ -237,27 +341,26 @@ export function markdownToHtml(md: string): string {
       continue;
     }
 
-    // Table row (renderiza como parágrafo simples para não quebrar o layout)
+    // ── Tabela ────────────────────────────────────────────────────────────────
     if (t.startsWith('|')) {
       flushPara(); flushList();
-      // Remove pipes e formata como texto
       const cells = t.split('|').filter(Boolean).map((c) => c.trim()).filter((c) => !/^[-:]+$/.test(c));
       if (cells.length) out.push(`<p>${cells.map(processInline).join(' &mdash; ')}</p>`);
       continue;
     }
 
-    // Linha vazia
+    // ── Linha vazia ───────────────────────────────────────────────────────────
     if (!t) {
       flushPara(); flushList();
       continue;
     }
 
-    // Texto normal
+    // ── Texto normal ──────────────────────────────────────────────────────────
     if (inUl || inOl) flushList();
     para.push(processInline(t));
   }
 
-  flushPara(); flushList(); flushBq();
+  flushPara(); flushList(); flushBq(); flushCbGroup();
   return linkBibleRefs(out.join('\n'));
 }
 

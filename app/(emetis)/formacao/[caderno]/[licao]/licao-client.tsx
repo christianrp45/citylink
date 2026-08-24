@@ -114,7 +114,17 @@ export function LicaoClient({ meta, section, prev, next, total, current }: Props
             prose-ul:text-slate-700 prose-li:text-sm
             prose-ol:text-slate-700
             prose-hr:border-slate-200
-            [&_.verse-link]:text-indigo-600 [&_.verse-link]:font-semibold [&_.verse-link]:underline [&_.verse-link]:decoration-dotted [&_.verse-link]:underline-offset-2"
+            [&_.verse-link]:text-indigo-600 [&_.verse-link]:font-semibold [&_.verse-link]:underline [&_.verse-link]:decoration-dotted [&_.verse-link]:underline-offset-2
+            [&_.fm-question]:bg-indigo-50 [&_.fm-question]:border [&_.fm-question]:border-indigo-100 [&_.fm-question]:rounded-xl [&_.fm-question]:p-4 [&_.fm-question]:my-4 [&_.fm-question]:not-prose
+            [&_.fm-write]:bg-amber-50 [&_.fm-write]:border [&_.fm-write]:border-amber-100 [&_.fm-write]:rounded-xl [&_.fm-write]:p-4 [&_.fm-write]:my-4 [&_.fm-write]:not-prose
+            [&_.fm-write-label]:text-amber-800 [&_.fm-write-label]:font-semibold [&_.fm-write-label]:text-sm [&_.fm-write-label]:mb-2 [&_.fm-write-label]:block [&_.fm-write-label]:leading-snug
+            [&_.fm-q-label]:flex [&_.fm-q-label]:items-start [&_.fm-q-label]:gap-2 [&_.fm-q-label]:text-slate-800 [&_.fm-q-label]:font-semibold [&_.fm-q-label]:text-sm [&_.fm-q-label]:leading-snug [&_.fm-q-label]:mb-2 [&_.fm-q-label]:m-0
+            [&_.fm-q-num]:bg-indigo-600 [&_.fm-q-num]:text-white [&_.fm-q-num]:rounded-full [&_.fm-q-num]:min-w-[22px] [&_.fm-q-num]:h-[22px] [&_.fm-q-num]:inline-flex [&_.fm-q-num]:items-center [&_.fm-q-num]:justify-center [&_.fm-q-num]:text-[11px] [&_.fm-q-num]:font-bold [&_.fm-q-num]:flex-shrink-0 [&_.fm-q-num]:mt-0.5
+            [&_.fm-textarea]:w-full [&_.fm-textarea]:min-h-[80px] [&_.fm-textarea]:rounded-lg [&_.fm-textarea]:border [&_.fm-textarea]:border-slate-200 [&_.fm-textarea]:bg-white [&_.fm-textarea]:p-3 [&_.fm-textarea]:text-sm [&_.fm-textarea]:text-slate-700 [&_.fm-textarea]:resize-y [&_.fm-textarea]:block [&_.fm-textarea]:mt-1 [&_.fm-textarea]:outline-none [&_.fm-textarea]:leading-relaxed
+            [&_.fm-textarea-lg]:min-h-[120px]
+            [&_.fm-cb-group]:bg-white [&_.fm-cb-group]:border [&_.fm-cb-group]:border-slate-100 [&_.fm-cb-group]:rounded-xl [&_.fm-cb-group]:p-3 [&_.fm-cb-group]:my-3 [&_.fm-cb-group]:not-prose [&_.fm-cb-group]:space-y-2
+            [&_.fm-cb-label]:flex [&_.fm-cb-label]:items-center [&_.fm-cb-label]:gap-3 [&_.fm-cb-label]:cursor-pointer [&_.fm-cb-label]:text-sm [&_.fm-cb-label]:text-slate-700 [&_.fm-cb-label]:py-1 [&_.fm-cb-label]:select-none
+            [&_.fm-cb]:w-4 [&_.fm-cb]:h-4 [&_.fm-cb]:accent-indigo-600 [&_.fm-cb]:flex-shrink-0 [&_.fm-cb]:cursor-pointer"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: conteúdo gerado server-side a partir dos arquivos .md locais
           dangerouslySetInnerHTML={{ __html: section.contentHtml }}
         />
