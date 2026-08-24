@@ -1019,3 +1019,30 @@ export const userMission = pgTable("UserMission", {
 
 export type UserMission = InferSelectModel<typeof userMission>;
 
+// ─── Formação Batista ──────────────────────────────────────────────────────────
+
+/** Progresso por lição (um registro por lição concluída) */
+export const formacaoProgress = pgTable("FormacaoProgress", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId").notNull().references(() => user.id, { onDelete: "cascade" }),
+  caderno: varchar("caderno", { length: 60 }).notNull(),   // slug do caderno
+  licao: varchar("licao", { length: 10 }).notNull(),        // slug "1", "2", ...
+  completedAt: timestamp("completedAt").notNull().defaultNow(),
+});
+
+export type FormacaoProgress = InferSelectModel<typeof formacaoProgress>;
+
+/** Resultado do quiz de cada caderno */
+export const formacaoQuizResult = pgTable("FormacaoQuizResult", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId").notNull().references(() => user.id, { onDelete: "cascade" }),
+  caderno: varchar("caderno", { length: 60 }).notNull(),
+  score: integer("score").notNull(),       // nº de acertos
+  total: integer("total").notNull(),       // total de questões
+  passed: boolean("passed").notNull(),
+  attempt: integer("attempt").notNull().default(1),
+  completedAt: timestamp("completedAt").notNull().defaultNow(),
+});
+
+export type FormacaoQuizResult = InferSelectModel<typeof formacaoQuizResult>;
+

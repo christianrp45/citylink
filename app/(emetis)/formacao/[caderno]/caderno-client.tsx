@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Award, ClipboardList } from 'lucide-react';
 import type { CadernoMeta } from '@/lib/data/formacao';
 import type { FormacaoSection } from '@/lib/formacao-parser';
 
@@ -20,6 +20,7 @@ interface Props {
 export function CadernoClient({ meta, sections, cor }: Props) {
   const router = useRouter();
   const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [quizPassed, setQuizPassed] = useState(false);
 
   useEffect(() => {
     const done = new Set<string>();
@@ -29,6 +30,13 @@ export function CadernoClient({ meta, sections, cor }: Props) {
       }
     }
     setCompleted(done);
+  }, [meta.slug]);
+
+  useEffect(() => {
+    fetch(`/api/formacao/quiz?caderno=${meta.slug}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.passed) setQuizPassed(true); })
+      .catch(() => {});
   }, [meta.slug]);
 
   // Agrupa por groupTitulo
@@ -45,6 +53,7 @@ export function CadernoClient({ meta, sections, cor }: Props) {
   }, [sections]);
 
   const totalConcluidos = completed.size;
+  const allDone = sections.length > 0 && totalConcluidos >= sections.length;
   const pct = sections.length ? Math.round((totalConcluidos / sections.length) * 100) : 0;
 
   return (
@@ -79,6 +88,27 @@ export function CadernoClient({ meta, sections, cor }: Props) {
         <p className="text-white/70 text-[10px] mt-1">
           {totalConcluidos} de {sections.length} {meta.unidade.toLowerCase()}s concluídos · {pct}%
         </p>
+
+        {/* Ações: Quiz / Certificado */}
+        {(allDone || quizPassed) && (
+          <div className="mt-4 flex gap-2">
+            {quizPassed ? (
+              <Link
+                href={`/formacao/${meta.slug}/certificado`}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-white/20 hover:bg-white/30 text-white font-semibold text-xs py-2.5 rounded-xl transition-colors"
+              >
+                <Award size={14} /> Ver Certificado
+              </Link>
+            ) : (
+              <Link
+                href={`/formacao/${meta.slug}/quiz`}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-white/20 hover:bg-white/30 text-white font-semibold text-xs py-2.5 rounded-xl transition-colors"
+              >
+                <ClipboardList size={14} /> Fazer Avaliação
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Lista de seções */}

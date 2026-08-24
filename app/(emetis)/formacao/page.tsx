@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { CADERNOS, COR_CLASSES } from '@/lib/data/formacao';
-import { ChevronRight, BookOpen } from 'lucide-react';
+import { ChevronRight, BookOpen, Trophy } from 'lucide-react';
 
 function useFormacaoProgress() {
   const [progress, setProgress] = useState<Record<string, number>>({});
@@ -24,6 +24,13 @@ function useFormacaoProgress() {
 
 export default function FormacaoPage() {
   const progress = useFormacaoProgress();
+  const [allPassed, setAllPassed] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/formacao/certificate')
+      .then((r) => { if (r.ok) setAllPassed(true); })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="px-4 pt-4 pb-6 space-y-5">
@@ -42,6 +49,21 @@ export default function FormacaoPage() {
           📖 Material elaborado pela <strong>Primeira Igreja Batista de Curitiba (PIB Curitiba)</strong>, disponibilizado para igrejas e instituições parceiras.
         </p>
       </div>
+
+      {/* Banner certificado final */}
+      {allPassed && (
+        <Link
+          href="/formacao/certificado-final"
+          className="flex items-center gap-3 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-2xl px-4 py-3.5 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+        >
+          <Trophy size={24} className="text-white flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-bold text-sm">Formação Completa! 🎉</p>
+            <p className="text-white/80 text-xs mt-0.5">Ver seu Certificado Final</p>
+          </div>
+          <ChevronRight size={16} className="text-white/70 flex-shrink-0" />
+        </Link>
+      )}
 
       {/* Lista de cadernos */}
       <div className="space-y-3">

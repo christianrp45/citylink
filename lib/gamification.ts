@@ -20,6 +20,9 @@ export const MISSIONS = {
   pray_for_someone:    { label: "Ore por alguém na célula",            points: 20, emoji: "🙏" },
   join_group:          { label: "Entre em uma célula ou comunidade",   points: 30, emoji: "👥" },
   invite_accepted:     { label: "Convide alguém que entrou no Emetis", points: 50, emoji: "🎉" },
+  complete_formacao_lesson:  { label: "Conclua uma lição da Série Integrar",      points: 20, emoji: "📚" },
+  complete_formacao_caderno: { label: "Conclua um caderno da Série Integrar",     points: 80, emoji: "🎓" },
+  complete_formacao_all:     { label: "Conclua toda a Formação Batista Integrar", points: 300, emoji: "🏆" },
 } as const;
 
 export type MissionAction = keyof typeof MISSIONS;

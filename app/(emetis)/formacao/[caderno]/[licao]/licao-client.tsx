@@ -45,13 +45,19 @@ export function LicaoClient({ meta, section, prev, next, total, current }: Props
     }
   }, [router, meta.slug, section.slug]);
 
-  function toggleConcluido() {
+  async function toggleConcluido() {
     if (concluido) {
       localStorage.removeItem(storageKey);
       setConcluido(false);
     } else {
       localStorage.setItem(storageKey, 'done');
       setConcluido(true);
+      // Sincroniza com DB e concede XP (fire-and-forget)
+      fetch('/api/formacao/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ caderno: meta.slug, licao: section.slug }),
+      }).catch(() => {});
       // Avança automaticamente para a próxima após marcar
       if (next) {
         setTimeout(() => router.push(`/formacao/${meta.slug}/${next.slug}`), 600);
