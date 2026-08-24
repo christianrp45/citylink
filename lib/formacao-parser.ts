@@ -275,12 +275,14 @@ export function markdownToHtml(md: string): string {
     if (isCheckboxLine(raw)) {
       flushPara(); flushList(); flushBq();
       if (!inCbGroup) {
-        out.push('<div class="fm-cb-group">');
+        out.push('<div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin:8px 0;display:flex;flex-direction:column;gap:6px">');
         inCbGroup = true;
       }
       const cbT = processInline(checkboxText(raw));
       out.push(
-        `<label class="fm-cb-label"><input type="checkbox" class="fm-cb"> <span>${cbT}</span></label>`,
+        `<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:#334155;padding:2px 0;user-select:none">` +
+        `<input type="checkbox" style="width:16px;height:16px;accent-color:#4f46e5;cursor:pointer;flex-shrink:0"> ` +
+        `<span>${cbT}</span></label>`,
       );
       continue;
     } else {
@@ -291,9 +293,9 @@ export function markdownToHtml(md: string): string {
     if (isWriteHere(t)) {
       flushPara(); flushList();
       out.push(
-        `<div class="fm-write">` +
-        `<p class="fm-write-label">${processInline(t)}</p>` +
-        `<textarea class="fm-textarea fm-textarea-lg" placeholder="Escreva aqui…"></textarea>` +
+        `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 16px;margin:16px 0">` +
+        `<p style="font-weight:600;font-size:13px;color:#92400e;margin:0 0 8px 0;line-height:1.5">${processInline(t)}</p>` +
+        `<textarea style="width:100%;min-height:110px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:14px;color:#334155;resize:vertical;background:white;outline:none;font-family:inherit;display:block;box-sizing:border-box" placeholder="Escreva aqui…"></textarea>` +
         `</div>`,
       );
       continue;
@@ -304,17 +306,19 @@ export function markdownToHtml(md: string): string {
       flushPara(); flushList();
       qNum++;
       const followedByCheckbox = nextNonEmptyIsCheckbox(lines, i);
+      const badge =
+        `<span style="background:#4f46e5;color:white;border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">${qNum}</span>`;
       if (followedByCheckbox) {
         // Apenas numera como label — o grupo de checkboxes vem a seguir
         out.push(
-          `<p class="fm-q-label"><span class="fm-q-num">${qNum}</span>${processInline(t)}</p>`,
+          `<p style="display:flex;align-items:flex-start;gap:8px;font-weight:600;font-size:14px;color:#1e293b;margin:16px 0 4px 0;line-height:1.5">${badge}${processInline(t)}</p>`,
         );
       } else {
         // Pergunta aberta → textarea
         out.push(
-          `<div class="fm-question">` +
-          `<p class="fm-q-label"><span class="fm-q-num">${qNum}</span>${processInline(t)}</p>` +
-          `<textarea class="fm-textarea" placeholder="Sua resposta…"></textarea>` +
+          `<div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px 16px;margin:16px 0">` +
+          `<p style="display:flex;align-items:flex-start;gap:8px;font-weight:600;font-size:14px;color:#1e293b;margin:0 0 8px 0;line-height:1.5">${badge}${processInline(t)}</p>` +
+          `<textarea style="width:100%;min-height:80px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:14px;color:#334155;resize:vertical;background:white;outline:none;font-family:inherit;display:block;box-sizing:border-box" placeholder="Sua resposta…"></textarea>` +
           `</div>`,
         );
       }
