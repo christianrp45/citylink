@@ -173,7 +173,7 @@ export const forgotPassword = async (
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Emetis <noreply@emetis.com.br>",
+            from: "Emetis <noreply@cliente.veraslog.com.br>",
             to: email,
             subject: "Redefinir sua senha — Emetis",
             html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto"><h2 style="color:#1e3a5f">Redefinir senha</h2><p>Recebemos uma solicitação para redefinir a senha da sua conta Emetis.</p><p>Clique no botão abaixo. O link expira em <strong>1 hora</strong>.</p><a href="${resetUrl}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Redefinir senha</a><p style="color:#64748b;font-size:13px">Se você não solicitou isso, ignore este e-mail.</p></div>`,
