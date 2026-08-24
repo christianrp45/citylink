@@ -1,0 +1,125 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
+import type { CadernoMeta } from '@/lib/data/formacao';
+import type { FormacaoSection } from '@/lib/formacao-parser';
+
+type CorClasses = {
+  bg: string; text: string; border: string; badge: string; light: string;
+};
+
+interface Props {
+  meta: CadernoMeta;
+  sections: FormacaoSection[];
+  cor: CorClasses;
+}
+
+export function CadernoClient({ meta, sections, cor }: Props) {
+  const router = useRouter();
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const done = new Set<string>();
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(`formacao:${meta.slug}:`)) {
+        done.add(key.replace(`formacao:${meta.slug}:`, ''));
+      }
+    }
+    setCompleted(done);
+  }, [meta.slug]);
+
+  // Agrupa por groupTitulo
+  const groups = useMemo(() => {
+    const map = new Map<string, { label: string; sections: FormacaoSection[] }>();
+    for (const s of sections) {
+      const key = s.groupSlug ?? '__ungrouped';
+      if (!map.has(key)) {
+        map.set(key, { label: s.groupTitulo ?? '', sections: [] });
+      }
+      map.get(key)!.sections.push(s);
+    }
+    return Array.from(map.values());
+  }, [sections]);
+
+  const totalConcluidos = completed.size;
+  const pct = sections.length ? Math.round((totalConcluidos / sections.length) * 100) : 0;
+
+  return (
+    <div className="pb-6">
+      {/* Header com cor */}
+      <div className={`${cor.bg} px-4 pt-4 pb-6`}>
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1 text-white/80 text-sm mb-4 hover:text-white"
+        >
+          <ChevronLeft size={16} /> Formação
+        </button>
+
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-4xl">{meta.emoji}</span>
+          <div>
+            <p className="text-white/70 text-xs font-semibold uppercase tracking-wide">
+              Caderno {meta.numero}
+            </p>
+            <h1 className="text-white text-lg font-bold leading-tight">{meta.titulo}</h1>
+            <p className="text-white/70 text-xs mt-0.5">{meta.subtitulo}</p>
+          </div>
+        </div>
+
+        {/* Barra de progresso */}
+        <div className="bg-white/20 rounded-full h-1.5 mt-2">
+          <div
+            className="bg-white rounded-full h-1.5 transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="text-white/70 text-[10px] mt-1">
+          {totalConcluidos} de {sections.length} {meta.unidade.toLowerCase()}s concluídos · {pct}%
+        </p>
+      </div>
+
+      {/* Lista de seções */}
+      <div className="px-4 pt-4 space-y-4">
+        {groups.map((group, gi) => (
+          <div key={gi}>
+            {group.label && (
+              <p className={`text-[11px] font-bold uppercase tracking-wide mb-2 ${cor.text}`}>
+                {group.label}
+              </p>
+            )}
+
+            <div className="space-y-2">
+              {group.sections.map((section) => {
+                const done = completed.has(section.slug);
+                return (
+                  <Link
+                    key={section.slug}
+                    href={`/formacao/${meta.slug}/${section.slug}`}
+                    className={`flex items-center gap-3 bg-white rounded-xl border px-4 py-3 hover:border-slate-200 active:scale-[0.98] transition-all ${
+                      done ? cor.border : 'border-slate-100'
+                    }`}
+                  >
+                    {done ? (
+                      <CheckCircle2 size={18} className={`${cor.text} flex-shrink-0`} />
+                    ) : (
+                      <Circle size={18} className="text-slate-300 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${done ? 'text-slate-500' : 'text-slate-800'}`}>
+                        {section.titulo}
+                      </p>
+                    </div>
+                    <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

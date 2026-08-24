@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Loader2, BookmarkPlus, X, Send, Moon, Sun, Share2, WifiOff } from 'lucide-react';
 import Link from 'next/link';
 import { useChat } from '@ai-sdk/react';
@@ -42,6 +42,8 @@ const FONT_SIZE_LABEL: Record<FontSize, string> = {
 export default function ChapterPage() {
   const params = useParams<{ book: string; chapter: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromStudy = searchParams.get('from'); // ex: "/formacao/primeiros-passos/3"
   const book = params.book;
   const chapterNum = parseInt(params.chapter, 10);
 
@@ -275,8 +277,19 @@ export default function ChapterPage() {
 
   return (
     <div className={`relative min-h-screen ${dm ? 'bg-gray-950' : 'bg-white'}`}>
+      {/* Banner "Voltar ao estudo" — aparece quando veio de uma lição de formação */}
+      {fromStudy && (
+        <button
+          onClick={() => router.push(decodeURIComponent(fromStudy))}
+          className="w-full flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-xs font-semibold sticky top-0 z-20"
+        >
+          <ChevronLeft size={14} />
+          Voltar ao estudo
+        </button>
+      )}
+
       {/* Header */}
-      <div className={`sticky top-0 z-10 border-b px-4 py-3 flex items-center justify-between ${dm ? 'bg-gray-900 border-gray-700' : 'bg-white border-slate-200'}`}>
+      <div className={`sticky ${fromStudy ? 'top-9' : 'top-0'} z-10 border-b px-4 py-3 flex items-center justify-between ${dm ? 'bg-gray-900 border-gray-700' : 'bg-white border-slate-200'}`}>
         <Link href="/bible" className={`p-1 -ml-1 ${dm ? 'text-gray-400' : 'text-slate-500'}`}>
           <ChevronLeft size={22} />
         </Link>

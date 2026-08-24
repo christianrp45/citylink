@@ -183,6 +183,22 @@ export default function BiblePage() {
         </Link>
       )}
 
+      {/* Formação Batista */}
+      <Link
+        href="/formacao"
+        className="flex items-center gap-4 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-4 shadow-md"
+      >
+        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+          <span className="text-2xl">📚</span>
+        </div>
+        <div className="flex-1">
+          <p className="text-white/70 text-[10px] font-bold uppercase tracking-wide">Série Integrar</p>
+          <p className="text-white font-bold text-sm">Formação Batista</p>
+          <p className="text-white/70 text-xs mt-0.5">8 cadernos · PIB Curitiba</p>
+        </div>
+        <ChevronRight size={18} className="text-white/60 flex-shrink-0" />
+      </Link>
+
       {/* Planos de Leitura */}
       <div>
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
