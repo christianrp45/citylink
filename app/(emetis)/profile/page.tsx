@@ -82,6 +82,7 @@ type UserProfile = {
   lat: string | null;
   lng: string | null;
   birthDate: string | null;
+  accountType: 'individual' | 'institution' | null;
 };
 
 const STATUS_CONFIG: Record<
@@ -172,6 +173,8 @@ export default function ProfilePage() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [accountType, setAccountType] = useState<'individual' | 'institution'>('individual');
+  const [savingAccountType, setSavingAccountType] = useState(false);
   const [proximity, setProximity] = useState<ProximityConfig | null>(null);
   const [proximityOpen, setProximityOpen] = useState(false);
   const [savingProximity, setSavingProximity] = useState(false);
@@ -214,6 +217,7 @@ export default function ProfilePage() {
         setProfile(data);
         setStatus(data.availabilityStatus ?? 'mesa-posta');
         setEditBio(data.bio ?? '');
+        setAccountType(data.accountType ?? 'individual');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -383,6 +387,24 @@ export default function ProfilePage() {
       setProximity(prev => prev ? { ...prev, ...Object.fromEntries(Object.keys(patch).map(k => [k, (proximity as Record<string, unknown>)?.[k]])) } : prev);
     } finally {
       setSavingProximity(false);
+    }
+  }
+
+  async function handleSaveAccountType(type: 'individual' | 'institution') {
+    if (type === accountType) return;
+    setSavingAccountType(true);
+    try {
+      await apiFetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountType: type }),
+      });
+      setAccountType(type);
+      setProfile((prev) => prev ? { ...prev, accountType: type } : prev);
+    } catch {
+      // mantém o tipo anterior em caso de erro
+    } finally {
+      setSavingAccountType(false);
     }
   }
 
@@ -1385,6 +1407,49 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Tipo de conta */}
+        <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100">
+            <p className="text-sm font-semibold text-slate-700">Tipo de conta</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Instituições têm painel de membros e convites. Sua visibilidade no mapa fica pública.
+            </p>
+          </div>
+          <div className="p-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleSaveAccountType('individual')}
+              disabled={savingAccountType}
+              className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-60 ${
+                accountType === 'individual'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              <span className="text-xl">👤</span>
+              Pessoa
+              <span className="text-[10px] font-normal text-slate-400">Membro, cristão</span>
+            </button>
+            <button
+              onClick={() => handleSaveAccountType('institution')}
+              disabled={savingAccountType}
+              className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-60 ${
+                accountType === 'institution'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              <span className="text-xl">🏛️</span>
+              Instituição
+              <span className="text-[10px] font-normal text-slate-400">Igreja, ministério</span>
+            </button>
+          </div>
+          {savingAccountType && (
+            <div className="px-4 pb-3 flex items-center gap-2 text-xs text-slate-400">
+              <Loader2 size={12} className="animate-spin" /> Salvando…
+            </div>
+          )}
+        </div>
+
         {/* Dashboard Pastoral (admin) */}
         <Link
           href="/admin"
@@ -1393,6 +1458,16 @@ export default function ProfilePage() {
           <Shield size={16} />
           Dashboard Pastoral
         </Link>
+
+        {/* Excluir conta */}
+        <button
+          onClick={handleDeleteAccount}
+          disabled={deletingAccount}
+          className="w-full py-3 rounded-2xl border border-red-200 text-red-400 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-red-50 transition-colors disabled:opacity-50"
+        >
+          {deletingAccount ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+          Excluir minha conta
+        </button>
 
         {/* Sair */}
         <button

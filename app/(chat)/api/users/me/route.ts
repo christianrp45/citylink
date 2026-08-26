@@ -39,6 +39,7 @@ export async function PATCH(request: Request) {
     "lat",
     "lng",
     "birthDate",
+    "accountType",
   ] as const;
 
   type AllowedKey = (typeof allowed)[number];
@@ -57,6 +58,16 @@ export async function PATCH(request: Request) {
   ) {
     return Response.json(
       { error: "availabilityStatus inválido" },
+      { status: 400 }
+    );
+  }
+
+  if (
+    data.accountType &&
+    !["individual", "institution"].includes(data.accountType)
+  ) {
+    return Response.json(
+      { error: "accountType inválido" },
       { status: 400 }
     );
   }
