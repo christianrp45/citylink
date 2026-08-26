@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { auth } from './(auth)/auth';
@@ -16,17 +17,13 @@ export default async function LandingPage() {
     <main className="min-h-screen bg-[#F0F4FF] flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-5 max-w-5xl mx-auto w-full">
-        <div className="flex items-center gap-3">
-          {/* Inline icon */}
-          <svg width="32" height="32" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="512" height="512" rx="113" fill="#0B1D4E"/>
-            <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="white" strokeWidth="44" strokeLinecap="round" fill="none"/>
-            <line x1="143" y1="256" x2="343" y2="256" stroke="white" strokeWidth="44" strokeLinecap="round"/>
-            <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
-            <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
-          </svg>
-          <span className="text-xl font-semibold tracking-tight text-[#0B1D4E]">emetis</span>
-        </div>
+        <Image
+          src="/emetis-logo.svg"
+          alt="Emetis"
+          width={120}
+          height={27}
+          priority
+        />
         <div className="flex items-center gap-3">
           <Link
             href="/login"
@@ -46,6 +43,15 @@ export default async function LandingPage() {
       {/* Hero */}
       <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20">
         <div className="max-w-2xl mx-auto">
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/emetis-icon.svg"
+              alt="Emetis"
+              width={80}
+              height={80}
+              priority
+            />
+          </div>
           <p className="text-xs font-semibold uppercase tracking-widest text-[#F59E0B] mb-4">
             Plataforma cristã de proximidade
           </p>
