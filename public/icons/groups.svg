@@ -1,8 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="4.5" r="2.5"/>
-  <circle cx="4.5" cy="18.5" r="2.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!--
+    Três círculos em triângulo equilátero — referência à Trindade e à
+    célula (grupo pequeno). Centro do triângulo: (12, 12.5).
+    Vértice topo: (12, 4.5)  Esquerdo: (4.5, 18.5)  Direito: (19.5, 18.5)
+  -->
+  <circle cx="12"   cy="4.5"  r="2.5"/>
+  <circle cx="4.5"  cy="18.5" r="2.5"/>
   <circle cx="19.5" cy="18.5" r="2.5"/>
-  <line x1="10.8" y1="6.7" x2="5.8" y2="16.4"/>
-  <line x1="13.2" y1="6.7" x2="18.2" y2="16.4"/>
-  <line x1="7" y1="18.5" x2="17" y2="18.5"/>
+  <!-- Linhas de conexão entre os três -->
+  <line x1="10.8" y1="6.7"  x2="5.8"  y2="16.4"/>
+  <line x1="13.2" y1="6.7"  x2="18.2" y2="16.4"/>
+  <line x1="7"    y1="18.5" x2="17"   y2="18.5"/>
 </svg>

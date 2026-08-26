@@ -1,44 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3B82F6"/>
-      <stop offset="100%" stop-color="#1D4ED8"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E3FA0"/>
+      <stop offset="100%" stop-color="#0B1D4E"/>
     </linearGradient>
   </defs>
 
-  <!-- Fundo azul com cantos arredondados -->
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Fundo com cantos arredondados -->
+  <rect width="512" height="512" rx="113" fill="url(#bg)"/>
 
   <!--
-    Torre de sinal centralizada:
-    Pilar vertical central + arcos em ambos os lados
-    Centro: 256, 256
+    Marca "e":
+    - Círculo centro (256, 256), raio 113
+    - Arco de 270° (sentido anti-horário, large-arc) do ponto superior-direito (336,176)
+      passando pelo topo, esquerda e base, até o ponto inferior-direito (336,336)
+    - Barra horizontal da borda esquerda (143,256) até o gap (343,256)
+    - Ponto âmbar no terminal superior do gap — o beacon de conexão
   -->
 
-  <!-- Pilar vertical centralizado -->
-  <rect x="233" y="96" width="46" height="240" rx="23" fill="white"/>
+  <!-- Taça do "e": arco 270° anti-horário -->
+  <path
+    d="M 336 176 A 113 113 0 1 0 336 336"
+    stroke="white"
+    stroke-width="44"
+    stroke-linecap="round"
+    fill="none"
+  />
 
-  <!-- Ponto base — a pessoa, o indivíduo -->
-  <circle cx="256" cy="374" r="26" fill="white"/>
+  <!-- Barra horizontal -->
+  <line
+    x1="143" y1="256"
+    x2="343" y2="256"
+    stroke="white"
+    stroke-width="44"
+    stroke-linecap="round"
+  />
 
-  <!-- Arco 1 esquerdo — fé pessoal -->
-  <path d="M 233 192 A 60 60 0 0 0 233 272"
-        stroke="white" stroke-opacity="0.95" stroke-width="22" stroke-linecap="round"/>
-  <!-- Arco 1 direito — fé pessoal -->
-  <path d="M 279 192 A 60 60 0 0 1 279 272"
-        stroke="white" stroke-opacity="0.95" stroke-width="22" stroke-linecap="round"/>
-
-  <!-- Arco 2 esquerdo — célula -->
-  <path d="M 233 148 A 108 108 0 0 0 233 316"
-        stroke="white" stroke-opacity="0.60" stroke-width="16" stroke-linecap="round"/>
-  <!-- Arco 2 direito — célula -->
-  <path d="M 279 148 A 108 108 0 0 1 279 316"
-        stroke="white" stroke-opacity="0.60" stroke-width="16" stroke-linecap="round"/>
-
-  <!-- Arco 3 esquerdo — Igreja -->
-  <path d="M 233 102 A 154 154 0 0 0 233 362"
-        stroke="white" stroke-opacity="0.28" stroke-width="12" stroke-linecap="round"/>
-  <!-- Arco 3 direito — Igreja -->
-  <path d="M 279 102 A 154 154 0 0 1 279 362"
-        stroke="white" stroke-opacity="0.28" stroke-width="12" stroke-linecap="round"/>
+  <!--
+    Alef (א) — o início, origem da verdade — ponto âmbar pleno
+    Tav (ת)  — o fim, conclusão que retorna ao começo — ponto âmbar sutil
+    Mem (מ)  — o centro eterno — a barra horizontal acima
+  -->
+  <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+  <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
 </svg>
