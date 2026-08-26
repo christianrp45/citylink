@@ -181,10 +181,14 @@ function isQuestion(line: string): boolean {
   if (!t || t.length < 8) return false;
   if (/^#{1,4}\s/.test(t)) return false;   // headings não são perguntas
   if (isCheckboxLine(t)) return false;
+  // Remove prefixo numérico (1. / 2) e marcadores bold/italic para análise
+  const stripped = t.replace(/^\d+[.)]\s+/, '').replace(/\*+/g, '').trim();
   // Termina com ? → pergunta direta
-  if (t.endsWith('?')) return true;
+  if (stripped.endsWith('?')) return true;
+  // Item numerado em negrito (ex: `1. **Assinale o que está correto:**`)
+  if (/^\d+[.)]\s+\*\*/.test(t)) return true;
   // Verbos que pedem resposta descritiva
-  if (/^(Conte |Descreva |Explique )/i.test(t)) return true;
+  if (/^(Conte |Descreva |Explique |Assinale |Marque |Complete |Responda )/i.test(stripped)) return true;
   return false;
 }
 
@@ -252,8 +256,15 @@ export function markdownToHtml(md: string): string {
       continue;
     }
 
+    // ── Linhas de preenchimento do PDF original (_____): pula silenciosamente ──
+    // (as textareas das perguntas substituem esses campos)
+    if (/^_+$/.test(t) && t.length >= 5) {
+      flushPara();
+      continue;
+    }
+
     // ── HR ────────────────────────────────────────────────────────────────────
-    if (/^[-*_]{3,}$/.test(t)) {
+    if (/^[-*]{3,}$/.test(t)) {
       flushPara(); flushList(); flushBq(); flushCbGroup();
       out.push('<hr>');
       continue;
@@ -305,19 +316,25 @@ export function markdownToHtml(md: string): string {
     if (isQuestion(t)) {
       flushPara(); flushList();
       qNum++;
+      // Remove prefixo numérico e marcadores bold/italic para exibição limpa
+      const displayText = t
+        .replace(/^\d+[.)]\s+/, '')
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .trim();
       const followedByCheckbox = nextNonEmptyIsCheckbox(lines, i);
       const badge =
         `<span style="background:#4f46e5;color:white;border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">${qNum}</span>`;
       if (followedByCheckbox) {
         // Apenas numera como label — o grupo de checkboxes vem a seguir
         out.push(
-          `<p style="display:flex;align-items:flex-start;gap:8px;font-weight:600;font-size:14px;color:#1e293b;margin:16px 0 4px 0;line-height:1.5">${badge}${processInline(t)}</p>`,
+          `<p style="display:flex;align-items:flex-start;gap:8px;font-weight:600;font-size:14px;color:#1e293b;margin:16px 0 4px 0;line-height:1.5">${badge}${processInline(displayText)}</p>`,
         );
       } else {
         // Pergunta aberta → textarea
         out.push(
           `<div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px 16px;margin:16px 0">` +
-          `<p style="display:flex;align-items:flex-start;gap:8px;font-weight:600;font-size:14px;color:#1e293b;margin:0 0 8px 0;line-height:1.5">${badge}${processInline(t)}</p>` +
+          `<p style="display:flex;align-items:flex-start;gap:8px;font-weight:600;font-size:14px;color:#1e293b;margin:0 0 8px 0;line-height:1.5">${badge}${processInline(displayText)}</p>` +
           `<textarea style="width:100%;min-height:80px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:14px;color:#334155;resize:vertical;background:white;outline:none;font-family:inherit;display:block;box-sizing:border-box" placeholder="Sua resposta…"></textarea>` +
           `</div>`,
         );
