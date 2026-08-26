@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emetis — Guia de Identidade Visual</title>
+  <style>
+    :root {
+      --navy:        #0B1D4E;
+      --indigo:      #1E3FA0;
+      --amber:       #F59E0B;
+      --amber-muted: rgba(245,158,11,0.42);
+      --white:       #FFFFFF;
+      --light:       #F0F4FF;
+      --muted:       #4A5FA8;
+      --border:      rgba(11,29,78,0.09);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--light);
+      color: var(--navy);
+      line-height: 1.6;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────── */
+    .wrap   { max-width: 1040px; margin: 0 auto; padding: 0 40px; }
+    .dark   { background: var(--navy); color: var(--white); }
+    .grad   { background: linear-gradient(135deg, var(--indigo) 0%, var(--navy) 100%); }
+    section { padding: 80px 0; }
+    section + section { border-top: 1px solid var(--border); }
+    .dark section, .dark + section { border-color: rgba(255,255,255,0.07); }
+
+    /* ── Type ───────────────────────────────────────────────────────── */
+    .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 36px;
+    }
+    h2 { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 16px; }
+    h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+    p  { color: var(--muted); font-size: 15px; line-height: 1.75; }
+    .dark p { color: rgba(255,255,255,0.55); }
+
+    /* ── Hero ───────────────────────────────────────────────────────── */
+    .hero {
+      padding: 100px 40px 80px;
+      text-align: center;
+    }
+    .hero svg { display: block; margin: 0 auto 48px; }
+    .hero-title {
+      font-size: 56px; font-weight: 700; letter-spacing: -2px;
+      color: white; margin-bottom: 16px;
+    }
+    .hero-sub {
+      font-size: 17px; color: rgba(255,255,255,0.5);
+      max-width: 460px; margin: 0 auto;
+    }
+    .hero-version {
+      display: inline-block; margin-top: 40px;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.12);
+      padding: 6px 16px; border-radius: 100px;
+    }
+
+    /* ── Concept ────────────────────────────────────────────────────── */
+    .concept-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 40px; margin-top: 48px; align-items: start;
+    }
+    .concept-svg-wrap {
+      background: white; border-radius: 20px;
+      padding: 40px; box-shadow: 0 4px 24px rgba(11,29,78,0.09);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .concept-letters { display: flex; flex-direction: column; gap: 20px; }
+    .letter-card {
+      background: white; border-radius: 14px; padding: 22px 24px;
+      border-left: 3px solid var(--amber);
+      box-shadow: 0 2px 12px rgba(11,29,78,0.07);
+      display: flex; gap: 20px; align-items: flex-start;
+    }
+    .letter-heb {
+      font-size: 36px; line-height: 1; color: var(--navy);
+      min-width: 44px; text-align: center;
+    }
+    .letter-body {}
+    .letter-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 4px;
+    }
+    .letter-name { font-size: 15px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+    .letter-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+    /* ── Logo Variations ────────────────────────────────────────────── */
+    .logo-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 20px; margin-top: 48px;
+    }
+    .logo-card {
+      border-radius: 18px; padding: 48px 24px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      min-height: 200px;
+    }
+    .logo-card-label {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      font-weight: 600;
+    }
+    .on-dark     { background: var(--navy); }
+    .on-grad     { background: linear-gradient(135deg,var(--indigo),var(--navy)); }
+    .on-light    { background: var(--light); border: 1px solid var(--border); }
+    .on-white    { background: white; border: 1px solid var(--border); }
+    .on-dark  .logo-card-label,
+    .on-grad  .logo-card-label { color: rgba(255,255,255,0.35); }
+    .on-light .logo-card-label,
+    .on-white .logo-card-label { color: var(--muted); }
+
+    /* ── Color Swatches ─────────────────────────────────────────────── */
+    .color-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 20px; margin-top: 48px;
+    }
+    .swatch { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(11,29,78,0.08); }
+    .swatch-color { height: 120px; }
+    .swatch-info  { background: white; padding: 16px; }
+    .swatch-name  { font-size: 13px; font-weight: 700; color: var(--navy); }
+    .swatch-hex   { font-size: 12px; font-family: monospace; color: var(--muted); margin-top: 2px; }
+    .swatch-role  { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+    /* ── Typography ─────────────────────────────────────────────────── */
+    .type-stack { display: flex; flex-direction: column; gap: 16px; margin-top: 48px; }
+    .type-row {
+      background: white; border-radius: 14px; padding: 28px 32px;
+      box-shadow: 0 2px 10px rgba(11,29,78,0.06);
+      display: flex; align-items: baseline; gap: 24px;
+    }
+    .type-meta { font-size: 11px; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted); min-width: 120px; }
+    .type-sample { color: var(--navy); }
+
+    /* ── Icon Grid ──────────────────────────────────────────────────── */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 16px; margin-top: 48px;
+    }
+    .icon-card {
+      background: white; border-radius: 14px; padding: 22px 12px 14px;
+      text-align: center; box-shadow: 0 2px 8px rgba(11,29,78,0.06);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .icon-card:hover { box-shadow: 0 8px 24px rgba(11,29,78,0.12); transform: translateY(-2px); }
+    .icon-card svg   { display: block; margin: 0 auto 10px; color: var(--navy); }
+    .icon-card span  { font-size: 11px; color: var(--muted); }
+
+    /* ── Rules ──────────────────────────────────────────────────────── */
+    .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 48px; }
+    .rule { border-radius: 14px; padding: 28px; }
+    .rule-do   { background: #F0FDF4; border: 1px solid #BBF7D0; }
+    .rule-dont { background: #FFF1F2; border: 1px solid #FECDD3; }
+    .rule-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; margin-bottom: 14px; padding: 4px 10px;
+      border-radius: 100px;
+    }
+    .rule-do   .rule-badge { background: #DCFCE7; color: #15803D; }
+    .rule-dont .rule-badge { background: #FFE4E6; color: #BE123C; }
+    .rule p { font-size: 14px; line-height: 1.65; }
+    .rule-do   p { color: #166534; }
+    .rule-dont p { color: #9F1239; }
+
+    /* ── Applications ───────────────────────────────────────────────── */
+    .app-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 24px; margin-top: 48px;
+    }
+    .app-card {
+      background: white; border-radius: 18px; padding: 36px 20px 24px;
+      text-align: center; box-shadow: 0 2px 12px rgba(11,29,78,0.08);
+    }
+    .app-card-label { font-size: 12px; color: var(--muted); margin-top: 18px; }
+    .app-card-sub   { font-size: 11px; color: rgba(74,95,168,0.6); margin-top: 4px; }
+
+    /* favicon mockup */
+    .favicon-row { display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .favicon-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .favicon-item span { font-size: 10px; color: var(--muted); }
+
+    /* ── Footer ─────────────────────────────────────────────────────── */
+    .footer {
+      padding: 48px 40px; text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    .footer p { font-size: 12px; color: var(--muted); }
+
+    @media (max-width: 700px) {
+      .wrap { padding: 0 20px; }
+      .hero { padding: 64px 20px 60px; }
+      .hero-title { font-size: 38px; }
+      .concept-grid { grid-template-columns: 1fr; }
+      .logo-grid { grid-template-columns: 1fr 1fr; }
+      .color-grid { grid-template-columns: 1fr 1fr; }
+      .rules-grid { grid-template-columns: 1fr; }
+      .type-row { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<div class="grad dark">
+  <div class="hero">
+    <!-- Logo icon -->
+    <svg width="96" height="96" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="512" height="512" rx="113" fill="rgba(255,255,255,0.08)"/>
+      <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="white" stroke-width="44" stroke-linecap="round" fill="none"/>
+      <line x1="143" y1="256" x2="343" y2="256" stroke="white" stroke-width="44" stroke-linecap="round"/>
+      <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+      <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
+    </svg>
+    <div class="hero-title">emetis</div>
+    <div class="hero-sub">Guia de Identidade Visual — Brand Guidelines</div>
+    <div class="hero-version">Versão 1.0 · 2026</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════ CONCEITO ══════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">01 — Conceito</div>
+    <h2>A origem do nome</h2>
+    <p>Emetis deriva de <strong>אמת</strong> (Emet), palavra hebraica que significa <em>verdade, fidelidade e firmeza</em>. Sua raiz, <em>aman</em>, é a mesma de "Amém" — algo que se sustenta, que não muda, que é seguro apoiar. As três letras que compõem a palavra representam a totalidade da existência.</p>
+
+    <div class="concept-grid">
+      <!-- Annotated logo SVG -->
+      <div class="concept-svg-wrap">
+        <svg width="260" height="280" viewBox="0 0 260 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- "e" mark centrado -->
+          <path d="M 168 88 A 56.5 56.5 0 1 0 168 168"
+                stroke="#0B1D4E" stroke-width="22" stroke-linecap="round" fill="none"/>
+          <line x1="71.5" y1="128" x2="171.5" y2="128"
+                stroke="#0B1D4E" stroke-width="22" stroke-linecap="round"/>
+          <!-- Alef dot -->
+          <circle cx="168" cy="88" r="17" fill="#F59E0B"/>
+          <!-- Tav dot -->
+          <circle cx="168" cy="168" r="10" fill="#F59E0B" opacity="0.45"/>
+
+          <!-- Annotation: Alef -->
+          <line x1="186" y1="80" x2="226" y2="54" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="228" y="50" font-family="system-ui" font-size="11" font-weight="700"
+                fill="#F59E0B" letter-spacing="1">א ALEF</text>
+          <text x="228" y="64" font-family="system-ui" font-size="10" fill="#4A5FA8">O Início</text>
+
+          <!-- Annotation: Mem -->
+          <line x1="71.5" y1="128" x2="32" y2="128" stroke="#0B1D4E" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="4" y="123" font-family="system-ui" font-size="11" font-weight="700"
+                fill="#0B1D4E" letter-spacing="1">מ MEM</text>
+          <text x="4" y="137" font-family="system-ui" font-size="10" fill="#4A5FA8">O Centro</text>
+
+          <!-- Annotation: Tav -->
+          <line x1="186" y1="170" x2="226" y2="200" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="228" y="196" font-family="system-ui" font-size="11" font-weight="700"
+                fill="#F59E0B" letter-spacing="1" opacity="0.7">ת TAV</text>
+          <text x="228" y="210" font-family="system-ui" font-size="10" fill="#4A5FA8">O Fim</text>
+        </svg>
+      </div>
+
+      <!-- Letter cards -->
+      <div class="concept-letters">
+        <div class="letter-card">
+          <div class="letter-heb">א</div>
+          <div class="letter-body">
+            <div class="letter-tag">Alef — O Início</div>
+            <div class="letter-name">Origem e Princípio</div>
+            <div class="letter-desc">Primeira letra do alfabeto hebraico. Representa o começo de todas as coisas e o ponto de onde a verdade emana. Na marca: o ponto âmbar pleno.</div>
+          </div>
+        </div>
+        <div class="letter-card">
+          <div class="letter-heb">מ</div>
+          <div class="letter-body">
+            <div class="letter-tag">Mem — O Centro</div>
+            <div class="letter-name">O Eterno Meio</div>
+            <div class="letter-desc">Letra do meio do alfabeto. Simboliza o centro imutável, a sustentação. Na marca: a barra horizontal que atravessa e une as duas metades.</div>
+          </div>
+        </div>
+        <div class="letter-card">
+          <div class="letter-heb">ת</div>
+          <div class="letter-body">
+            <div class="letter-tag">Tav — O Fim</div>
+            <div class="letter-name">Conclusão e Completude</div>
+            <div class="letter-desc">Última letra do alfabeto. Indica que a verdade divina abrange do começo ao fim de forma eterna. Na marca: o ponto âmbar sutil que ecoa o início.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ LOGO ════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">02 — Logo</div>
+    <h2>Variações da marca</h2>
+    <p>O ícone pode ser usado isolado ou em conjunto com o logotipo textual. Aplique sempre a versão de maior contraste para o fundo utilizado.</p>
+
+    <div class="logo-grid">
+      <!-- Ícone em fundo navy -->
+      <div class="logo-card on-dark">
+        <svg width="72" height="72" viewBox="0 0 512 512" fill="none">
+          <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="white" stroke-width="44" stroke-linecap="round" fill="none"/>
+          <line x1="143" y1="256" x2="343" y2="256" stroke="white" stroke-width="44" stroke-linecap="round"/>
+          <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+          <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
+        </svg>
+        <div class="logo-card-label">Ícone · Fundo escuro</div>
+      </div>
+
+      <!-- Lockup em fundo gradiente -->
+      <div class="logo-card on-grad" style="padding: 40px 20px;">
+        <svg width="200" height="46" viewBox="0 0 440 100" fill="none">
+          <svg x="0" y="8" width="64" height="64" viewBox="80 80 360 360">
+            <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="white" stroke-width="44" stroke-linecap="round" fill="none"/>
+            <line x1="143" y1="256" x2="343" y2="256" stroke="white" stroke-width="44" stroke-linecap="round"/>
+            <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+            <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
+          </svg>
+          <text x="77" y="63" font-family="system-ui,-apple-system,sans-serif"
+                font-size="44" font-weight="600" letter-spacing="-0.5" fill="white">emetis</text>
+        </svg>
+        <div class="logo-card-label">Lockup · Fundo gradiente</div>
+      </div>
+
+      <!-- Ícone com fundo proprio -->
+      <div class="logo-card on-light">
+        <svg width="72" height="72" viewBox="0 0 512 512" fill="none">
+          <rect width="512" height="512" rx="113" fill="#0B1D4E"/>
+          <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="white" stroke-width="44" stroke-linecap="round" fill="none"/>
+          <line x1="143" y1="256" x2="343" y2="256" stroke="white" stroke-width="44" stroke-linecap="round"/>
+          <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+          <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
+        </svg>
+        <div class="logo-card-label">Ícone com fundo · Claro</div>
+      </div>
+
+      <!-- Lockup em fundo branco com cores invertidas -->
+      <div class="logo-card on-white" style="grid-column: span 2;">
+        <svg width="200" height="46" viewBox="0 0 440 100" fill="none">
+          <svg x="0" y="8" width="64" height="64" viewBox="80 80 360 360">
+            <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="#0B1D4E" stroke-width="44" stroke-linecap="round" fill="none"/>
+            <line x1="143" y1="256" x2="343" y2="256" stroke="#0B1D4E" stroke-width="44" stroke-linecap="round"/>
+            <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+            <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
+          </svg>
+          <text x="77" y="63" font-family="system-ui,-apple-system,sans-serif"
+                font-size="44" font-weight="600" letter-spacing="-0.5" fill="#0B1D4E">emetis</text>
+        </svg>
+        <div class="logo-card-label">Lockup · Fundo branco</div>
+      </div>
+
+      <!-- Mono -->
+      <div class="logo-card on-white">
+        <svg width="72" height="72" viewBox="0 0 512 512" fill="none">
+          <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="#0B1D4E" stroke-width="44" stroke-linecap="round" fill="none"/>
+          <line x1="143" y1="256" x2="343" y2="256" stroke="#0B1D4E" stroke-width="44" stroke-linecap="round"/>
+          <circle cx="336" cy="176" r="34" fill="#0B1D4E"/>
+          <circle cx="336" cy="336" r="20" fill="#0B1D4E" opacity="0.45"/>
+        </svg>
+        <div class="logo-card-label">Ícone monocromático</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ CORES ════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">03 — Cores</div>
+    <h2>Paleta de cores</h2>
+    <p>Quatro cores formam toda a identidade visual. O âmbar é o único elemento quente — use com parcimônia para que mantenha seu impacto.</p>
+
+    <div class="color-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0B1D4E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Navy</div>
+          <div class="swatch-hex">#0B1D4E · rgb(11,29,78)</div>
+          <div class="swatch-role">Cor primária. Fundos, texto principal, ícones sobre claro.</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:linear-gradient(135deg,#1E3FA0,#0B1D4E);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Índigo</div>
+          <div class="swatch-hex">#1E3FA0 · rgb(30,63,160)</div>
+          <div class="swatch-role">Gradiente. Sempre em par com Navy, nunca sozinho.</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F59E0B;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Âmbar</div>
+          <div class="swatch-hex">#F59E0B · rgb(245,158,11)</div>
+          <div class="swatch-role">Acento único. Apenas nos pontos Alef e Tav da marca.</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F0F4FF; border: 1px solid rgba(11,29,78,0.08);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Luz</div>
+          <div class="swatch-hex">#F0F4FF · rgb(240,244,255)</div>
+          <div class="swatch-role">Fundo de telas claras. Nunca use branco puro como fundo.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ TIPOGRAFIA ═══════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">04 — Tipografia</div>
+    <h2>Sistema tipográfico</h2>
+    <p>A identidade usa <strong>DM Sans</strong> como fonte primária — geométrica, aberta e humanista. Em ausência, system-ui garante consistência em qualquer plataforma.</p>
+
+    <div class="type-stack">
+      <div class="type-row">
+        <div class="type-meta">Display / 48px / 700</div>
+        <div class="type-sample" style="font-size:48px;font-weight:700;letter-spacing:-1.5px;line-height:1.1;">Conectando cristãos</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Heading / 28px / 600</div>
+        <div class="type-sample" style="font-size:28px;font-weight:600;letter-spacing:-0.5px;">Verdade que sustenta</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Body / 16px / 400</div>
+        <div class="type-sample" style="font-size:16px;font-weight:400;color:#4A5FA8;max-width:560px;">Emetis é uma plataforma para a reconexão física de cristãos — construída sobre o conceito de Emet: verdade, fidelidade e firmeza.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Label / 11px / 700</div>
+        <div class="type-sample" style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#F59E0B;">Série Integrar · Formação</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Logotipo / 44px / 600</div>
+        <div class="type-sample" style="font-size:44px;font-weight:600;letter-spacing:-0.5px;color:#0B1D4E;">emetis</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ ÍCONES ══════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">05 — Ícones</div>
+    <h2>Sistema de ícones UI</h2>
+    <p>20 ícones desenhados com traço <code>stroke-width="2"</code>, linecap e linejoin arredondados. Todos usam <code>currentColor</code> — adaptativos a qualquer contexto de cor.</p>
+
+    <div class="icon-grid">
+      <!-- bell -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span>bell</span>
+      </div>
+      <!-- bible -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 3a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h6V3H4z"/>
+          <path d="M20 3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-6V3h6z"/>
+          <line x1="10" y1="3" x2="10" y2="21"/><line x1="14" y1="3" x2="14" y2="21"/>
+          <line x1="17" y1="8" x2="17" y2="14"/><line x1="14.5" y1="11" x2="19.5" y2="11"/>
+        </svg>
+        <span>bible</span>
+      </div>
+      <!-- chat -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <circle cx="9" cy="10" r="0.8" fill="currentColor" stroke="none"/>
+          <circle cx="12" cy="10" r="0.8" fill="currentColor" stroke="none"/>
+          <circle cx="15" cy="10" r="0.8" fill="currentColor" stroke="none"/>
+        </svg>
+        <span>chat</span>
+      </div>
+      <!-- check -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span>check</span>
+      </div>
+      <!-- chevron-left -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        <span>chevron‑left</span>
+      </div>
+      <!-- chevron-right -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        <span>chevron‑right</span>
+      </div>
+      <!-- church -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="10" rx="1"/>
+          <path d="M3 11L12 4l9 7"/>
+          <line x1="12" y1="1" x2="12" y2="7"/><line x1="9.5" y1="3.5" x2="14.5" y2="3.5"/>
+          <path d="M10 21v-5a2 2 0 0 1 4 0v5"/>
+        </svg>
+        <span>church</span>
+      </div>
+      <!-- community -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8.5" cy="7" r="3"/><circle cx="17" cy="7.5" r="2.5"/>
+          <path d="M2 21c0-3.3 2.9-6 6.5-6H12c3.3 0 6 2.7 6 6"/>
+          <path d="M20 21c0-2.5-1.5-4.5-3.5-5.3"/>
+        </svg>
+        <span>community</span>
+      </div>
+      <!-- edit -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        <span>edit</span>
+      </div>
+      <!-- groups -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="4.5" r="2.5"/><circle cx="4.5" cy="18.5" r="2.5"/><circle cx="19.5" cy="18.5" r="2.5"/>
+          <line x1="10.8" y1="6.7" x2="5.8" y2="16.4"/>
+          <line x1="13.2" y1="6.7" x2="18.2" y2="16.4"/>
+          <line x1="7" y1="18.5" x2="17" y2="18.5"/>
+        </svg>
+        <span>groups</span>
+      </div>
+      <!-- heart -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <span>heart</span>
+      </div>
+      <!-- home -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
+          <path d="M9 21V12h6v9"/>
+        </svg>
+        <span>home</span>
+      </div>
+      <!-- map -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a7 7 0 0 1 7 7c0 5.5-7 13-7 13S5 14.5 5 9a7 7 0 0 1 7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+        <span>map</span>
+      </div>
+      <!-- plus -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>plus</span>
+      </div>
+      <!-- profile -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21c0-4.42 3.58-8 8-8s8 3.58 8 8"/>
+        </svg>
+        <span>profile</span>
+      </div>
+      <!-- search -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="10.5" cy="10.5" r="6.5"/>
+          <line x1="15.5" y1="15.5" x2="21" y2="21"/>
+        </svg>
+        <span>search</span>
+      </div>
+      <!-- share -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        <span>share</span>
+      </div>
+      <!-- signal -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8.5 16.5a5 5 0 0 1 7 0"/>
+          <path d="M5 13a9 9 0 0 1 14 0"/>
+          <path d="M1.5 9.5a14 14 0 0 1 21 0"/>
+          <circle cx="12" cy="20" r="1.3" fill="currentColor" stroke="none"/>
+        </svg>
+        <span>signal</span>
+      </div>
+      <!-- trash -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6M14 11v6"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+        <span>trash</span>
+      </div>
+      <!-- x -->
+      <div class="icon-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        <span>x</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ REGRAS ═══════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">06 — Regras de uso</div>
+    <h2>O que fazer e o que evitar</h2>
+    <p>A consistência da marca depende de algumas regras simples de aplicação.</p>
+
+    <div class="rules-grid">
+      <div class="rule rule-do">
+        <div class="rule-badge">✓ Correto</div>
+        <p>Use o ícone sempre com fundo navy ou gradiente navy→índigo. Em fundos claros, use a versão com caixa própria (rounded rect).</p>
+      </div>
+      <div class="rule rule-dont">
+        <div class="rule-badge">✗ Evitar</div>
+        <p>Não use o ícone sem fundo em superfícies brancas ou cinza — o traço branco some. Não inverta as cores do âmbar para outra tonalidade.</p>
+      </div>
+      <div class="rule rule-do">
+        <div class="rule-badge">✓ Correto</div>
+        <p>Escreva "emetis" sempre em letras minúsculas no logotipo. O lowercase é parte da identidade — acolhedor, moderno, não hierárquico.</p>
+      </div>
+      <div class="rule rule-dont">
+        <div class="rule-badge">✗ Evitar</div>
+        <p>Não escreva "Emetis" ou "EMETIS" no contexto do logotipo. Não desforme, rotacione ou aplique efeitos (sombra, outline) sobre a marca.</p>
+      </div>
+      <div class="rule rule-do">
+        <div class="rule-badge">✓ Correto</div>
+        <p>O âmbar é reservado exclusivamente aos pontos Alef e Tav da marca. Pode ser usado com parcimônia em elementos de destaque na UI (badges, CTAs).</p>
+      </div>
+      <div class="rule rule-dont">
+        <div class="rule-badge">✗ Evitar</div>
+        <p>Não use âmbar em excesso na interface — perde o impacto. Não substitua o âmbar por amarelo, laranja ou dourado.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ APLICAÇÕES ══════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">07 — Aplicações</div>
+    <h2>Ícones digitais</h2>
+    <p>Tamanhos e contextos de uso dos ícones de app e favicon.</p>
+
+    <div class="app-grid">
+      <!-- PWA 512 -->
+      <div class="app-card">
+        <svg width="80" height="80" viewBox="0 0 512 512" fill="none">
+          <rect width="512" height="512" rx="113" fill="#0B1D4E"/>
+          <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="white" stroke-width="44" stroke-linecap="round" fill="none"/>
+          <line x1="143" y1="256" x2="343" y2="256" stroke="white" stroke-width="44" stroke-linecap="round"/>
+          <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+          <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
+        </svg>
+        <div class="app-card-label">PWA Icon</div>
+        <div class="app-card-sub">512 × 512 px</div>
+      </div>
+      <!-- Apple touch 192 -->
+      <div class="app-card">
+        <svg width="60" height="60" viewBox="0 0 512 512" fill="none">
+          <rect width="512" height="512" rx="113" fill="#0B1D4E"/>
+          <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="white" stroke-width="44" stroke-linecap="round" fill="none"/>
+          <line x1="143" y1="256" x2="343" y2="256" stroke="white" stroke-width="44" stroke-linecap="round"/>
+          <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+          <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
+        </svg>
+        <div class="app-card-label">Apple Touch</div>
+        <div class="app-card-sub">192 × 192 px</div>
+      </div>
+      <!-- Favicon SVG -->
+      <div class="app-card">
+        <div class="favicon-row" style="margin-bottom:8px;">
+          <div class="favicon-item">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="7" fill="#0B1D4E"/>
+              <path d="M 21 11 A 7 7 0 1 0 21 21" stroke="white" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+              <line x1="9" y1="16" x2="21.4" y2="16" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
+              <circle cx="21" cy="11" r="2.2" fill="#F59E0B"/>
+              <circle cx="21" cy="21" r="1.3" fill="#F59E0B" opacity="0.45"/>
+            </svg>
+            <span style="font-size:10px;color:#4A5FA8;">32px</span>
+          </div>
+          <div class="favicon-item">
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="7" fill="#0B1D4E"/>
+              <path d="M 21 11 A 7 7 0 1 0 21 21" stroke="white" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+              <line x1="9" y1="16" x2="21.4" y2="16" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
+              <circle cx="21" cy="11" r="2.2" fill="#F59E0B"/>
+            </svg>
+            <span style="font-size:10px;color:#4A5FA8;">16px</span>
+          </div>
+        </div>
+        <div class="app-card-label">Favicon SVG</div>
+        <div class="app-card-sub">16 / 32 px</div>
+      </div>
+      <!-- Notification badge -->
+      <div class="app-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="position:relative;display:inline-block;">
+          <svg width="48" height="48" viewBox="0 0 512 512" fill="none">
+            <rect width="512" height="512" rx="113" fill="#0B1D4E"/>
+            <path d="M 336 176 A 113 113 0 1 0 336 336" stroke="white" stroke-width="44" stroke-linecap="round" fill="none"/>
+            <line x1="143" y1="256" x2="343" y2="256" stroke="white" stroke-width="44" stroke-linecap="round"/>
+            <circle cx="336" cy="176" r="34" fill="#F59E0B"/>
+            <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45"/>
+          </svg>
+          <div style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#EF4444;border-radius:50%;border:2px solid white;"></div>
+        </div>
+        <div class="app-card-label">Push Badge</div>
+        <div class="app-card-sub">Notificação</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ FOOTER ═══════════════════════════════ -->
+<div class="footer">
+  <p>Emetis — Guia de Identidade Visual · Versão 1.0 · 2026 · eColabs</p>
+  <p style="margin-top:6px;">אמת — Emet · Verdade · Fidelidade · Firmeza</p>
+</div>
+
+</body>
+</html>
