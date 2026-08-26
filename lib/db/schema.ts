@@ -1071,3 +1071,22 @@ export const formacaoMatricula = pgTable(
 
 export type FormacaoMatricula = InferSelectModel<typeof formacaoMatricula>;
 
+// ─── CellVisitor ───────────────────────────────────────────────────────────────
+// Visitantes sem conta cadastrada — registrados pelo líder da célula
+
+export const cellVisitor = pgTable("CellVisitor", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  cellId: uuid("cellId")
+    .notNull()
+    .references(() => cell.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  phone: varchar("phone", { length: 30 }),
+  email: varchar("email", { length: 120 }),
+  notes: text("notes"),
+  addedBy: uuid("addedBy").references(() => user.id, { onDelete: "set null" }),
+  becameMember: boolean("becameMember").notNull().default(false),
+  visitedAt: timestamp("visitedAt").notNull().defaultNow(),
+});
+
+export type CellVisitor = InferSelectModel<typeof cellVisitor>;
+

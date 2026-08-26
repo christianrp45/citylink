@@ -5,7 +5,17 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import QRCode from 'react-qr-code';
-import { Share2, QrCode, X } from 'lucide-react';
+import { Share2, QrCode, X, UserPlus, Trash2, Phone, Mail, Loader2, Check } from 'lucide-react';
+
+interface CellVisitor {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  becameMember: boolean;
+  visitedAt: string;
+}
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
@@ -51,12 +61,26 @@ export default function CellDetailPage() {
   // Toggle de entryMode (líder)
   const [entryModeLoading, setEntryModeLoading] = useState(false);
 
+  // Visitantes
+  const [visitors, setVisitors] = useState<CellVisitor[]>([]);
+  const [showVisitorForm, setShowVisitorForm] = useState(false);
+  const [visitorName, setVisitorName] = useState('');
+  const [visitorPhone, setVisitorPhone] = useState('');
+  const [visitorEmail, setVisitorEmail] = useState('');
+  const [visitorNotes, setVisitorNotes] = useState('');
+  const [savingVisitor, setSavingVisitor] = useState(false);
+  const [deletingVisitorId, setDeletingVisitorId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!cellId) return;
     fetch(`/api/mdc/cells/${cellId}`)
       .then((r) => r.json())
       .then((data) => { setCell(data); setLoading(false); })
       .catch(() => setLoading(false));
+    fetch(`/api/mdc/cells/${cellId}/visitors`)
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setVisitors(data))
+      .catch(() => {});
   }, [cellId]);
 
   const handleJoin = async () => {
@@ -138,6 +162,32 @@ export default function CellDetailPage() {
     session?.user?.id &&
     cell &&
     (cell.leaderId === session.user.id || cell.coLeaderId === session.user.id);
+
+  async function handleAddVisitor() {
+    if (!visitorName.trim()) return;
+    setSavingVisitor(true);
+    try {
+      const res = await fetch(`/api/mdc/cells/${cellId}/visitors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: visitorName.trim(), phone: visitorPhone.trim() || null, email: visitorEmail.trim() || null, notes: visitorNotes.trim() || null }),
+      });
+      if (res.ok) {
+        const created: CellVisitor = await res.json();
+        setVisitors((prev) => [created, ...prev]);
+        setVisitorName(''); setVisitorPhone(''); setVisitorEmail(''); setVisitorNotes('');
+        setShowVisitorForm(false);
+      }
+    } catch {} finally { setSavingVisitor(false); }
+  }
+
+  async function handleDeleteVisitor(visitorId: string) {
+    setDeletingVisitorId(visitorId);
+    try {
+      await fetch(`/api/mdc/cells/${cellId}/visitors/${visitorId}`, { method: 'DELETE' });
+      setVisitors((prev) => prev.filter((v) => v.id !== visitorId));
+    } catch {} finally { setDeletingVisitorId(null); }
+  }
 
   if (loading) {
     return (
@@ -475,6 +525,103 @@ export default function CellDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Seção de Visitantes — visível apenas para líderes */}
+      {isLeader && (
+        <div className="max-w-2xl mx-auto px-4 pb-4">
+          <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-gray-900 flex items-center gap-2">
+                <UserPlus size={16} className="text-amber-500" />
+                Visitantes ({visitors.length})
+              </p>
+              <button
+                onClick={() => setShowVisitorForm((v) => !v)}
+                className="text-xs text-indigo-600 font-semibold hover:underline"
+              >
+                {showVisitorForm ? 'Cancelar' : '+ Adicionar'}
+              </button>
+            </div>
+
+            {showVisitorForm && (
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-3 space-y-2">
+                <input
+                  value={visitorName}
+                  onChange={(e) => setVisitorName(e.target.value)}
+                  placeholder="Nome do visitante *"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    value={visitorPhone}
+                    onChange={(e) => setVisitorPhone(e.target.value)}
+                    placeholder="Telefone"
+                    type="tel"
+                    className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                  <input
+                    value={visitorEmail}
+                    onChange={(e) => setVisitorEmail(e.target.value)}
+                    placeholder="E-mail"
+                    type="email"
+                    className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                </div>
+                <input
+                  value={visitorNotes}
+                  onChange={(e) => setVisitorNotes(e.target.value)}
+                  placeholder="Observações (opcional)"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+                <button
+                  onClick={handleAddVisitor}
+                  disabled={savingVisitor || !visitorName.trim()}
+                  className="w-full py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {savingVisitor ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                  {savingVisitor ? 'Salvando…' : 'Salvar visitante'}
+                </button>
+              </div>
+            )}
+
+            {visitors.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-2">Nenhum visitante registrado ainda.</p>
+            ) : (
+              <div className="space-y-2">
+                {visitors.map((v) => (
+                  <div key={v.id} className="flex items-start gap-2 bg-amber-50 rounded-lg px-3 py-2 border border-amber-100">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800">{v.name}</p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+                        {v.phone && (
+                          <a href={`tel:${v.phone}`} className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-indigo-600">
+                            <Phone size={9} /> {v.phone}
+                          </a>
+                        )}
+                        {v.email && (
+                          <a href={`mailto:${v.email}`} className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-indigo-600">
+                            <Mail size={9} /> {v.email}
+                          </a>
+                        )}
+                      </div>
+                      {v.notes && <p className="text-[10px] text-slate-400 mt-0.5">{v.notes}</p>}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteVisitor(v.id)}
+                      disabled={deletingVisitorId === v.id}
+                      className="text-slate-300 hover:text-red-400 p-1 rounded flex-shrink-0 disabled:opacity-50"
+                    >
+                      {deletingVisitorId === v.id
+                        ? <Loader2 size={12} className="animate-spin" />
+                        : <Trash2 size={12} />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Modal QR Code do convite */}
       {showQR && inviteCode && (

@@ -5,6 +5,7 @@ import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellO
 import QRCode from 'react-qr-code';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ShareInviteButton } from '@/components/share-invite-button';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { LocationSearchPicker } from '@/components/location-search-picker';
@@ -154,6 +155,7 @@ function PushToggle() {
 
 export default function ProfilePage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const isGuest = session?.user?.type === 'guest';
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -401,6 +403,16 @@ export default function ProfilePage() {
       });
       setAccountType(type);
       setProfile((prev) => prev ? { ...prev, accountType: type } : prev);
+      // Redireciona para o onboarding se for a primeira vez como instituição
+      if (type === 'institution') {
+        const commRes = await fetch('/api/admin/members-progress');
+        const commData = await commRes.json();
+        if (!commData.communities || commData.communities.length === 0) {
+          router.push('/onboarding/instituicao');
+        } else {
+          router.push('/instituicao');
+        }
+      }
     } catch {
       // mantém o tipo anterior em caso de erro
     } finally {
@@ -1449,6 +1461,17 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Painel da Instituição (só para accountType=institution) */}
+        {accountType === 'institution' && (
+          <Link
+            href="/instituicao"
+            className="w-full py-3 rounded-2xl border border-blue-200 bg-blue-50 text-blue-700 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+          >
+            <Shield size={16} />
+            Painel da Instituição
+          </Link>
+        )}
 
         {/* Dashboard Pastoral (admin) */}
         <Link
