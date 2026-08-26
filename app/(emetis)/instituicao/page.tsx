@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Users, BookOpen, ChevronRight, Plus, Copy, Share2, Check,
-  Loader2, Building2, UserCheck, UserX, Crown, Star, Zap
+  Loader2, Building2, UserCheck, UserX, Crown, Star, Zap, Trash2
 } from 'lucide-react';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
@@ -72,6 +72,7 @@ export default function InstituicaoPage() {
   const [generatingInvite, setGeneratingInvite] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'members' | 'cells' | 'progress'>('members');
+  const [deletingCommunity, setDeletingCommunity] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/members-progress')
@@ -124,6 +125,30 @@ export default function InstituicaoPage() {
     navigator.clipboard.writeText(invite.link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleDeleteCommunity(communityId: string, communityName: string) {
+    const confirmed = window.confirm(
+      `Tem certeza que deseja excluir a comunidade "${communityName}"?\n\nEsta ação é irreversível. Todos os membros serão removidos e as células serão desvinculadas.`
+    );
+    if (!confirmed) return;
+    setDeletingCommunity(true);
+    try {
+      const res = await fetch(`/api/communities/${communityId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      // Atualiza a lista local e redireciona se não sobrar nenhuma
+      const remaining = communities.filter((c) => c.id !== communityId);
+      setCommunities(remaining);
+      if (remaining.length === 0) {
+        router.push('/onboarding/instituicao');
+      } else {
+        setSelectedCommunity('all');
+      }
+    } catch {
+      alert('Erro ao excluir comunidade. Tente novamente.');
+    } finally {
+      setDeletingCommunity(false);
+    }
   }
 
   if (loading) {
@@ -333,6 +358,23 @@ export default function InstituicaoPage() {
             )}
           </div>
         )}
+
+        {/* Excluir comunidade */}
+        <button
+          onClick={() => {
+            const target = selectedCommunity !== 'all'
+              ? communities.find((c) => c.id === selectedCommunity)
+              : communities[0];
+            if (target) handleDeleteCommunity(target.id, target.name);
+          }}
+          disabled={deletingCommunity}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-red-200 text-red-400 text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+        >
+          {deletingCommunity
+            ? <Loader2 size={13} className="animate-spin" />
+            : <Trash2 size={13} />}
+          Excluir comunidade
+        </button>
 
         {/* Tab: Células */}
         {activeTab === 'cells' && (

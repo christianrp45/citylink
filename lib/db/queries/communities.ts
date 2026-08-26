@@ -2,7 +2,7 @@ import "server-only";
 
 import { and, asc, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { community, communityMember, user } from "../schema";
+import { cell, community, communityMember, inviteCode, user } from "../schema";
 
 export async function getCommunities(filters?: { type?: string; city?: string; isPublic?: boolean }) {
   let query = db.select().from(community);
@@ -178,4 +178,21 @@ export async function getUserCommunityRole(communityId: string, userId: string) 
       )
     );
   return row ?? null;
+}
+
+/**
+ * Deleta uma comunidade e limpa as referências dependentes.
+ * Só pode ser chamado pelo admin/owner da comunidade.
+ */
+export async function deleteCommunity(communityId: string) {
+  // 1. Remove membros
+  await db.delete(communityMember).where(eq(communityMember.communityId, communityId));
+  // 2. Desvincula células (communityId é nullable, então setamos null em vez de deletar)
+  await db.update(cell).set({ communityId: null }).where(eq(cell.communityId, communityId));
+  // 3. Remove convites associados
+  await db.delete(inviteCode).where(
+    and(eq(inviteCode.targetId, communityId), eq(inviteCode.type, 'community'))
+  );
+  // 4. Deleta a comunidade
+  await db.delete(community).where(eq(community.id, communityId));
 }
