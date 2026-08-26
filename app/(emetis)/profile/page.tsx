@@ -7,6 +7,7 @@ import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { ShareInviteButton } from '@/components/share-invite-button';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
+import { LocationSearchPicker } from '@/components/location-search-picker';
 
 type AvailabilityStatus = 'mesa-posta' | 'requer-aviso' | 'offline';
 
@@ -253,25 +254,18 @@ export default function ProfilePage() {
       .catch(() => {});
   }, []);
 
-  async function handleSaveLocation() {
-    if (!newLocLabel.trim()) return;
+  async function handleSaveLocation(lat: number, lng: number, addressLabel: string) {
+    if (!newLocLabel.trim() && !addressLabel) return;
     setSavingLocation(true);
     try {
-      const pos = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-          reject,
-          { timeout: 10000 }
-        );
-      });
       const res = await fetch('/api/users/locations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          label: newLocLabel.trim(),
+          label: newLocLabel.trim() || addressLabel,
           type: newLocType,
-          lat: String(pos.lat),
-          lng: String(pos.lng),
+          lat: String(lat),
+          lng: String(lng),
           setActive: savedLocations.length === 0,
         }),
       });
@@ -283,7 +277,7 @@ export default function ProfilePage() {
         setAddingLocation(false);
       }
     } catch {
-      alert('Não foi possível obter sua localização. Verifique se o GPS está ativo.');
+      alert('Erro ao salvar localização. Tente novamente.');
     } finally {
       setSavingLocation(false);
     }
@@ -1152,15 +1146,17 @@ export default function ProfilePage() {
 
               {/* Formulário para adicionar */}
               {addingLocation ? (
-                <div className="bg-white rounded-xl border border-slate-200 p-3 space-y-2">
+                <div className="bg-white rounded-xl border border-slate-200 p-3 space-y-3">
+                  {/* Nome personalizado */}
                   <input
                     type="text"
                     value={newLocLabel}
                     onChange={(e) => setNewLocLabel(e.target.value)}
-                    placeholder="Nome do local (ex: Casa, Igreja)"
+                    placeholder="Nome do local (ex: Casa, Igreja Central)"
                     maxLength={50}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
                   />
+                  {/* Tipo */}
                   <div className="grid grid-cols-4 gap-1">
                     {([
                       { value: 'home', label: 'Casa', Icon: Home },
@@ -1180,22 +1176,20 @@ export default function ProfilePage() {
                       </button>
                     ))}
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { setAddingLocation(false); setNewLocLabel(''); }}
-                      className="flex-1 py-2 border border-slate-200 rounded-lg text-xs text-slate-500 hover:bg-slate-50 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleSaveLocation}
-                      disabled={savingLocation || !newLocLabel.trim()}
-                      className="flex-1 py-2 bg-teal-500 text-white rounded-lg text-xs font-semibold hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
-                    >
-                      {savingLocation ? <Loader2 size={12} className="animate-spin" /> : null}
-                      {savingLocation ? 'Capturando GPS…' : 'Salvar posição atual'}
-                    </button>
-                  </div>
+                  {/* Busca de endereço + GPS */}
+                  {savingLocation ? (
+                    <div className="flex items-center justify-center gap-2 py-4 text-xs text-slate-400">
+                      <Loader2 size={14} className="animate-spin text-teal-500" />
+                      Salvando…
+                    </div>
+                  ) : (
+                    <LocationSearchPicker
+                      onSelect={(lat, lng, addressLabel) => {
+                        handleSaveLocation(lat, lng, addressLabel);
+                      }}
+                      onCancel={() => { setAddingLocation(false); setNewLocLabel(''); }}
+                    />
+                  )}
                 </div>
               ) : (
                 <button
