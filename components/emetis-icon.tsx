@@ -1,15 +1,17 @@
 /**
- * Emetis Logo Mark — "The Signal Tower"
+ * Emetis Brand Icon — "e" lettermark com conceito Emet (אמת)
  *
- * Conceito: fusão de três símbolos
- *  • Letra E  → pilar vertical = barra do E; arcos = barras curvas do E
- *  • Torre de sinal → beacon de fé irradiando comunidade
- *  • 3 esferas → arco pequeno (fé pessoal), médio (célula), grande (Igreja)
- *  • Ponto na base → o indivíduo, o ponto de partida
+ * Anatomia:
+ *  • Arco 270° anti-horário  → letra "e"
+ *  • Barra horizontal        → Mem (מ) — o centro
+ *  • Ponto âmbar pleno       → Alef (א) — o começo
+ *  • Ponto âmbar sutil       → Tav (ת) — o fim
  *
- * Variante "white": para usar sobre fundos azuis (header)
- * Variante "blue":  para usar sobre fundos claros (splash, ícone)
+ * Variante "blue":  ícone completo com fundo gradiente (sobre fundos claros)
+ * Variante "white": marca "e" sem fundo (sobre fundos azuis/escuros)
  */
+
+import { useId } from 'react';
 
 interface EmetisIconProps {
   size?: number;
@@ -18,56 +20,73 @@ interface EmetisIconProps {
 }
 
 export function EmetisIcon({ size = 32, variant = 'blue', className }: EmetisIconProps) {
-  const height = Math.round(size * (90 / 64));
+  const uid = useId().replace(/:/g, '');
 
-  const pillar = variant === 'white' ? 'white' : '#1E40AF';
-  const dot    = variant === 'white' ? 'white' : '#1E40AF';
-  const arc1   = variant === 'white' ? 'rgba(255,255,255,0.95)' : '#2563EB';
-  const arc2   = variant === 'white' ? 'rgba(255,255,255,0.68)' : '#3B82F6';
-  const arc3   = variant === 'white' ? 'rgba(255,255,255,0.38)' : '#93C5FD';
+  if (variant === 'blue') {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 512 512"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        aria-label="Emetis"
+      >
+        <defs>
+          <linearGradient id={`em-bg-${uid}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#1E3FA0" />
+            <stop offset="100%" stopColor="#0B1D4E" />
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" rx="113" fill={`url(#em-bg-${uid})`} />
+        <path
+          d="M 336 176 A 113 113 0 1 0 336 336"
+          stroke="white"
+          strokeWidth="44"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <line
+          x1="143" y1="256"
+          x2="343" y2="256"
+          stroke="white"
+          strokeWidth="44"
+          strokeLinecap="round"
+        />
+        <circle cx="336" cy="176" r="34" fill="#F59E0B" />
+        <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45" />
+      </svg>
+    );
+  }
 
+  // variant="white" — marca "e" sem fundo, para usar sobre azul/escuro
   return (
     <svg
       width={size}
-      height={height}
-      viewBox="0 0 64 90"
+      height={size}
+      viewBox="80 80 360 360"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-label="Emetis"
     >
-      {/* ── Pilar / Torre ────────────────────────────────── */}
-      <rect x="8" y="6" width="11" height="64" rx="5.5" fill={pillar} />
-
-      {/* ── Ponto na base (o indivíduo, a fundação) ──────── */}
-      <circle cx="13.5" cy="76" r="5" fill={dot} />
-
-      {/* ── Arco 1 — fé pessoal (mais próximo) ──────────── */}
-      {/* de (19,42) a (19,58) — curva para a direita */}
       <path
-        d="M 19 42 A 12 12 0 0 1 19 58"
-        stroke={arc1}
-        strokeWidth="7.5"
+        d="M 336 176 A 113 113 0 1 0 336 336"
+        stroke="white"
+        strokeWidth="44"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <line
+        x1="143" y1="256"
+        x2="343" y2="256"
+        stroke="white"
+        strokeWidth="44"
         strokeLinecap="round"
       />
-
-      {/* ── Arco 2 — célula / grupo pequeno ─────────────── */}
-      {/* de (19,30) a (19,70) */}
-      <path
-        d="M 19 30 A 22 22 0 0 1 19 70"
-        stroke={arc2}
-        strokeWidth="6"
-        strokeLinecap="round"
-      />
-
-      {/* ── Arco 3 — Igreja / comunidade ampla ───────────── */}
-      {/* de (19,16) a (19,84) — semicírculo perfeito */}
-      <path
-        d="M 19 16 A 34 34 0 0 1 19 84"
-        stroke={arc3}
-        strokeWidth="5"
-        strokeLinecap="round"
-      />
+      <circle cx="336" cy="176" r="34" fill="#F59E0B" />
+      <circle cx="336" cy="336" r="20" fill="#F59E0B" opacity="0.45" />
     </svg>
   );
 }
@@ -80,15 +99,16 @@ interface EmetisLogoProps {
 }
 
 export function EmetisLogo({ iconSize = 28, variant = 'blue', className }: EmetisLogoProps) {
-  const textColor = variant === 'white' ? 'text-white' : 'text-slate-900';
-  const accentColor = variant === 'white' ? 'text-white' : 'text-blue-700';
+  const textColor = variant === 'white' ? 'text-white' : 'text-[#0B1D4E]';
 
   return (
-    <div className={`flex items-center gap-2 ${className ?? ''}`}>
+    <div className={`flex items-center gap-2.5 ${className ?? ''}`}>
       <EmetisIcon size={iconSize} variant={variant} />
-      <span className={`font-extrabold tracking-tight leading-none select-none ${textColor}`}
-            style={{ fontSize: iconSize * 0.85 }}>
-        <span className={accentColor}>e</span>metis
+      <span
+        className={`font-semibold tracking-tight leading-none select-none ${textColor}`}
+        style={{ fontSize: iconSize * 0.82 }}
+      >
+        emetis
       </span>
     </div>
   );
