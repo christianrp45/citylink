@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Loader2, BookmarkPlus, X, Send, Moon, Sun, S
 import Link from 'next/link';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
+import { toast } from 'sonner';
 import { ShareVerseModal } from '@/components/share-verse-modal';
 
 type Verse = { verse: number; text: string };
@@ -223,6 +224,7 @@ export default function ChapterPage() {
           ...prev.filter((h) => h.verse !== selectedVerse),
           hl,
         ]);
+        toast.success('+15 XP ✨ Versículo destacado!', { duration: 2500 });
       }
     } finally {
       setSavingHighlight(false);

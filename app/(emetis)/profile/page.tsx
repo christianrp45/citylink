@@ -6,6 +6,7 @@ import QRCode from 'react-qr-code';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { ShareInviteButton } from '@/components/share-invite-button';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { LocationSearchPicker } from '@/components/location-search-picker';
@@ -221,14 +222,14 @@ export default function ProfilePage() {
         setEditBio(data.bio ?? '');
         setAccountType(data.accountType ?? 'individual');
       })
-      .catch(() => {})
+      .catch(() => toast.error('Não foi possível carregar seu perfil. Verifique sua conexão.'))
       .finally(() => setLoading(false));
   }, []);
 
   // Carregar missões semanais
   useEffect(() => {
     if (!isGuest) {
-      fetch('/api/missions').then((r) => r.json()).then(setMissions).catch(() => {});
+      fetch('/api/missions').then((r) => r.json()).then(setMissions).catch(() => toast.error('Erro ao carregar missões.'));
     }
   }, [isGuest]);
 

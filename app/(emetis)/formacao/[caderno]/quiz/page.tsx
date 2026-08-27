@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { getCadernoMeta, COR_CLASSES } from '@/lib/data/formacao';
 import { QUIZZES, QUIZ_PASS_SCORE } from '@/lib/data/formacao-quiz';
 import { ChevronLeft, CheckCircle2, XCircle, Award } from 'lucide-react';
@@ -41,6 +42,15 @@ export default function QuizPage() {
       const data = await res.json();
       setResultado(data);
       setPhase('result');
+      if (data.passed) {
+        const isAllDone = data.allCompleted;
+        toast.success(
+          isAllDone
+            ? '+300 XP 🏆 Formação Batista concluída!'
+            : '+80 XP 🎓 Caderno concluído!',
+          { duration: 4000 }
+        );
+      }
     } finally {
       setLoading(false);
     }

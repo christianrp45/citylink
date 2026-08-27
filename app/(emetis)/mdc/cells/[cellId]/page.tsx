@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import QRCode from 'react-qr-code';
+import { toast } from 'sonner';
 import { Share2, QrCode, X, UserPlus, Trash2, Phone, Mail, Loader2, Check } from 'lucide-react';
 
 interface CellVisitor {
@@ -104,7 +105,7 @@ export default function CellDetailPage() {
         setInviteCode(data.code);
       }
     } catch {
-      // silencioso — o líder verá o botão ainda ativo
+      toast.error('Erro ao gerar convite. Tente novamente.');
     } finally {
       setInviteLoading(false);
     }
@@ -178,7 +179,7 @@ export default function CellDetailPage() {
         setVisitorName(''); setVisitorPhone(''); setVisitorEmail(''); setVisitorNotes('');
         setShowVisitorForm(false);
       }
-    } catch {} finally { setSavingVisitor(false); }
+    } catch { toast.error('Erro ao salvar visitante. Tente novamente.'); } finally { setSavingVisitor(false); }
   }
 
   async function handleDeleteVisitor(visitorId: string) {
@@ -186,13 +187,40 @@ export default function CellDetailPage() {
     try {
       await fetch(`/api/mdc/cells/${cellId}/visitors/${visitorId}`, { method: 'DELETE' });
       setVisitors((prev) => prev.filter((v) => v.id !== visitorId));
-    } catch {} finally { setDeletingVisitorId(null); }
+    } catch { toast.error('Erro ao remover visitante.'); } finally { setDeletingVisitorId(null); }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Carregando célula...</p>
+      <div className="min-h-screen bg-gray-50 px-4 pt-4 pb-24 space-y-4 animate-pulse">
+        {/* Header skeleton */}
+        <div className="bg-indigo-600 rounded-2xl p-5">
+          <div className="h-3 w-24 bg-indigo-400 rounded mb-3" />
+          <div className="h-6 w-48 bg-white/30 rounded mb-2" />
+          <div className="h-3 w-32 bg-white/20 rounded" />
+        </div>
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-3 gap-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+              <div className="h-6 w-8 bg-slate-200 rounded mx-auto mb-2" />
+              <div className="h-2.5 w-14 bg-slate-100 rounded mx-auto" />
+            </div>
+          ))}
+        </div>
+        {/* Members skeleton */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
+          <div className="h-3 w-20 bg-slate-200 rounded" />
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-slate-200 flex-shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 w-28 bg-slate-200 rounded" />
+                <div className="h-2.5 w-20 bg-slate-100 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

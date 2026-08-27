@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import VisitRequestModal from '@/components/visit-request-modal';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -471,7 +472,9 @@ export default function CommunityPage() {
       ]);
       if (friendsRes.ok) setFriends(await friendsRes.json());
       if (pendingRes.ok) setPendingRequests(await pendingRes.json());
-    } catch {}
+    } catch {
+      toast.error('Não foi possível carregar seus amigos.');
+    }
   }, []);
 
   const fetchDiscover = useCallback(async () => {
@@ -495,7 +498,9 @@ export default function CommunityPage() {
     try {
       const res = await fetch('/api/alerts');
       if (res.ok) setAlerts(await res.json());
-    } catch {}
+    } catch {
+      toast.error('Não foi possível carregar os alertas.');
+    }
   }, []);
 
   useEffect(() => {
@@ -658,9 +663,16 @@ export default function CommunityPage() {
             )}
 
             {filteredFriends.length === 0 && pendingRequests.length === 0 && (
-              <div className="text-center py-16 text-slate-400">
-                <p className="text-4xl mb-2">👥</p>
-                <p className="text-sm">Nenhum amigo ainda. Explore para conectar!</p>
+              <div className="text-center py-14 px-6">
+                <p className="text-5xl mb-3">🤝</p>
+                <p className="text-base font-semibold text-slate-700">Sua rede está vazia</p>
+                <p className="text-sm text-slate-400 mt-1 mb-4">Conecte-se com membros da sua célula ou explore pessoas próximas</p>
+                <button
+                  onClick={() => setTab('discover')}
+                  className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-indigo-700 transition-colors"
+                >
+                  Descobrir pessoas próximas →
+                </button>
               </div>
             )}
             {filteredFriends.map((u) => (

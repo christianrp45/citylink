@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
 import { COR_CLASSES } from '@/lib/data/formacao';
 import type { CadernoMeta } from '@/lib/data/formacao';
@@ -52,6 +53,7 @@ export function LicaoClient({ meta, section, prev, next, total, current }: Props
     } else {
       localStorage.setItem(storageKey, 'done');
       setConcluido(true);
+      toast.success('+20 XP 📚 Lição concluída!', { duration: 3000 });
       // Sincroniza com DB e concede XP (fire-and-forget)
       fetch('/api/formacao/progress', {
         method: 'POST',

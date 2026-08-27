@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { CADERNOS, COR_CLASSES } from '@/lib/data/formacao';
 import { ChevronRight, BookOpen, Trophy, GraduationCap } from 'lucide-react';
 
@@ -42,7 +43,7 @@ export default function FormacaoPage() {
     fetch('/api/formacao/minhas-turmas')
       .then((r) => r.ok ? r.json() : [])
       .then(setMinhasTurmas)
-      .catch(() => {});
+      .catch(() => toast.error('Não foi possível carregar suas turmas.'));
   }, []);
 
   return (
@@ -57,6 +58,15 @@ export default function FormacaoPage() {
       </div>
 
       {/* Minhas matrículas */}
+      {minhasTurmas.length === 0 && (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl px-4 py-4 flex items-start gap-3">
+          <span className="text-2xl mt-0.5">🎓</span>
+          <div>
+            <p className="text-sm font-semibold text-indigo-800">Estude com sua célula</p>
+            <p className="text-xs text-indigo-600 mt-0.5">Peça ao líder para criar uma turma da Série Integrar na sua célula e se matricule para acompanhar o progresso em grupo.</p>
+          </div>
+        </div>
+      )}
       {minhasTurmas.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
 import type { PrayerRequestDetail } from '@/lib/types';
 
 const PRAYER_EMOJIS = ['🙏', '❤️', '💪'] as const;
@@ -47,6 +48,7 @@ export default function PrayerPage() {
       body: JSON.stringify({ emoji }),
     });
     if (!res.ok) return;
+    toast.success('+20 XP 🙏 Oração registrada!', { duration: 2500 });
     const { praying, emoji: newEmoji } = await res.json();
 
     setRequests((prev) =>
