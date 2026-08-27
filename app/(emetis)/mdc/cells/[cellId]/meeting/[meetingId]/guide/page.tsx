@@ -576,10 +576,10 @@ export default function GuidePage() {
           {/* Barra de ações — PDF e Offline */}
           <div className="max-w-2xl mx-auto px-4 pb-2 flex gap-2">
             <button
-              onClick={handlePrint}
+              onClick={() => window.open(`/mdc/cells/${cellId}/meeting/${meetingId}/guide/print`, '_blank')}
               className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-lg hover:bg-gray-900 transition"
             >
-              📄 Gerar PDF
+              📄 Gerar PDF / Imprimir
             </button>
             <button
               onClick={() => {
