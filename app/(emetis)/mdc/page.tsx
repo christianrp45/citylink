@@ -369,6 +369,28 @@ function CommunitiesTab({ myId }: { myId: string }) {
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', description: '', city: '', address: '', phone: '', website: '' });
+  const [editSaving, setEditSaving] = useState(false);
+
+  async function handleEditSave() {
+    if (!selected || !editForm.name.trim()) return;
+    setEditSaving(true);
+    try {
+      const res = await fetch(`/api/communities/${selected.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+      if (res.ok) {
+        setSelected((prev) => prev ? { ...prev, ...editForm } : prev);
+        setCommunities((prev) => prev.map((c) => c.id === selected.id ? { ...c, ...editForm } : c));
+        setShowEdit(false);
+      }
+    } finally {
+      setEditSaving(false);
+    }
+  }
 
   async function generateInvite() {
     if (!selected) return;
@@ -551,6 +573,16 @@ function CommunitiesTab({ myId }: { myId: string }) {
             >
               {joining ? <Loader2 size={16} className="animate-spin" /> : null}
               {isMember ? 'Sair da comunidade' : selected.requireApproval ? 'Solicitar entrada' : 'Entrar na comunidade'}
+            </button>
+          )}
+
+          {/* Botão Editar — apenas para admin */}
+          {isAdmin && (
+            <button
+              onClick={() => { setEditForm({ name: selected.name ?? '', description: selected.description ?? '', city: selected.city ?? '', address: selected.address ?? '', phone: selected.phone ?? '', website: selected.website ?? '' }); setShowEdit(true); }}
+              className="w-full py-2.5 rounded-2xl font-semibold text-sm bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors"
+            >
+              ✏️ Editar comunidade
             </button>
           )}
 
@@ -798,6 +830,55 @@ function CommunitiesTab({ myId }: { myId: string }) {
               {saving ? 'Criando...' : 'Criar Comunidade'}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Sheet de edição de comunidade */}
+      {showEdit && selected && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={() => setShowEdit(false)}>
+          <div className="w-full bg-white rounded-t-3xl p-6 space-y-3 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-bold text-slate-800">Editar comunidade</h3>
+              <button onClick={() => setShowEdit(false)}><X size={20} className="text-slate-400" /></button>
+            </div>
+
+            {[
+              { key: 'name',        label: 'Nome *',      placeholder: 'Nome da comunidade' },
+              { key: 'description', label: 'Descrição',   placeholder: 'Sobre a comunidade...' },
+              { key: 'city',        label: 'Cidade',      placeholder: 'Ex.: São Paulo' },
+              { key: 'address',     label: 'Endereço',    placeholder: 'Rua, número...' },
+              { key: 'phone',       label: 'Telefone',    placeholder: '(11) 9 9999-9999' },
+              { key: 'website',     label: 'Site',        placeholder: 'https://...' },
+            ].map(({ key, label, placeholder }) => (
+              <div key={key}>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
+                {key === 'description' ? (
+                  <textarea
+                    value={editForm[key as keyof typeof editForm]}
+                    onChange={(e) => setEditForm((p) => ({ ...p, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    rows={3}
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+                  />
+                ) : (
+                  <input
+                    value={editForm[key as keyof typeof editForm]}
+                    onChange={(e) => setEditForm((p) => ({ ...p, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                )}
+              </div>
+            ))}
+
+            <button
+              onClick={handleEditSave}
+              disabled={editSaving || !editForm.name.trim()}
+              className="w-full py-3 bg-indigo-600 text-white font-semibold text-sm rounded-2xl hover:bg-indigo-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {editSaving ? <><Loader2 size={16} className="animate-spin" /> Salvando...</> : 'Salvar alterações'}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -1393,6 +1474,25 @@ export default function ComunidadePage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Atalhos rápidos — rotas que não têm link no nav principal */}
+      <div className="flex gap-2 px-3 py-2.5 overflow-x-auto border-b border-slate-100 bg-white">
+        {[
+          { href: '/ranking',   emoji: '🏆', label: 'Ranking'   },
+          { href: '/talents',   emoji: '🎁', label: 'Talentos'  },
+          { href: '/formacao',  emoji: '📚', label: 'Formação'  },
+          { href: '/search',    emoji: '🔍', label: 'Buscar'    },
+          { href: '/events',    emoji: '📅', label: 'Eventos'   },
+        ].map(({ href, emoji, label }) => (
+          <Link
+            key={href}
+            href={href}
+            className="flex-shrink-0 flex items-center gap-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors"
+          >
+            <span>{emoji}</span>{label}
+          </Link>
+        ))}
       </div>
 
       <div className="px-4 py-4">

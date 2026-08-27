@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { deleteCommunity, getCommunityById, getCommunityMembers } from "@/lib/db/queries";
+import { deleteCommunity, getCommunityById, getCommunityMembers, updateCommunity } from "@/lib/db/queries";
 
 export async function GET(
   _request: Request,
@@ -18,6 +18,34 @@ export async function GET(
 
   const members = await getCommunityMembers(id);
   return Response.json({ ...community, members });
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return Response.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const comm = await getCommunityById(id);
+  if (!comm) return Response.json({ error: "Comunidade não encontrada" }, { status: 404 });
+  if (comm.adminUserId !== session.user.id) {
+    return Response.json({ error: "Sem permissão" }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const allowed = ['name', 'description', 'type', 'city', 'address', 'phone', 'website', 'isPublic', 'requireApproval'];
+  const data = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)));
+
+  if (data.name !== undefined && !(data.name as string).trim()) {
+    return Response.json({ error: "Nome não pode ser vazio" }, { status: 400 });
+  }
+
+  await updateCommunity(id, data);
+  return Response.json({ ok: true });
 }
 
 export async function DELETE(

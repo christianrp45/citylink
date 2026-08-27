@@ -182,6 +182,24 @@ export async function getUserCommunityRole(communityId: string, userId: string) 
 
 /**
  * Deleta uma comunidade e limpa as referências dependentes.
+export async function updateCommunity(
+  communityId: string,
+  data: {
+    name?: string;
+    description?: string;
+    type?: string;
+    city?: string;
+    address?: string;
+    phone?: string;
+    website?: string;
+    isPublic?: boolean;
+    requireApproval?: boolean;
+  }
+) {
+  await db.update(community).set(data).where(eq(community.id, communityId));
+}
+
+/**
  * Só pode ser chamado pelo admin/owner da comunidade.
  */
 export async function deleteCommunity(communityId: string) {
