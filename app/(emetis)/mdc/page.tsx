@@ -420,6 +420,29 @@ function CommunitiesTab({ myId }: { myId: string }) {
     }
   }
 
+  async function handleFeedLike(postId: string, emoji: string) {
+    if (!myId) return;
+    // Optimistic update
+    setFeed((prev) => prev.map((p) => {
+      if (p.id !== postId) return p;
+      const withoutMe = p.reactions.map((r) => ({
+        ...r,
+        userIds: r.userIds.filter((id) => id !== myId),
+        count: r.userIds.includes(myId) ? r.count - 1 : r.count,
+      })).filter((r) => r.count > 0);
+      const alreadyReacted = p.reactions.find((r) => r.emoji === emoji && r.userIds.includes(myId));
+      if (alreadyReacted) return { ...p, reactions: withoutMe };
+      const existing = withoutMe.find((r) => r.emoji === emoji);
+      if (existing) return { ...p, reactions: withoutMe.map((r) => r.emoji === emoji ? { ...r, count: r.count + 1, userIds: [...r.userIds, myId] } : r) };
+      return { ...p, reactions: [...withoutMe, { emoji, count: 1, userIds: [myId] }] };
+    }));
+    await fetch(`/api/testimonials/${postId}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emoji }),
+    }).catch(() => {});
+  }
+
   async function handleEditSave() {
     if (!selected || !editForm.name.trim()) return;
     setEditSaving(true);
@@ -682,13 +705,26 @@ function CommunitiesTab({ myId }: { myId: string }) {
                     </div>
                     <p className="text-sm font-bold text-slate-800">{post.title}</p>
                     <p className="text-xs text-slate-600 leading-relaxed">{post.content}</p>
-                    {post.reactions.length > 0 && (
-                      <div className="flex gap-1 pt-1 flex-wrap">
-                        {post.reactions.map((r) => (
-                          <span key={r.emoji} className="text-xs bg-white border border-slate-200 rounded-full px-2 py-0.5">{r.emoji} {r.count}</span>
-                        ))}
-                      </div>
-                    )}
+                    {/* Reactions */}
+                    <div className="flex items-center gap-1 pt-1 flex-wrap">
+                      {['❤️', '🙏', '🔥', '👏'].map((emoji) => {
+                        const r = post.reactions.find((rx) => rx.emoji === emoji);
+                        const reacted = r?.userIds.includes(myId) ?? false;
+                        return (
+                          <button
+                            key={emoji}
+                            onClick={() => handleFeedLike(post.id, emoji)}
+                            className={`flex items-center gap-0.5 text-xs rounded-full px-2 py-0.5 border transition-colors ${
+                              reacted
+                                ? 'bg-indigo-100 border-indigo-200 text-indigo-700'
+                                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                            }`}
+                          >
+                            {emoji} {r && r.count > 0 ? r.count : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}
