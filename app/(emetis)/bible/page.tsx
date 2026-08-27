@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, ChevronRight, Star, Search, CheckCircle2 } from 'lucide-react';
+import { OnboardingHint } from '@/components/onboarding-hint';
 import type { ReadingPlan, PlanDay } from '@/lib/reading-plans';
 
 type VerseOfDay = {
@@ -169,6 +170,13 @@ export default function BiblePage() {
         </h1>
         <p className="text-xs text-slate-400 mt-0.5">Nova Versão Internacional (NVI)</p>
       </div>
+
+      <OnboardingHint
+        page="bible"
+        icon="📖"
+        title="Bíblia no Emetis"
+        message="Leia o versículo do dia e salve seus favoritos tocando na estrela ao lado de qualquer versículo."
+      />
 
       {/* Versículo do dia */}
       {verseLoading && (

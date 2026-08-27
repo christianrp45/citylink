@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Loader2, Plus, Send, X } from 'lucide-react';
+import { OnboardingHint } from '@/components/onboarding-hint';
 import { useSession } from 'next-auth/react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
@@ -138,6 +139,13 @@ function CelulasTab() {
 
   return (
     <div className="space-y-4">
+      <OnboardingHint
+        page="mdc"
+        icon="👥"
+        title="Células e Comunidades"
+        message="Crie ou junte-se a uma célula para começar a participar de grupos de estudo e oração."
+      />
+
       <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl p-5 text-white shadow-lg">
         <p className="text-indigo-200 text-xs font-medium mb-1">📖 Atos 2:42</p>
         <p className="text-sm font-semibold leading-snug">

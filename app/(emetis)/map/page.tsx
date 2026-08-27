@@ -8,6 +8,7 @@ import Link from 'next/link';
 import VisitRequestModal from '@/components/visit-request-modal';
 import { WelcomeModal } from '@/components/welcome-modal';
 import { TeoNewUserSheet } from '@/components/teo-new-user-sheet';
+import { OnboardingHint } from '@/components/onboarding-hint';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(m => m.TileLayer), { ssr: false });
@@ -467,6 +468,12 @@ export default function MapPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
+      <OnboardingHint
+        page="map"
+        icon="🏠"
+        title="Modo Hospitalidade"
+        message="Ative o modo hospitalidade para aparecer no mapa e receber visitas de pessoas da comunidade."
+      />
       <div className="flex-1 relative min-h-0">
         {mapReady && (
           <MapContainer
