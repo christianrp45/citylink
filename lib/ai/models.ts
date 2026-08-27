@@ -1,6 +1,6 @@
-// Modelos disponíveis via SambaNova Cloud (SAMBANOVA_API_KEY)
-// Atualizado em 2026-08-19 conforme painel SambaNova
-export const DEFAULT_CHAT_MODEL = "Meta-Llama-3.3-70B-Instruct";
+// Modelos disponíveis via OpenRouter (OPENROUTER_API_KEY)
+// IDs no formato "provider/model:tier" — sufixo ":free" = gratuito
+export const DEFAULT_CHAT_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 
 export type ChatModel = {
   id: string;
@@ -11,40 +11,34 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
-    id: "Meta-Llama-3.3-70B-Instruct",
+    id: "meta-llama/llama-3.3-70b-instruct:free",
     name: "Llama 3.3 70B",
-    provider: "sambanova",
+    provider: "openrouter",
     description: "Rápido e eficiente para tarefas do dia a dia",
   },
   {
-    id: "DeepSeek-V3-0324",
-    name: "DeepSeek V3.1",
-    provider: "sambanova",
+    id: "deepseek/deepseek-chat-v3-0324:free",
+    name: "DeepSeek V3",
+    provider: "openrouter",
     description: "Alta performance geral",
   },
   {
-    id: "DeepSeek-R1",
-    name: "DeepSeek V3.2",
-    provider: "sambanova",
+    id: "deepseek/deepseek-r1:free",
+    name: "DeepSeek R1",
+    provider: "openrouter",
     description: "Raciocínio avançado para problemas complexos",
   },
   {
-    id: "MiniMax-M2.7",
-    name: "MiniMax M2.7",
-    provider: "sambanova",
-    description: "Modelo multilingual eficiente",
+    id: "google/gemma-3-27b-it:free",
+    name: "Gemma 3 27B",
+    provider: "openrouter",
+    description: "Modelo Google eficiente e multilingual",
   },
   {
-    id: "gemma-4-31B-it",
-    name: "Gemma 4 31B",
-    provider: "sambanova",
-    description: "Modelo Google com suporte a visão",
-  },
-  {
-    id: "gpt-oss-120b",
-    name: "GPT OSS 120B",
-    provider: "sambanova",
-    description: "Modelo OpenAI open-source de grande porte",
+    id: "mistralai/mistral-7b-instruct:free",
+    name: "Mistral 7B",
+    provider: "openrouter",
+    description: "Modelo leve e veloz",
   },
 ];
 

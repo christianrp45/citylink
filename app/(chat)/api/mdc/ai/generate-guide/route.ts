@@ -110,29 +110,31 @@ Diretrizes de qualidade:
 BANCO DE QUEBRA-GELOS DISPONÍVEIS:
 ${quebraGelosList}`;
 
-  const apiKey = process.env.SAMBANOVA_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    return Response.json({ error: "Chave da API SambaNova não configurada no servidor." }, { status: 500 });
+    return Response.json({ error: "Chave da API de IA não configurada no servidor." }, { status: 500 });
   }
 
+  // Modelos gratuitos OpenRouter em ordem de preferência
   const MODELS_FALLBACK = [
-    "Meta-Llama-3.3-70B-Instruct",
-    "DeepSeek-V3-0324",
-    "MiniMax-M2.7",
-    "gpt-oss-120b",
-    "gemma-4-31B-it",
-    "DeepSeek-R1",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "deepseek/deepseek-chat-v3-0324:free",
+    "deepseek/deepseek-r1:free",
+    "google/gemma-3-27b-it:free",
+    "mistralai/mistral-7b-instruct:free",
   ];
 
-  const RETRYABLE = new Set([429, 410]);
+  const RETRYABLE = new Set([429, 503, 410]);
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-  async function callSambaNova(model: string) {
-    return fetch("https://api.sambanova.ai/v1/chat/completions", {
+  async function callOpenRouter(model: string) {
+    return fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://app.emetis.com.br",
+        "X-Title": "Emetis",
       },
       body: JSON.stringify({
         model,
@@ -148,9 +150,8 @@ ${quebraGelosList}`;
     let usedModel = "";
 
     for (const model of MODELS_FALLBACK) {
-      // Tenta cada modelo até 2 vezes com pausa de 3s
       for (let attempt = 1; attempt <= 2; attempt++) {
-        aiRes = await callSambaNova(model);
+        aiRes = await callOpenRouter(model);
         if (!RETRYABLE.has(aiRes.status)) {
           usedModel = model;
           break;
@@ -171,9 +172,9 @@ ${quebraGelosList}`;
 
     if (!aiRes.ok) {
       const errBody = await aiRes.text();
-      console.error("[generate-guide] SambaNova API error:", aiRes.status, errBody);
+      console.error("[generate-guide] OpenRouter API error:", aiRes.status, errBody);
       return Response.json(
-        { error: `Erro da API SambaNova (${aiRes.status}): ${errBody.slice(0, 200)}` },
+        { error: `Erro da API de IA (${aiRes.status}): ${errBody.slice(0, 200)}` },
         { status: 500 }
       );
     }

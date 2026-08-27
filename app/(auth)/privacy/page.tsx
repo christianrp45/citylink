@@ -54,7 +54,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 space-y-2 mt-2">
               <li><strong>Neon (banco de dados):</strong> armazenamento seguro na região AWS São Paulo.</li>
               <li><strong>Vercel:</strong> hospedagem do aplicativo.</li>
-              <li><strong>SambaNova / Meta Llama:</strong> processamento das mensagens para o assistente Teo (sem armazenamento permanente pelo provedor).</li>
+              <li><strong>OpenRouter / Meta Llama:</strong> processamento das mensagens para o assistente Teo (sem armazenamento permanente pelo provedor).</li>
               <li><strong>Resend:</strong> envio de e-mails transacionais (redefinição de senha).</li>
             </ul>
           </section>

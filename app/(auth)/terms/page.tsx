@@ -89,7 +89,7 @@ export default function TermsPage() {
               <li>O Teo é um assistente de inteligência artificial com foco em formação cristã.</li>
               <li>As respostas do Teo são geradas automaticamente e podem conter imprecisões.</li>
               <li>Não use o Teo como substituto para aconselhamento pastoral, médico ou jurídico.</li>
-              <li>Suas conversas com o Teo são processadas por um provedor de IA terceiro (SambaNova / Meta Llama) sem armazenamento permanente pelo provedor.</li>
+              <li>Suas conversas com o Teo são processadas por um provedor de IA terceiro (OpenRouter / Meta Llama) sem armazenamento permanente pelo provedor.</li>
             </ul>
           </section>
 
