@@ -4,9 +4,48 @@ import { useEffect, useRef, useState } from 'react';
 import { useChat, type Message } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { X, Send, RotateCcw } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 const TEO_STORAGE_KEY = 'teo:messages';
 const MAX_SAVED_MESSAGES = 40;
+
+function getContextPrompts(pathname: string): string[] {
+  if (pathname === '/map' || pathname.startsWith('/map/')) {
+    return [
+      'Como posso me preparar para receber alguém?',
+      'Qual o espírito da hospitalidade cristã?',
+    ];
+  }
+  if (pathname === '/bible' || pathname.startsWith('/bible/')) {
+    return [
+      'Me ajuda a entender o versículo de hoje',
+      'Sugira uma oração para hoje',
+    ];
+  }
+  if (pathname === '/mdc' || pathname.startsWith('/mdc/cells/')) {
+    return [
+      'Sugestão de tema para reunião de célula',
+      'Como liderar uma discussão bíblica?',
+    ];
+  }
+  if (pathname.startsWith('/formacao/')) {
+    return [
+      'Explique a importância da formação discipular',
+      'Tenho dúvidas sobre o conteúdo',
+    ];
+  }
+  if (pathname === '/profile' || pathname === '/ranking') {
+    return [
+      'Como posso crescer espiritualmente?',
+      'O que são as missões semanais?',
+    ];
+  }
+  return [
+    'Quem é o Teo?',
+    'Como funciona o Emetis?',
+    'Me dê um versículo para hoje',
+  ];
+}
 
 function loadSavedMessages(): Message[] {
   try {
@@ -23,6 +62,8 @@ export function TeoFAB() {
   const [visible, setVisible] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pathname = usePathname();
+  const contextPrompts = getContextPrompts(pathname);
 
   const [initialMessages] = useState<Message[]>(() => loadSavedMessages());
 
@@ -156,7 +197,7 @@ export function TeoFAB() {
                       Estou aqui para estudo bíblico, orientação espiritual e oração. Como posso ajudá-lo?
                     </p>
                   </div>
-                  {['O que significa graça?', 'Me explique João 3:16', 'Ore por mim'].map((q) => (
+                  {contextPrompts.map((q) => (
                     <button
                       key={q}
                       onClick={() => submit(q)}
