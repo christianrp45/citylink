@@ -12,10 +12,10 @@ interface ShareVerseModalProps {
 }
 
 const THEMES = [
-  { label: 'Índigo', from: '#4338ca', to: '#7c3aed' },
-  { label: 'Aurora', from: '#0f766e', to: '#0369a1' },
-  { label: 'Pôr do Sol', from: '#b45309', to: '#b91c1c' },
-  { label: 'Noite', from: '#1e1b4b', to: '#0f172a' },
+  { label: 'Índigo', from: '#4338ca', to: '#7c3aed', accent: 'rgba(167,139,250,0.25)' },
+  { label: 'Aurora', from: '#0f766e', to: '#0369a1', accent: 'rgba(52,211,153,0.2)' },
+  { label: 'Pôr do Sol', from: '#b45309', to: '#b91c1c', accent: 'rgba(251,191,36,0.2)' },
+  { label: 'Noite', from: '#1e1b4b', to: '#0f172a', accent: 'rgba(99,102,241,0.2)' },
 ];
 
 function wrapText(
@@ -56,71 +56,100 @@ function drawVerseCard(
   theme: (typeof THEMES)[number]
 ) {
   const SIZE = 1080;
-  const PAD = 80;
+  const PAD = 90;
   canvas.width = SIZE;
   canvas.height = SIZE;
 
   const ctx = canvas.getContext('2d')!;
 
-  // Gradiente de fundo
+  // Gradiente de fundo diagonal
   const grad = ctx.createLinearGradient(0, 0, SIZE, SIZE);
   grad.addColorStop(0, theme.from);
-  grad.addColorStop(1, theme.to);
+  grad.addColorStop(0.6, theme.to);
+  grad.addColorStop(1, theme.from);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, SIZE, SIZE);
 
-  // Overlay sutil para textura
-  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  // Overlay radial central
+  const radial = ctx.createRadialGradient(SIZE / 2, SIZE / 2, SIZE * 0.1, SIZE / 2, SIZE / 2, SIZE * 0.75);
+  radial.addColorStop(0, 'rgba(255,255,255,0.08)');
+  radial.addColorStop(1, 'rgba(0,0,0,0.15)');
+  ctx.fillStyle = radial;
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  // Círculo decorativo superior direito
+  ctx.fillStyle = theme.accent;
   ctx.beginPath();
-  ctx.arc(SIZE * 0.8, SIZE * 0.2, SIZE * 0.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(0,0,0,0.08)';
-  ctx.beginPath();
-  ctx.arc(SIZE * 0.1, SIZE * 0.85, SIZE * 0.4, 0, Math.PI * 2);
+  ctx.arc(SIZE * 0.85, SIZE * 0.12, SIZE * 0.38, 0, Math.PI * 2);
   ctx.fill();
 
-  // Aspas decorativas
-  ctx.font = `bold ${SIZE * 0.2}px Georgia, serif`;
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  ctx.fillText('"', PAD - 10, PAD + SIZE * 0.18);
+  // Círculo decorativo inferior esquerdo
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.beginPath();
+  ctx.arc(SIZE * 0.1, SIZE * 0.9, SIZE * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Linha superior decorativa
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.fillRect(PAD, PAD * 0.6, 60, 4);
+  ctx.fillRect(PAD + 72, PAD * 0.6, 20, 4);
+
+  // Aspas decorativas grandes
+  ctx.font = `bold ${SIZE * 0.22}px Georgia, serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.textBaseline = 'top';
+  ctx.fillText('\u201C', PAD - 20, PAD * 0.3);
 
   // Texto do versículo
-  const fontSize = text.length > 200 ? 44 : text.length > 120 ? 52 : 60;
-  ctx.font = `${fontSize}px Georgia, serif`;
+  const fontSize = text.length > 220 ? 40 : text.length > 150 ? 48 : text.length > 80 ? 56 : 64;
+  ctx.font = `italic ${fontSize}px Georgia, serif`;
   ctx.fillStyle = 'rgba(255,255,255,0.95)';
   ctx.textBaseline = 'top';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 12;
 
   const textEndY = wrapText(
     ctx,
-    `"${text}"`,
+    `\u201C${text}\u201D`,
     PAD,
-    PAD + 60,
+    PAD * 1.1,
     SIZE - PAD * 2,
-    fontSize * 1.5
+    fontSize * 1.55
   );
 
-  // Linha decorativa
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.fillRect(PAD, textEndY + 20, 80, 3);
+  ctx.shadowBlur = 0;
 
-  // Referência
-  ctx.font = `bold 42px -apple-system, sans-serif`;
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.fillText(`${bookName} ${chapter}:${verse}`, PAD, textEndY + 48);
+  // Linha separadora com gradiente
+  const linGrad = ctx.createLinearGradient(PAD, 0, PAD + 120, 0);
+  linGrad.addColorStop(0, 'rgba(255,255,255,0.7)');
+  linGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = linGrad;
+  ctx.fillRect(PAD, textEndY + 28, 120, 3);
 
-  // NVI
-  ctx.font = `28px -apple-system, sans-serif`;
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.fillText('NVI', PAD, textEndY + 104);
+  // Referência bíblica
+  ctx.font = `bold 46px -apple-system, "Helvetica Neue", sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.shadowColor = 'rgba(0,0,0,0.2)';
+  ctx.shadowBlur = 8;
+  ctx.fillText(`${bookName} ${chapter}:${verse}`, PAD, textEndY + 52);
+  ctx.shadowBlur = 0;
 
-  // Branding Emetis (rodapé)
-  ctx.font = `bold 32px -apple-system, sans-serif`;
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.textBaseline = 'bottom';
-  ctx.fillText('Emetis', SIZE - PAD, SIZE - PAD * 0.7);
+  // Versão da Bíblia
+  ctx.font = `300 28px -apple-system, "Helvetica Neue", sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fillText('NVI — Nova Versão Internacional', PAD, textEndY + 112);
+
+  // Rodapé — branding Emetis
   ctx.textAlign = 'right';
-  ctx.font = `26px Georgia, serif`;
-  ctx.fillText('τ', SIZE - PAD - 90, SIZE - PAD * 0.65);
+  ctx.textBaseline = 'bottom';
+  ctx.font = `bold 30px -apple-system, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('Emetis', SIZE - PAD, SIZE - PAD * 0.55);
+
+  ctx.font = `bold 36px Georgia, serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('\u03C4', SIZE - PAD - 80, SIZE - PAD * 0.5);
+
   ctx.textAlign = 'left';
 }
 
