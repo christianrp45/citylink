@@ -110,21 +110,25 @@ type PlanWithProgress = Omit<ReadingPlan, 'days'> & {
 
 export default function BiblePage() {
   const [verseOfDay, setVerseOfDay] = useState<VerseOfDay | null>(null);
+  const [verseLoading, setVerseLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [testament, setTestament] = useState<'AT' | 'NT' | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [plans, setPlans] = useState<PlanWithProgress[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/bible/verse-of-day')
       .then((r) => r.json())
       .then(setVerseOfDay)
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setVerseLoading(false));
     fetch('/api/bible/plans')
       .then((r) => r.ok ? r.json() : [])
       .then(setPlans)
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setPlansLoading(false));
   }, []);
 
   async function handleEnroll(slug: string) {
@@ -167,7 +171,26 @@ export default function BiblePage() {
       </div>
 
       {/* Versículo do dia */}
-      {verseOfDay && (
+      {verseLoading && (
+        <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl text-white shadow-md overflow-hidden animate-pulse">
+          <div className="p-4 space-y-2">
+            <div className="flex items-center gap-1.5 mb-3 opacity-80">
+              <div className="w-3 h-3 rounded-full bg-white/40" />
+              <div className="h-3 w-28 bg-white/30 rounded-full" />
+            </div>
+            <div className="h-3 bg-white/30 rounded-full w-full" />
+            <div className="h-3 bg-white/30 rounded-full w-4/5" />
+            <div className="h-3 bg-white/30 rounded-full w-2/3 mt-1" />
+            <div className="h-3 bg-white/20 rounded-full w-24 mt-2" />
+          </div>
+          <div className="border-t border-white/20 flex">
+            <div className="flex-1 h-9 bg-white/10" />
+            <div className="w-px bg-white/20" />
+            <div className="flex-1 h-9 bg-white/10" />
+          </div>
+        </div>
+      )}
+      {!verseLoading && verseOfDay && (
         <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl text-white shadow-md overflow-hidden">
           <Link href={`/bible/read/${verseOfDay.book}/${verseOfDay.chapter}`} className="block p-4">
             <div className="flex items-center gap-1.5 mb-2 opacity-80">
@@ -222,7 +245,20 @@ export default function BiblePage() {
           📚 Planos de Leitura
         </p>
         <div className="space-y-3">
-          {plans.map((plan) => {
+          {plansLoading && [0, 1].map((i) => (
+            <div key={i} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 animate-pulse">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 bg-slate-200 rounded-lg flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 bg-slate-200 rounded-full w-40" />
+                  <div className="h-3 bg-slate-100 rounded-full w-56" />
+                </div>
+                <div className="h-7 w-20 bg-slate-100 rounded-xl" />
+              </div>
+              <div className="mt-3 h-2 bg-slate-100 rounded-full w-full" />
+            </div>
+          ))}
+          {!plansLoading && plans.map((plan) => {
             const todayRef = plan.enrolled ? plan.todayDay : null;
             return (
               <div key={plan.slug} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
