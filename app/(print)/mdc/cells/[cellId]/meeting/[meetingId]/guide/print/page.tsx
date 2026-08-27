@@ -40,6 +40,7 @@ export default function GuidePrintPage() {
   const [guide, setGuide] = useState<CellGuideDetail | null>(null);
   const [format, setFormat] = useState<Format>('a4');
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!meetingId) return;
@@ -50,6 +51,55 @@ export default function GuidePrintPage() {
   }, [meetingId]);
 
   const handlePrint = () => window.print();
+
+  const handleDownload = async () => {
+    const el = document.getElementById('guide-page');
+    if (!el || !guide) return;
+    setDownloading(true);
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pageFormat = format === 'mobile' ? 'a5' : 'a4';
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: pageFormat });
+
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const canvasW = canvas.width;
+      const canvasH = canvas.height;
+      const ratio = pdfW / (canvasW / 2); // canvas scale=2
+      const totalH = (canvasH / 2) * ratio;
+
+      let remaining = totalH;
+      let offset = 0;
+
+      while (remaining > 0) {
+        if (offset > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, -offset, pdfW, totalH);
+        offset += pdfH;
+        remaining -= pdfH;
+      }
+
+      const filename = (guide.sermonTitle || guide.title || 'roteiro')
+        .replace(/[^a-zA-Z0-9À-ÿ\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+      pdf.save(`${filename}.pdf`);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -95,7 +145,7 @@ export default function GuidePrintPage() {
           font-family: system-ui, sans-serif;
           font-size: 13px;
         }
-        .controls-title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; }
+        .controls-title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 35%; }
         .controls-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .fmt-btn {
           padding: 5px 12px; border-radius: 6px; border: 1.5px solid #475569;
@@ -103,6 +153,13 @@ export default function GuidePrintPage() {
           transition: all .15s;
         }
         .fmt-btn.active { background: white; color: #1e293b; border-color: white; }
+        .dl-btn {
+          padding: 6px 16px; border-radius: 6px; border: none;
+          background: #10b981; color: white; font-weight: 700; cursor: pointer; font-size: 13px;
+          display: flex; align-items: center; gap: 6px;
+        }
+        .dl-btn:hover { background: #059669; }
+        .dl-btn:disabled { opacity: .6; cursor: not-allowed; }
         .print-btn {
           padding: 6px 16px; border-radius: 6px; border: none;
           background: #3b82f6; color: white; font-weight: 700; cursor: pointer; font-size: 13px;
@@ -236,14 +293,17 @@ export default function GuidePrintPage() {
           >
             📱 Celular
           </button>
+          <button className="dl-btn" onClick={handleDownload} disabled={downloading}>
+            {downloading ? '⏳ Gerando…' : '⬇ Baixar PDF'}
+          </button>
           <button className="print-btn" onClick={handlePrint}>
-            Imprimir / PDF
+            🖨 Imprimir
           </button>
         </div>
       </div>
 
       {/* Página do roteiro */}
-      <div className={`page ${format}`}>
+      <div id="guide-page" className={`page ${format}`}>
 
         {/* Cabeçalho */}
         <div className="guide-header">
