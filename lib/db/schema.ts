@@ -1090,3 +1090,17 @@ export const cellVisitor = pgTable("CellVisitor", {
 
 export type CellVisitor = InferSelectModel<typeof cellVisitor>;
 
+
+
+// ─── UserBlock ─────────────────────────────────────────────────────────────────
+
+export const userBlock = pgTable(
+  "UserBlock",
+  {
+    blockerId: text("blockerId").notNull(),
+    blockedId: text("blockedId").notNull(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.blockerId, t.blockedId] }) }),
+);
+
+export type UserBlock = InferSelectModel<typeof userBlock>;

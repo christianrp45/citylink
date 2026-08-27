@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, X, Send, CheckCircle, ExternalLink } from 'lucide-react';
+import { MapPin, X, Send, CheckCircle, ExternalLink, Ban } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface User {
   id: string;
@@ -20,6 +21,28 @@ interface Props {
 export default function VisitRequestModal({ user, onClose }: Props) {
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'accepted' | 'pending' | 'error'>('idle');
+  const [blocking, setBlocking] = useState(false);
+
+  async function handleBlock() {
+    setBlocking(true);
+    try {
+      const res = await fetch('/api/user/block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockedId: user.id }),
+      });
+      if (res.ok) {
+        toast.success(`${user.name.split(' ')[0]} foi bloqueado.`);
+        onClose();
+      } else {
+        toast.error('Erro ao bloquear usuário.');
+      }
+    } catch {
+      toast.error('Erro ao bloquear usuário.');
+    } finally {
+      setBlocking(false);
+    }
+  }
 
   async function handleSend() {
     setStatus('sending');
@@ -182,6 +205,15 @@ export default function VisitRequestModal({ user, onClose }: Props) {
               : user.openToVisits
               ? 'Ir Visitar!'
               : 'Enviar Solicitação'}
+          </button>
+
+          <button
+            onClick={handleBlock}
+            disabled={blocking}
+            className="mt-2 w-full py-2.5 rounded-xl border border-red-200 text-red-400 text-sm font-medium flex items-center justify-center gap-2 hover:bg-red-50 transition-colors disabled:opacity-50"
+          >
+            <Ban size={14} />
+            {blocking ? 'Bloqueando…' : `Bloquear ${user.name.split(' ')[0]}`}
           </button>
         </div>
       </div>
