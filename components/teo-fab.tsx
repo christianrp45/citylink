@@ -91,11 +91,16 @@ export function TeoFAB() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed right-4 z-[9990] bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-xl flex items-center justify-center active:scale-95 transition-all"
-          style={{ width: 52, height: 52, bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0px))' }}
+          className="fixed right-4 z-[9990] text-white rounded-full flex items-center justify-center active:scale-95 transition-all"
+          style={{
+            width: 54, height: 54,
+            bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0px))',
+            background: 'linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)',
+            boxShadow: '0 6px 24px rgba(99,102,241,0.55), 0 2px 8px rgba(0,0,0,0.15)',
+          }}
           aria-label="Abrir Teo"
         >
-          <span className="text-xl font-bold" style={{ fontFamily: 'serif' }}>τ</span>
+          <span className="text-[22px] font-bold leading-none select-none" style={{ fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: '-0.5px' }}>τ</span>
         </button>
       )}
 
