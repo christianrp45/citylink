@@ -110,57 +110,36 @@ Diretrizes de qualidade:
 BANCO DE QUEBRA-GELOS DISPONÍVEIS:
 ${quebraGelosList}`;
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.GOOGLE_AI_KEY;
   if (!apiKey) {
     return Response.json({ error: "Chave da API de IA não configurada no servidor." }, { status: 500 });
   }
 
-  // Modelos gratuitos OpenRouter em ordem de preferência
-  const MODELS_FALLBACK = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "deepseek/deepseek-chat-v3-0324:free",
-    "deepseek/deepseek-r1:free",
-    "google/gemma-3-27b-it:free",
-    "mistralai/mistral-7b-instruct:free",
-  ];
+  // Gemini 2.0 Flash — gratuito, 1M tokens/dia, Google AI Studio
+  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-  const RETRYABLE = new Set([429, 503, 410]);
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-  async function callOpenRouter(model: string) {
-    return fetch("https://openrouter.ai/api/v1/chat/completions", {
+  async function callGemini() {
+    return fetch(GEMINI_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://app.emetis.com.br",
-        "X-Title": "Emetis",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 6000,
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 6000 },
       }),
     });
   }
 
   try {
     let aiRes: Response | null = null;
-    let usedModel = "";
 
-    for (const model of MODELS_FALLBACK) {
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        aiRes = await callOpenRouter(model);
-        if (!RETRYABLE.has(aiRes.status)) {
-          usedModel = model;
-          break;
-        }
-        console.warn(`[generate-guide] ${aiRes.status} no modelo ${model} (tentativa ${attempt})`);
-        aiRes = null;
-        if (attempt < 2) await sleep(3000);
-      }
-      if (aiRes) break;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      aiRes = await callGemini();
+      if (aiRes.status !== 429 && aiRes.status !== 503) break;
+      console.warn(`[generate-guide] ${aiRes.status} (tentativa ${attempt})`);
+      aiRes = null;
+      if (attempt < 3) await sleep(3000 * attempt);
     }
 
     if (!aiRes) {
@@ -172,20 +151,19 @@ ${quebraGelosList}`;
 
     if (!aiRes.ok) {
       const errBody = await aiRes.text();
-      console.error("[generate-guide] OpenRouter API error:", aiRes.status, errBody);
+      console.error("[generate-guide] Gemini API error:", aiRes.status, errBody);
       return Response.json(
         { error: `Erro da API de IA (${aiRes.status}): ${errBody.slice(0, 200)}` },
         { status: 500 }
       );
     }
 
-    console.log(`[generate-guide] roteiro gerado com modelo: ${usedModel}`);
-
-    const groqData = await aiRes.json();
-    const text: string = groqData.choices?.[0]?.message?.content ?? "";
+    const geminiData = await aiRes.json();
+    const text: string = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    console.log(`[generate-guide] roteiro gerado com Gemini 2.0 Flash`);
 
     if (!text) {
-      console.error("[generate-guide] Groq retornou resposta vazia:", JSON.stringify(groqData).slice(0, 300));
+      console.error("[generate-guide] Gemini retornou resposta vazia:", JSON.stringify(geminiData).slice(0, 300));
       return Response.json({ error: "IA retornou resposta vazia. Tente novamente." }, { status: 500 });
     }
 

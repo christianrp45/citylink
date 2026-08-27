@@ -1,4 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import type { LanguageModelV3 } from "@ai-sdk/provider";
 import {
   customProvider,
@@ -28,7 +29,12 @@ export const myProvider = isTestEnvironment
     })()
   : null;
 
-// Provedor OpenRouter — OpenAI-compatible, modelos Llama gratuitos
+// Google Gemini — genuinamente gratuito (1M tokens/dia), usa GOOGLE_AI_KEY
+const _google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_AI_KEY ?? "",
+});
+
+// OpenRouter — fallback, usa OPENROUTER_API_KEY
 const _or = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY ?? "",
@@ -38,7 +44,7 @@ const _or = createOpenAI({
     "X-Title": "Emetis",
   },
 });
-const sn = (modelId: string) => _or.chat(modelId) as unknown as LanguageModelV3;
+const or = (modelId: string) => _or.chat(modelId) as unknown as LanguageModelV3;
 
 export function getLanguageModel(modelId: string) {
   if (isTestEnvironment && myProvider) {
@@ -51,29 +57,29 @@ export function getLanguageModel(modelId: string) {
   if (isReasoningModel) {
     const baseModelId = modelId.replace(THINKING_SUFFIX_REGEX, "");
     return wrapLanguageModel({
-      model: sn(baseModelId),
+      model: or(baseModelId),
       middleware: extractReasoningMiddleware({ tagName: "thinking" }),
     });
   }
 
-  return sn(modelId);
+  return or(modelId);
 }
 
 export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  return sn("meta-llama/llama-3.3-70b-instruct:free");
+  return _google("gemini-2.0-flash-lite") as unknown as LanguageModelV3;
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("artifact-model");
   }
-  return sn("meta-llama/llama-3.3-70b-instruct:free");
+  return _google("gemini-2.0-flash-lite") as unknown as LanguageModelV3;
 }
 
-// Modelo para Teo e funcionalidades pastorais
+// Modelo principal para Teo e funcionalidades pastorais — Gemini Flash
 export function getFreeModel() {
-  return sn("meta-llama/llama-3.3-70b-instruct:free");
+  return _google("gemini-2.0-flash") as unknown as LanguageModelV3;
 }
