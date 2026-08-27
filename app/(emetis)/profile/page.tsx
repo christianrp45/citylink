@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus, QrCode, Copy, Calendar } from 'lucide-react';
+import { LogOut, Edit2, MapPin, Phone, Mail, Users, Camera, Loader2, Bell, BellOff, Check, X, Shield, ChevronDown, ChevronUp, Download, Trash2, Clock, CheckCircle, Heart, Home, Briefcase, Church, Plus, QrCode, Copy, Calendar, Eye } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -193,6 +193,7 @@ export default function ProfilePage() {
   const [togglingLocId, setTogglingLocId] = useState<string | null>(null);
   const [deletingLocId, setDeletingLocId] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
   const [missions, setMissions] = useState<{
     total: number; level: string; weekPoints: number;
@@ -611,6 +612,15 @@ export default function ProfilePage() {
             )}
             <p className="text-blue-300 text-xs mt-0.5">{profile?.email}</p>
           </div>
+
+          {/* Botão Preview */}
+          <button
+            onClick={() => setShowPreview(true)}
+            className="flex-shrink-0 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"
+            title="Ver como outros me veem"
+          >
+            <Eye size={20} className="text-white" />
+          </button>
 
           {/* Botão QR Code */}
           <button
@@ -1502,6 +1512,76 @@ export default function ProfilePage() {
           Sair da Conta
         </button>
       </div>
+
+      {/* Modal Preview — como outros me veem */}
+      {showPreview && profile && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
+          style={{ background: 'rgba(15,23,42,0.7)' }}
+          onClick={() => setShowPreview(false)}
+        >
+          <div
+            className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Label */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Eye size={16} className="text-indigo-500" />
+                <span className="text-sm font-bold text-slate-700">Visualização pública</span>
+              </div>
+              <button onClick={() => setShowPreview(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                <X size={15} className="text-slate-500" />
+              </button>
+            </div>
+            {/* Card de perfil */}
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full border-4 border-blue-100 overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  {profile.avatar ? (
+                    <img src={profile.avatar} alt={displayName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl font-bold text-blue-500">{displayName.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-800 text-base">{displayName}</p>
+                  {profile.profession && <p className="text-sm text-slate-500">{profile.profession}</p>}
+                  {/* Status badge */}
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <div className={`w-2 h-2 rounded-full ${statusInfo.dot}`} />
+                    <span className="text-xs text-slate-500 font-medium">{statusInfo.label}</span>
+                  </div>
+                </div>
+              </div>
+
+              {profile.bio ? (
+                <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-xl px-4 py-3">{profile.bio}</p>
+              ) : (
+                <p className="text-sm text-slate-400 italic bg-slate-50 rounded-xl px-4 py-3">Sem bio ainda. Vá em Editar para adicionar.</p>
+              )}
+
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
+                <p className="text-xs text-indigo-600 font-semibold mb-0.5">O que outras pessoas veem</p>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Nome, foto, profissão, bio e status de disponibilidade são públicos. E-mail, telefone e localização permanecem privados.
+                </p>
+              </div>
+
+              {/* Simulated actions */}
+              <div className="flex gap-2">
+                <div className="flex-1 py-2.5 bg-blue-600/20 text-blue-400 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 cursor-not-allowed select-none">
+                  <Heart size={15} /> Amizade
+                </div>
+                <div className="flex-1 py-2.5 bg-slate-100 text-slate-400 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 cursor-not-allowed select-none">
+                  Solicitar Visita
+                </div>
+              </div>
+              <p className="text-center text-xs text-slate-400">Estes botões são simulados — apenas para visualização</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal QR Code */}
       {showQR && (
