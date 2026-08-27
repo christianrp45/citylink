@@ -1200,6 +1200,7 @@ function TestimonialsTab({ myId }: { myId: string }) {
   const [expandedComments, setExpandedComments] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
   const [commenting, setCommenting] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   useEffect(() => {
     fetch('/api/testimonials').then((r) => r.json()).then(setItems).finally(() => setLoading(false));
@@ -1301,7 +1302,7 @@ function TestimonialsTab({ myId }: { myId: string }) {
 
       {loading && <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-purple-400" /></div>}
 
-      {items.map((t) => {
+      {items.slice(0, visibleCount).map((t) => {
         const myReaction = t.reactions.find((r) => r.userIds.includes(myId))?.emoji ?? null;
         const showComments = expandedComments === t.id;
         return (
@@ -1362,6 +1363,19 @@ function TestimonialsTab({ myId }: { myId: string }) {
           </div>
         );
       })}
+
+      {/* Carregar mais */}
+      {!loading && visibleCount < items.length && (
+        <div className="flex justify-center py-2">
+          <button
+            type="button"
+            onClick={() => setVisibleCount((v) => v + 10)}
+            className="px-6 py-2 text-sm font-medium text-purple-600 border border-purple-200 rounded-full hover:bg-purple-50 transition-colors"
+          >
+            Carregar mais
+          </button>
+        </div>
+      )}
     </div>
   );
 }
