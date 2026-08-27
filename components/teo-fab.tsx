@@ -1,9 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useChat } from '@ai-sdk/react';
+import { useChat, type Message } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { X, Send } from 'lucide-react';
+import { X, Send, RotateCcw } from 'lucide-react';
+
+const TEO_STORAGE_KEY = 'teo:messages';
+const MAX_SAVED_MESSAGES = 40;
+
+function loadSavedMessages(): Message[] {
+  try {
+    const saved = localStorage.getItem(TEO_STORAGE_KEY);
+    return saved ? (JSON.parse(saved) as Message[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 export function TeoFAB() {
   const [open, setOpen] = useState(false);
@@ -12,11 +24,28 @@ export function TeoFAB() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { messages, sendMessage, status } = useChat({
+  const [initialMessages] = useState<Message[]>(() => loadSavedMessages());
+
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: '/api/teo' }),
+    initialMessages,
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Persist messages to localStorage after each complete exchange
+  useEffect(() => {
+    if (!isLoading && messages.length > 0) {
+      try {
+        localStorage.setItem(TEO_STORAGE_KEY, JSON.stringify(messages.slice(-MAX_SAVED_MESSAGES)));
+      } catch {}
+    }
+  }, [messages, isLoading]);
+
+  function clearConversation() {
+    setMessages([]);
+    try { localStorage.removeItem(TEO_STORAGE_KEY); } catch {}
+  }
 
   useEffect(() => {
     if (open) {
@@ -93,12 +122,23 @@ export function TeoFAB() {
                   <p className="text-xs text-slate-400">Assistente teólogo do Emetis</p>
                 </div>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200"
-              >
-                <X size={15} />
-              </button>
+              <div className="flex items-center gap-2">
+                {messages.length > 0 && (
+                  <button
+                    onClick={clearConversation}
+                    className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200"
+                    title="Nova conversa"
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+                )}
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200"
+                >
+                  <X size={15} />
+                </button>
+              </div>
             </div>
 
             {/* Mensagens */}

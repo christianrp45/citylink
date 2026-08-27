@@ -75,7 +75,8 @@ export default function QuizPage() {
     const pct = Math.round((resultado.score / resultado.total) * 100);
     return (
       <div className="flex flex-col min-h-full">
-        <div className={`${cor.bg} px-4 pt-4 pb-8 text-center`}>
+        {/* Header */}
+        <div className={`${cor.bg} px-4 pt-4 pb-8 text-center flex-shrink-0`}>
           <button onClick={() => router.push(`/formacao/${caderno}`)} className="flex items-center gap-1 text-white/70 text-sm mb-6 hover:text-white">
             <ChevronLeft size={16} /> {meta.titulo}
           </button>
@@ -106,7 +107,61 @@ export default function QuizPage() {
           )}
         </div>
 
-        <div className="px-4 py-6 space-y-3 flex-1">
+        {/* Revisão por questão */}
+        <div className="px-4 pt-5 pb-2">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Revisão das questões</p>
+          <div className="space-y-4">
+            {questoes.map((q, idx) => {
+              const chosen = respostas[q.id];
+              const isCorrect = chosen === q.correta;
+              return (
+                <div key={q.id} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                  {/* Question bar */}
+                  <div className={`flex items-start gap-2.5 px-4 py-3 ${isCorrect ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                    <div className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${isCorrect ? 'bg-emerald-500' : 'bg-red-400'}`}>
+                      {isCorrect
+                        ? <CheckCircle2 size={13} className="text-white" />
+                        : <XCircle size={13} className="text-white" />}
+                    </div>
+                    <p className="text-slate-800 text-xs font-semibold leading-snug flex-1">
+                      <span className={`text-[10px] font-bold mr-1 ${isCorrect ? 'text-emerald-600' : 'text-red-400'}`}>{idx + 1}.</span>
+                      {q.enunciado}
+                    </p>
+                  </div>
+                  {/* Options */}
+                  <div className="px-4 py-3 space-y-1.5">
+                    {q.opcoes.map((opt) => {
+                      const isChosen = chosen === opt.id;
+                      const isRight = opt.id === q.correta;
+                      let cls = 'text-slate-500 bg-slate-50';
+                      if (isRight) cls = 'text-emerald-700 bg-emerald-50 font-semibold';
+                      else if (isChosen && !isRight) cls = 'text-red-600 bg-red-50 line-through';
+                      return (
+                        <div key={opt.id} className={`flex items-start gap-2 px-3 py-2 rounded-lg text-xs ${cls}`}>
+                          <span className="font-bold flex-shrink-0">{opt.id.toUpperCase()}.</span>
+                          <span>{opt.texto}</span>
+                          {isRight && <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0 ml-auto mt-0.5" />}
+                          {isChosen && !isRight && <XCircle size={13} className="text-red-400 flex-shrink-0 ml-auto mt-0.5" />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Explanation */}
+                  {q.explicacao && (
+                    <div className="px-4 pb-3">
+                      <p className="text-[11px] text-slate-500 leading-relaxed border-t border-slate-100 pt-2.5">
+                        <span className="font-semibold text-slate-600">Por quê: </span>{q.explicacao}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="px-4 pt-4 pb-8 space-y-3">
           {resultado.passed && (
             <button
               onClick={() => router.push(`/formacao/${caderno}/certificado`)}

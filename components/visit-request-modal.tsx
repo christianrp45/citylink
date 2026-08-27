@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, X, Send, CheckCircle } from 'lucide-react';
+import { MapPin, X, Send, CheckCircle, ExternalLink } from 'lucide-react';
 
 interface User {
   id: string;
@@ -122,6 +122,16 @@ export default function VisitRequestModal({ user, onClose }: Props) {
                 <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                   <MapPin size={11} /> {user.homeLocation.address}
                 </p>
+              )}
+              {user.homeLocation && (
+                <a
+                  href={`https://maps.google.com/?q=${user.homeLocation.lat},${user.homeLocation.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-indigo-500 flex items-center gap-1 mt-1 hover:text-indigo-700"
+                >
+                  <ExternalLink size={11} /> Abrir no Google Maps
+                </a>
               )}
             </div>
           </div>

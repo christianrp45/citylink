@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar, Bell, Search, ChevronUp } from 'lucide-react';
+import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar, Bell, Search, ChevronUp, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import VisitRequestModal from '@/components/visit-request-modal';
 import { WelcomeModal } from '@/components/welcome-modal';
@@ -728,13 +728,25 @@ export default function MapPage() {
                   {(u.name ?? 'Usuário').split(' ')[0]}
                 </span>
                 <span className="text-[10px] text-blue-500">{formatDistance(u.distance)}</span>
-                <button
-                  onClick={() => router.push(`/chat?with=${u.id}`)}
-                  className="flex items-center gap-0.5 text-[10px] text-indigo-500 hover:text-indigo-700"
-                >
-                  <MessageCircle size={10} />
-                  Msg
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => router.push(`/chat?with=${u.id}`)}
+                    className="flex items-center gap-0.5 text-[10px] text-indigo-500 hover:text-indigo-700"
+                  >
+                    <MessageCircle size={10} />
+                    Msg
+                  </button>
+                  <a
+                    href={`https://maps.google.com/?q=${u.lat},${u.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-0.5 text-[10px] text-slate-400 hover:text-slate-600"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink size={10} />
+                    Maps
+                  </a>
+                </div>
               </div>
             ))}
           </div>
@@ -852,10 +864,20 @@ export default function MapPage() {
             {selectedWindow.description && (
               <p className="text-sm text-slate-600 mb-2">{selectedWindow.description}</p>
             )}
-            <div className="flex items-center gap-1 text-xs text-slate-400 mb-5">
+            <div className="flex items-center gap-1 text-xs text-slate-400 mb-4">
               <Clock size={11} />
               até {new Date(selectedWindow.endsAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </div>
+            {selectedWindow.hostLat && selectedWindow.hostLng && (
+              <a
+                href={`https://maps.google.com/?q=${selectedWindow.hostLat},${selectedWindow.hostLng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full mb-3 py-2.5 rounded-2xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors"
+              >
+                <ExternalLink size={15} /> Abrir no Google Maps
+              </a>
+            )}
             <button
               onClick={() => { setSelectedUser(null); setSelectedWindow(null); router.push(`/chat?with=${selectedWindow.userId}`); }}
               className="w-full py-3 bg-indigo-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700"

@@ -14,6 +14,7 @@ export type QuizQuestion = {
   enunciado: string;
   opcoes: QuizOption[];
   correta: 'a' | 'b' | 'c' | 'd';
+  explicacao?: string;
 };
 
 export type CadernoQuiz = {
@@ -35,6 +36,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Um homem santo escolhido entre os profetas' },
       ],
       correta: 'b',
+      explicacao: 'João 1.1-3,14 declara que o Verbo (Jesus) era Deus e criou todas as coisas antes de se tornar carne. Ele não é apenas profeta ou anjo — é o Filho eterno.',
     },
     {
       id: 2,
@@ -46,6 +48,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Contém apenas histórias morais de valor universal' },
       ],
       correta: 'c',
+      explicacao: '2 Timóteo 3.16 afirma que "toda Escritura é inspirada por Deus" (theopneustos — expirada por Deus). Sua autoridade vem da origem divina, não de aprovação humana.',
     },
     {
       id: 3,
@@ -57,6 +60,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Ser batizado e entregar dízimos fielmente' },
       ],
       correta: 'b',
+      explicacao: 'Efésios 2.8-9: "pela graça sois salvos mediante a fé; e isso não vem de vós, é dom de Deus; não de obras, para que ninguém se glorie." A salvação é presente recebido, não mérito conquistado.',
     },
     {
       id: 4,
@@ -68,6 +72,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Um símbolo público de morte e ressurreição com Cristo' },
       ],
       correta: 'd',
+      explicacao: 'Romanos 6.3-4 explica que o batismo simboliza nossa morte ao pecado e ressurreição a uma nova vida em Cristo. É declaração pública de fé, não meio de salvação.',
     },
     {
       id: 5,
@@ -79,6 +84,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'A presença espiritual de Jesus após a ressurreição' },
       ],
       correta: 'c',
+      explicacao: 'João 14.16-17,26 descreve o Espírito Santo como Auxiliador (Paráclito) pessoal, enviado pelo Pai — a terceira pessoa da Trindade, distinta do Filho, mas igualmente Deus.',
     },
   ],
 
@@ -94,6 +100,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'A hierarquia de pastores e líderes cristãos' },
       ],
       correta: 'c',
+      explicacao: 'Colossenses 1.18 e Efésios 1.22-23 descrevem a Igreja como o Corpo de Cristo — o povo redimido, não um edifício, organização ou hierarquia.',
     },
     {
       id: 2,
@@ -105,6 +112,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'O mesmo processo que o evangelismo' },
       ],
       correta: 'b',
+      explicacao: 'A Grande Comissão (Mateus 28.19-20) define discipulado como fazer seguidores que fazem outros seguidores. É um movimento multiplicador, não apenas ensino unidirecional.',
     },
     {
       id: 3,
@@ -116,6 +124,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Porque é obrigatório para ser membro batizado' },
       ],
       correta: 'b',
+      explicacao: 'A célula é o espaço onde o discipulado acontece de forma relacional: cuidado mútuo, oração, estudo e multiplicação. Não é obrigação institucional, mas comunidade de vida.',
     },
     {
       id: 4,
@@ -127,6 +136,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Excluir pessoas problemáticas da comunidade' },
       ],
       correta: 'c',
+      explicacao: 'Gálatas 6.1 orienta: "restaurai o tal com espírito de mansidão". O objetivo é sempre a restauração da pessoa, não punição ou exclusão.',
     },
     {
       id: 5,
@@ -138,6 +148,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Preservar a doutrina batista histórica' },
       ],
       correta: 'c',
+      explicacao: 'A Grande Comissão (Mateus 28.18-20) define claramente a missão: "ide e fazei discípulos de todas as nações, batizando-os e ensinando-os." É a agenda central da Igreja.',
     },
   ],
 
@@ -153,6 +164,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Aguardar ser convocado antes de oferecer ajuda' },
       ],
       correta: 'b',
+      explicacao: 'Marcos 10.43-45: Jesus declarou que quem quer ser grande deve ser servo de todos. O modelo de Jesus foi usar sua posição para servir, não para ser servido.',
     },
     {
       id: 2,
@@ -164,6 +176,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Completada somente após a morte do crente' },
       ],
       correta: 'c',
+      explicacao: '2 Coríntios 3.18 descreve a santificação como transformação progressiva "de glória em glória" pela obra do Espírito. É jornada de toda a vida, disponível a todo crente.',
     },
     {
       id: 3,
@@ -175,6 +188,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Apenas aos que contribuem fielmente com o dízimo' },
       ],
       correta: 'c',
+      explicacao: '1 Coríntios 12.7-11 ensina que "a cada um é dada a manifestação do Espírito para o proveito comum". Os dons são distribuídos pelo Espírito a cada membro do Corpo.',
     },
     {
       id: 4,
@@ -186,6 +200,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'O fruto é permanente; os dons são temporários' },
       ],
       correta: 'b',
+      explicacao: 'Gálatas 5.22-23 (fruto) trata do caráter — quem somos. 1 Coríntios 12 (dons) trata da capacitação — o que fazemos. Ambos são necessários e complementares.',
     },
     {
       id: 5,
@@ -197,6 +212,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Um ritual religioso obrigatório diário' },
       ],
       correta: 'c',
+      explicacao: 'Mateus 6.9 e Filipenses 4.6 apresentam a oração como comunicação direta com o Pai. Jesus nos ensinou a chamar Deus de "Pai" — uma relação, não uma técnica ou ritual.',
     },
   ],
 
@@ -212,6 +228,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Ensinar a Bíblia de forma sistemática e acadêmica' },
       ],
       correta: 'c',
+      explicacao: 'Mateus 28.19-20 define discipulado como multiplicação: fazer seguidores que fazem outros seguidores. É movimento orgânico, não programa institucional.',
     },
     {
       id: 2,
@@ -223,6 +240,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'A falta de apoio financeiro da liderança sênior' },
       ],
       correta: 'b',
+      explicacao: 'Muitos postergam discipular por acharem que precisam ter tudo resolvido primeiro. Mas discipulamos caminhando juntos — do lugar onde estamos, não de onde gostaríamos de estar.',
     },
     {
       id: 3,
@@ -234,6 +252,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Alguém mais velho e experiente na fé do que o discípulo' },
       ],
       correta: 'c',
+      explicacao: '1 Coríntios 11.1: Paulo discipulou sendo exemplo — "sede meus imitadores, como eu o sou de Cristo". O modelo de vida supera o conteúdo transmitido em sala.',
     },
     {
       id: 4,
@@ -245,6 +264,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Acompanhar com paciência, oração e orientação bíblica contínua' },
       ],
       correta: 'd',
+      explicacao: '2 Timóteo 2.24-26 orienta o servo do Senhor a ser "paciente para com todos" e corrigir "com mansidão". O discipulado é processo de longo prazo, não sprint de desempenho.',
     },
     {
       id: 5,
@@ -256,6 +276,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Comparar o progresso de diferentes discípulos na turma' },
       ],
       correta: 'b',
+      explicacao: 'Os estudos de caso desenvolvem discernimento prático: como aplicar a Bíblia nas situações reais de trabalho, família e relacionamentos — o objetivo final do discipulado.',
     },
   ],
 
@@ -271,6 +292,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Reunir pessoas com interesses e idades semelhantes' },
       ],
       correta: 'b',
+      explicacao: 'A célula é a unidade orgânica da Igreja: onde o discipulado acontece de forma relacional, o cuidado pastoral é distribuído e a multiplicação se torna possível.',
     },
     {
       id: 2,
@@ -282,6 +304,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'A célula conclui todos os cadernos de formação' },
       ],
       correta: 'c',
+      explicacao: 'A multiplicação não é automática por tamanho, mas intencional: quando um assistente está maduro, ele é enviado com parte do grupo para plantar uma nova célula.',
     },
     {
       id: 3,
@@ -293,6 +316,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Reportar todas as atividades semanalmente à liderança' },
       ],
       correta: 'c',
+      explicacao: 'A prioridade máxima do líder é formar seu assistente. Sem investimento intencional na próxima geração, a célula cresce mas não se multiplica.',
     },
     {
       id: 4,
@@ -304,6 +328,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Garante automaticamente o crescimento e sucesso da célula' },
       ],
       correta: 'c',
+      explicacao: 'João 15.4-5: "sem mim nada podeis fazer". O líder transmite o que vive. Ministério sem vida interior resulta em ativismo sem substância espiritual.',
     },
     {
       id: 5,
@@ -315,6 +340,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Definir os temas de estudo para cada célula da região' },
       ],
       correta: 'c',
+      explicacao: 'O supervisor existe para servir os líderes, não gerenciá-los. Cuida do cuidado dos cuidadores — garantindo que os líderes tenham quem os pastoreie também.',
     },
   ],
 
@@ -330,6 +356,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'A consciência moral individual de cada crente' },
       ],
       correta: 'b',
+      explicacao: 'O princípio batista de "sola scriptura" coloca a Bíblia como única norma de fé e prática. 2 Timóteo 3.16-17 afirma que ela é suficiente para "equipar o homem de Deus".',
     },
     {
       id: 2,
@@ -341,6 +368,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Uma manifestação especial do Espírito Santo na terra' },
       ],
       correta: 'c',
+      explicacao: 'O Concílio de Calcedônia (451 d.C.) formulou o que as Escrituras ensinam: Jesus é plenamente Deus (Jo 1.1) e plenamente homem (Jo 1.14) em uma só pessoa — sem mistura nem divisão.',
     },
     {
       id: 3,
@@ -352,6 +380,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Eliminar completamente a imagem de Deus no homem' },
       ],
       correta: 'c',
+      explicacao: 'Romanos 5.12 ensina que o pecado entrou pelo um homem e se espalhou a todos. A imagem de Deus permanece, mas distorcida — separação de Deus e inclinação ao pecado.',
     },
     {
       id: 4,
@@ -363,6 +392,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Progressiva e confirmada somente no dia do julgamento' },
       ],
       correta: 'b',
+      explicacao: 'Efésios 2.8-9: "pela graça sois salvos mediante a fé; e isso não vem de vós, é dom de Deus; não de obras". A salvação é recebida pela fé, não ganha por mérito.',
     },
     {
       id: 5,
@@ -374,6 +404,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'A consciência moral inata presente em cada ser humano' },
       ],
       correta: 'c',
+      explicacao: 'Romanos 1.20 (criação revela poder e divindade de Deus) e 2 Timóteo 3.16 (Escrituras revelam o plano salvífico). A revelação especial nas Escrituras é completa e suficiente.',
     },
   ],
 
@@ -389,6 +420,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Surgiu evolutivamente como necessidade humana natural' },
       ],
       correta: 'b',
+      explicacao: 'Romanos 13.1: "não há autoridade que não venha de Deus; as autoridades existentes são estabelecidas por Deus." Toda autoridade legítima é delegada, não autogerada.',
     },
     {
       id: 2,
@@ -400,6 +432,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Participação apenas quando concordar com as decisões tomadas' },
       ],
       correta: 'c',
+      explicacao: 'Hebreus 13.17 orienta a obedecer e submeter-se aos líderes. Não é obediência cega (limites estão na Bíblia), nem rebeldia sistemática, mas submissão respeitosa e intencional.',
     },
     {
       id: 3,
@@ -411,6 +444,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Todo cristão pode administrar os sacramentos da Igreja' },
       ],
       correta: 'b',
+      explicacao: '1 Pedro 2.9 declara que todos os crentes formam um "sacerdócio real". Isso significa acesso direto a Deus e chamado universal ao serviço — não ausência de liderança.',
     },
     {
       id: 4,
@@ -422,6 +456,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Permitir que líderes governem com eficiência administrativa' },
       ],
       correta: 'c',
+      explicacao: 'Efésios 4.11-13 ensina que líderes existem para "equipar os santos para a obra do ministério". Marcos 10.45 completa: o maior deve ser servo de todos.',
     },
     {
       id: 5,
@@ -433,6 +468,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Denunciar publicamente o líder nas redes sociais' },
       ],
       correta: 'c',
+      explicacao: 'Atos 5.29: "é preciso obedecer a Deus antes que aos homens". A submissão tem limites definidos pelas Escrituras. O crente deve recusar com respeito, não com rebeldia.',
     },
   ],
 
@@ -448,6 +484,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'A visão de mundo adquirida ao frequentar a igreja regularmente' },
       ],
       correta: 'c',
+      explicacao: 'Cosmovisão é o conjunto de pressupostos com os quais interpretamos a realidade. A cosmovisão cristã parte das Escrituras para entender Deus, o homem, o mundo e a redenção.',
     },
     {
       id: 2,
@@ -459,6 +496,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Nossas conquistas e o sucesso em nossa vocação profissional' },
       ],
       correta: 'c',
+      explicacao: 'João 1.12 e Efésios 2.10 definem nossa identidade: filhos de Deus, feitura sua. Ela repousa no que Deus declara — imutável — não em performance ou aprovação humana.',
     },
     {
       id: 3,
@@ -470,6 +508,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'É exclusiva para pastores e líderes espirituais consagrados' },
       ],
       correta: 'c',
+      explicacao: 'Ezequiel 36.26-27 profetizou um coração novo. A ética cristã nasce de dentro: o Espírito Santo transforma desejos e motivações — não é legalismo externo, mas amor que obedece.',
     },
     {
       id: 4,
@@ -481,6 +520,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Indiferente à fé, pois o espiritual e o cultural não se misturam' },
       ],
       correta: 'c',
+      explicacao: 'João 17.15-18: Jesus pediu que não tirássemos os discípulos do mundo, mas que fossem enviados a ele. Somos chamados a transformar a cultura pelo sal e luz do Reino.',
     },
     {
       id: 5,
@@ -492,6 +532,7 @@ export const QUIZZES: Record<string, QuizQuestion[]> = {
         { id: 'd', texto: 'Os papéis de gênero são criações culturais sem base bíblica' },
       ],
       correta: 'c',
+      explicacao: 'Gênesis 1.27: "macho e fêmea os criou" — ambos portadores da imagem de Deus, iguais em valor e dignidade. A diferença de design é complementaridade, não hierarquia de valor.',
     },
   ],
 };
