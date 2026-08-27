@@ -70,25 +70,19 @@ export default function GuidePrintPage() {
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const pageFormat = format === 'mobile' ? 'a5' : 'a4';
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: pageFormat });
+      // Cria uma página com as dimensões exatas do conteúdo — sem cortes.
+      // O leitor de PDF do usuário cuida da paginação na impressão.
+      const imgW = canvas.width / 2;   // divide pelo scale=2
+      const imgH = canvas.height / 2;
 
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
-      const canvasW = canvas.width;
-      const canvasH = canvas.height;
-      const ratio = pdfW / (canvasW / 2); // canvas scale=2
-      const totalH = (canvasH / 2) * ratio;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [imgW, imgH],
+        hotfixes: ['px_scaling'],
+      });
 
-      let remaining = totalH;
-      let offset = 0;
-
-      while (remaining > 0) {
-        if (offset > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, -offset, pdfW, totalH);
-        offset += pdfH;
-        remaining -= pdfH;
-      }
+      pdf.addImage(imgData, 'PNG', 0, 0, imgW, imgH);
 
       const filename = (guide.sermonTitle || guide.title || 'roteiro')
         .replace(/[^a-zA-Z0-9À-ÿ\s-]/g, '')
