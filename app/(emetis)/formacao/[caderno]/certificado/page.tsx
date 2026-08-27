@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getCadernoMeta, COR_CLASSES } from '@/lib/data/formacao';
 import { ChevronLeft, Download, Share2, Award } from 'lucide-react';
+import QRCode from 'react-qr-code';
 
 type CertData = {
+  userId: string;
   userName: string;
   churchName: string | null;
   completedAt: string;
@@ -106,6 +108,18 @@ export default function CertificadoPage() {
                 height={636}
                 className="w-full h-auto"
               />
+            </div>
+
+            {/* QR de Verificação */}
+            <div className="w-full flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wide">QR de Verificação</p>
+              <QRCode
+                value={`${window.location.origin}/verificar/cert?userId=${certData.userId}&caderno=${caderno}`}
+                size={100}
+              />
+              <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+                Escaneie para verificar a autenticidade deste certificado
+              </p>
             </div>
 
             {/* Ações */}
