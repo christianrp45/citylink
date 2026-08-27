@@ -28,14 +28,17 @@ export const myProvider = isTestEnvironment
     })()
   : null;
 
-// Provedor SambaNova — OpenAI-compatible, usa SAMBANOVA_API_KEY
-// .chat() força endpoint /chat/completions (SambaNova não suporta Responses API)
-const _sn = createOpenAI({
-  baseURL: "https://api.sambanova.ai/v1",
-  apiKey: process.env.SAMBANOVA_API_KEY ?? "",
-  name: "sambanova",
+// Provedor OpenRouter — OpenAI-compatible, modelos Llama gratuitos
+const _or = createOpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY ?? "",
+  name: "openrouter",
+  headers: {
+    "HTTP-Referer": "https://app.emetis.com.br",
+    "X-Title": "Emetis",
+  },
 });
-const sn = (modelId: string) => _sn.chat(modelId) as unknown as LanguageModelV3;
+const sn = (modelId: string) => _or.chat(modelId) as unknown as LanguageModelV3;
 
 export function getLanguageModel(modelId: string) {
   if (isTestEnvironment && myProvider) {
@@ -60,17 +63,17 @@ export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  return sn("Meta-Llama-3.3-70B-Instruct");
+  return sn("meta-llama/llama-3.3-70b-instruct:free");
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("artifact-model");
   }
-  return sn("Meta-Llama-3.3-70B-Instruct");
+  return sn("meta-llama/llama-3.3-70b-instruct:free");
 }
 
 // Modelo para Teo e funcionalidades pastorais
 export function getFreeModel() {
-  return sn("Meta-Llama-3.3-70B-Instruct");
+  return sn("meta-llama/llama-3.3-70b-instruct:free");
 }
