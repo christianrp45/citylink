@@ -168,19 +168,36 @@ export default function BiblePage() {
 
       {/* Versículo do dia */}
       {verseOfDay && (
-        <Link
-          href={`/bible/read/${verseOfDay.book}/${verseOfDay.chapter}`}
-          className="block bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-4 text-white shadow-md"
-        >
-          <div className="flex items-center gap-1.5 mb-2 opacity-80">
-            <Star size={12} className="fill-white" />
-            <span className="text-xs font-semibold uppercase tracking-wide">Versículo do Dia</span>
+        <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl text-white shadow-md overflow-hidden">
+          <Link href={`/bible/read/${verseOfDay.book}/${verseOfDay.chapter}`} className="block p-4">
+            <div className="flex items-center gap-1.5 mb-2 opacity-80">
+              <Star size={12} className="fill-white" />
+              <span className="text-xs font-semibold uppercase tracking-wide">Versículo do Dia</span>
+            </div>
+            <p className="text-sm leading-relaxed mb-2 font-medium">
+              "{verseOfDay.text}"
+            </p>
+            <p className="text-xs opacity-70 font-semibold">{verseOfDay.ref}</p>
+          </Link>
+          <div className="border-t border-white/20 flex">
+            <Link
+              href={`/bible/read/${verseOfDay.book}/${verseOfDay.chapter}`}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <ChevronRight size={13} /> Ler capítulo
+            </Link>
+            <div className="w-px bg-white/20" />
+            <button
+              onClick={() => {
+                const text = `Quero orar e meditar sobre o versículo de hoje: "${verseOfDay.text}" — ${verseOfDay.ref}. Pode me ajudar com uma oração?`;
+                window.dispatchEvent(new CustomEvent('teo:ask', { detail: { text } }));
+              }}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              🙏 Orar sobre isso
+            </button>
           </div>
-          <p className="text-sm leading-relaxed mb-2 font-medium">
-            "{verseOfDay.text}"
-          </p>
-          <p className="text-xs opacity-70 font-semibold">{verseOfDay.ref}</p>
-        </Link>
+        </div>
       )}
 
       {/* Formação Batista */}
