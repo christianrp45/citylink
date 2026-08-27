@@ -68,6 +68,52 @@ export async function getTestimonials() {
   });
 }
 
+/** Retorna testemunhos de um conjunto de usuários (feed de comunidade). */
+export async function getTestimonialsByUsers(userIds: string[]) {
+  if (userIds.length === 0) return [];
+  const rows = await db
+    .select({
+      id: testimonial.id,
+      userId: testimonial.userId,
+      authorName: user.name,
+      authorAvatar: user.avatar,
+      title: testimonial.title,
+      content: testimonial.content,
+      createdAt: testimonial.createdAt,
+    })
+    .from(testimonial)
+    .leftJoin(user, eq(testimonial.userId, user.id))
+    .where(inArray(testimonial.userId, userIds))
+    .orderBy(desc(testimonial.createdAt))
+    .limit(30);
+
+  const ids = rows.map((r) => r.id);
+  if (ids.length === 0) return [];
+
+  const [likes, comments] = await Promise.all([
+    db.select({ testimonialId: testimonialLike.testimonialId, userId: testimonialLike.userId, emoji: testimonialLike.emoji })
+      .from(testimonialLike).where(inArray(testimonialLike.testimonialId, ids)),
+    db.select({ id: testimonialComment.id, testimonialId: testimonialComment.testimonialId, userId: testimonialComment.userId, authorName: user.name, content: testimonialComment.content, createdAt: testimonialComment.createdAt })
+      .from(testimonialComment).leftJoin(user, eq(testimonialComment.userId, user.id))
+      .where(inArray(testimonialComment.testimonialId, ids)).orderBy(asc(testimonialComment.createdAt)),
+  ]);
+
+  return rows.map((r) => {
+    const myLikes = likes.filter((l) => l.testimonialId === r.id);
+    const reactionMap = new Map<string, string[]>();
+    for (const l of myLikes) {
+      const arr = reactionMap.get(l.emoji) ?? [];
+      arr.push(l.userId);
+      reactionMap.set(l.emoji, arr);
+    }
+    return {
+      ...r,
+      reactions: Array.from(reactionMap.entries()).map(([emoji, userIds]) => ({ emoji, count: userIds.length, userIds })),
+      comments: comments.filter((c) => c.testimonialId === r.id),
+    };
+  });
+}
+
 export async function createTestimonial(data: {
   userId: string;
   title: string;
