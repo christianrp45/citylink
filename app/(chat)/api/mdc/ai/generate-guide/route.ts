@@ -116,7 +116,7 @@ ${quebraGelosList}`;
   }
 
   // Gemini 2.0 Flash — gratuito, 1M tokens/dia, Google AI Studio
-  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
