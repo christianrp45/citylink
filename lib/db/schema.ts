@@ -778,6 +778,10 @@ export const userPrivacySettings = pgTable("UserPrivacySettings", {
   consentProfileVisible: boolean("consentProfileVisible").notNull().default(false),
   consentProfileVisibleAt: timestamp("consentProfileVisibleAt"),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  pushVisits: boolean("pushVisits").notNull().default(true),
+  pushMessages: boolean("pushMessages").notNull().default(true),
+  pushFriendRequests: boolean("pushFriendRequests").notNull().default(true),
+  pushMissions: boolean("pushMissions").notNull().default(true),
 });
 
 export type UserPrivacySettings = InferSelectModel<typeof userPrivacySettings>;

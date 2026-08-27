@@ -4,6 +4,7 @@ import {
   getAllPushSubscriptionsForUsers,
   deletePushSubscription,
 } from "@/lib/db/queries";
+import { getUserPrivacySettings } from "@/lib/db/queries/privacy";
 import { sendPush } from "@/lib/push";
 import { awardPoints } from "@/lib/gamification";
 
@@ -63,7 +64,10 @@ export async function POST(request: Request) {
     title: `${responderName}: ${PUSH_MESSAGES[status as keyof typeof PUSH_MESSAGES].title}`,
   };
 
-  const subs = await getAllPushSubscriptionsForUsers([updated.fromUserId]);
+  const requesterPrefs = await getUserPrivacySettings(updated.fromUserId);
+  const subs = requesterPrefs?.pushVisits === false
+    ? []
+    : await getAllPushSubscriptionsForUsers([updated.fromUserId]);
   await Promise.all(
     subs.map(async (sub) => {
       const ok = await sendPush(sub, pushPayload);

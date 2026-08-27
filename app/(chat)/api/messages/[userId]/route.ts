@@ -7,6 +7,7 @@ import {
   getUserById,
   deletePushSubscription,
 } from "@/lib/db/queries";
+import { getUserPrivacySettings } from "@/lib/db/queries/privacy";
 import { sendPush } from "@/lib/push";
 import { awardPoints } from "@/lib/gamification";
 
@@ -68,8 +69,9 @@ export async function POST(
   );
 
   // Notificação push para o destinatário (fire-and-forget)
+  const recipientPrefs = await getUserPrivacySettings(toUserId);
   const senderName = session.user.email?.split('@')[0] ?? 'Alguém';
-  const subs = await getUserPushSubscriptions(toUserId);
+  const subs = recipientPrefs?.pushMessages === false ? [] : await getUserPushSubscriptions(toUserId);
   await Promise.all(
     subs.map(async (sub) => {
       const ok = await sendPush(sub, {
