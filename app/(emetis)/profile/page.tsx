@@ -694,6 +694,62 @@ export default function ProfilePage() {
           <ShareInviteButton />
         </div>
 
+        {/* Nível & XP — card destacado */}
+        {missions && (() => {
+          const LEVEL_STYLES: Record<string, { bg: string; bar: string; text: string; border: string }> = {
+            semente: { bg: 'bg-slate-50', bar: 'bg-slate-400', text: 'text-slate-700', border: 'border-slate-200' },
+            broto:   { bg: 'bg-emerald-50', bar: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-200' },
+            árvore:  { bg: 'bg-blue-50', bar: 'bg-blue-500', text: 'text-blue-700', border: 'border-blue-200' },
+            fruto:   { bg: 'bg-violet-50', bar: 'bg-violet-500', text: 'text-violet-700', border: 'border-violet-200' },
+            luz:     { bg: 'bg-amber-50', bar: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-200' },
+          };
+          const LEVEL_EMOJIS: Record<string, string> = { semente:'🌱', broto:'🌿', árvore:'🌳', fruto:'🍎', luz:'✨' };
+          const style = LEVEL_STYLES[missions.level] ?? LEVEL_STYLES.semente;
+          const emoji = LEVEL_EMOJIS[missions.level] ?? '🌱';
+          const LEVELS_ORDER = ['semente','broto','árvore','fruto','luz'];
+          const prevLevelIdx = LEVELS_ORDER.indexOf(missions.level);
+          const prevLevelMins = [0, 100, 300, 600, 1000];
+          const currentMin = prevLevelMins[prevLevelIdx] ?? 0;
+          const nextMin = missions.nextLevelMin ?? null;
+          const xpInLevel = missions.total - currentMin;
+          const xpNeeded = nextMin ? nextMin - currentMin : null;
+          const pct = xpNeeded ? Math.min((xpInLevel / xpNeeded) * 100, 100) : 100;
+          return (
+            <div className={`rounded-2xl border p-4 ${style.bg} ${style.border}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{emoji}</span>
+                  <div>
+                    <p className={`text-base font-bold capitalize ${style.text}`}>{missions.level}</p>
+                    <p className="text-xs text-slate-400">{missions.total} XP acumulado</p>
+                  </div>
+                </div>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${style.bg} ${style.text} ${style.border}`}>
+                  {missions.weekPoints} pts esta semana
+                </span>
+              </div>
+              {xpNeeded ? (
+                <>
+                  <div className="w-full bg-white/70 rounded-full h-3 border border-white shadow-inner overflow-hidden">
+                    <div
+                      className={`h-3 rounded-full transition-all ${style.bar}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1.5 text-[11px] text-slate-400">
+                    <span>{xpInLevel} / {xpNeeded} XP</span>
+                    {missions.nextLevelName && (
+                      <span>Próximo: <span className={`font-semibold capitalize ${style.text}`}>{missions.nextLevelName}</span></span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className={`text-xs font-semibold mt-1 ${style.text}`}>Nível máximo atingido! ✨</p>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Missões Semanais */}
         {missions && (
           <div className="bg-white rounded-2xl border border-slate-100 p-4">
@@ -706,31 +762,26 @@ export default function ProfilePage() {
               </span>
             </div>
 
-            {/* Nível */}
-            <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-indigo-700 capitalize">
-                  {['semente','broto','árvore','fruto','luz'].includes(missions.level)
-                    ? { semente:'🌱', broto:'🌿', árvore:'🌳', fruto:'🍎', luz:'✨' }[missions.level as 'semente'|'broto'|'árvore'|'fruto'|'luz']
-                    : '🌱'
-                  } Nível {missions.level}
-                </span>
-                <span className="text-xs text-slate-500">{missions.total} pts total</span>
-              </div>
-              {missions.nextLevelMin && (
-                <div className="w-full bg-indigo-100 rounded-full h-2">
-                  <div
-                    className="bg-indigo-500 h-2 rounded-full transition-all"
-                    style={{ width: `${Math.min((missions.total / missions.nextLevelMin) * 100, 100)}%` }}
-                  />
+            {/* Resumo semanal */}
+            {(() => {
+              const completed = missions.missions.filter(m => m.completed).length;
+              const total = missions.missions.length;
+              const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+              return (
+                <div className="mb-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-semibold text-slate-600">{completed} de {total} missões esta semana</span>
+                    <span className="text-xs font-bold text-indigo-600">{pct}%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-2 rounded-full transition-all ${pct === 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-              )}
-              {missions.nextLevelName && (
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Próximo nível: <span className="capitalize font-medium">{missions.nextLevelName}</span> ({missions.nextLevelMin} pts)
-                </p>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Lista de missões */}
             <div className="space-y-2">
