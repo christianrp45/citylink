@@ -29,7 +29,16 @@ export function LicaoClient({ meta, section, prev, next, total, current }: Props
 
   useEffect(() => {
     setConcluido(localStorage.getItem(storageKey) === 'done');
-  }, [storageKey]);
+    // Salva última lição visitada para "continuar de onde parou"
+    try {
+      localStorage.setItem('formacao:last_lesson', JSON.stringify({
+        caderno: meta.slug,
+        licao: section.slug,
+        titulo: section.titulo,
+        cadernoTitulo: meta.titulo,
+      }));
+    } catch {}
+  }, [storageKey, meta.slug, meta.titulo, section.slug, section.titulo]);
 
   // Injeta ?from= nos links de versículos para o leitor Bíblico saber onde voltar
   useEffect(() => {

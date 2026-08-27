@@ -27,13 +27,26 @@ export function CadernoClient({ meta, sections, cor }: Props) {
   const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
+    // Lê localStorage imediatamente para exibição instantânea
     const done = new Set<string>();
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith(`formacao:${meta.slug}:`)) {
         done.add(key.replace(`formacao:${meta.slug}:`, ''));
       }
     }
-    setCompleted(done);
+    setCompleted(new Set(done));
+
+    // Faz merge com progresso do servidor (sincronização cross-device)
+    fetch(`/api/formacao/progress?caderno=${meta.slug}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((licoes: string[]) => {
+        for (const licao of licoes) {
+          localStorage.setItem(`formacao:${meta.slug}:${licao}`, 'done');
+          done.add(licao);
+        }
+        setCompleted(new Set(done));
+      })
+      .catch(() => {});
   }, [meta.slug]);
 
   useEffect(() => {

@@ -18,23 +18,49 @@ function useFormacaoProgress() {
   const [progress, setProgress] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    const result: Record<string, number> = {};
+    // 1. Lê localStorage imediatamente (exibição instantânea)
+    const local: Record<string, number> = {};
     for (const caderno of CADERNOS) {
-      const keys = Object.keys(localStorage).filter((k) =>
+      local[caderno.slug] = Object.keys(localStorage).filter((k) =>
         k.startsWith(`formacao:${caderno.slug}:`),
-      );
-      result[caderno.slug] = keys.length;
+      ).length;
     }
-    setProgress(result);
+    setProgress(local);
+
+    // 2. Busca progresso do servidor e faz merge (sync cross-device)
+    fetch('/api/formacao/progress')
+      .then((r) => r.ok ? r.json() : null)
+      .then((serverData: Record<string, string[]> | null) => {
+        if (!serverData) return;
+        const merged = { ...local };
+        for (const [caderno, licoes] of Object.entries(serverData)) {
+          for (const licao of licoes) {
+            localStorage.setItem(`formacao:${caderno}:${licao}`, 'done');
+          }
+          merged[caderno] = Math.max(merged[caderno] ?? 0, licoes.length);
+        }
+        setProgress(merged);
+      })
+      .catch(() => {});
   }, []);
 
   return progress;
 }
 
+type LastLesson = { caderno: string; licao: string; titulo: string; cadernoTitulo: string };
+
 export default function FormacaoPage() {
   const progress = useFormacaoProgress();
   const [allPassed, setAllPassed] = useState(false);
   const [minhasTurmas, setMinhasTurmas] = useState<MinhasTurmas>([]);
+  const [lastLesson, setLastLesson] = useState<LastLesson | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('formacao:last_lesson');
+      if (saved) setLastLesson(JSON.parse(saved));
+    } catch {}
+  }, []);
 
   useEffect(() => {
     fetch('/api/formacao/certificate')
@@ -56,6 +82,22 @@ export default function FormacaoPage() {
         </h1>
         <p className="text-xs text-slate-400 mt-0.5">Formação Batista — 8 cadernos</p>
       </div>
+
+      {/* Continuar de onde parou */}
+      {lastLesson && (
+        <Link
+          href={`/formacao/${lastLesson.caderno}/${lastLesson.licao}`}
+          className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-2xl px-4 py-3.5 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+        >
+          <ChevronRight size={22} className="text-white/80 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-white/70 text-[10px] font-semibold uppercase tracking-wide">Continuar</p>
+            <p className="text-white font-bold text-sm truncate">{lastLesson.titulo}</p>
+            <p className="text-white/60 text-xs truncate">{lastLesson.cadernoTitulo}</p>
+          </div>
+          <span className="text-white/50 text-xs flex-shrink-0">→</span>
+        </Link>
+      )}
 
       {/* Minhas matrículas */}
       {minhasTurmas.length === 0 && (
