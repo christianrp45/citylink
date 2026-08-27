@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import QRCode from 'react-qr-code';
 import { toast } from 'sonner';
-import { Share2, QrCode, X, UserPlus, Trash2, Phone, Mail, Loader2, Check } from 'lucide-react';
+import { Share2, QrCode, X, UserPlus, Trash2, Phone, Mail, Loader2, Check, CalendarDays } from 'lucide-react';
 
 interface CellVisitor {
   id: string;
@@ -380,6 +380,14 @@ export default function CellDetailPage() {
             <p className="text-2xl">📚</p>
             <p className="font-medium text-gray-800 mt-1 text-sm">Histórico</p>
           </Link>
+          <a
+            href={`/api/mdc/cells/${cellId}/ical`}
+            download
+            className="bg-white rounded-xl p-4 shadow-sm text-center hover:shadow-md transition flex flex-col items-center"
+          >
+            <CalendarDays size={24} className="text-indigo-500 mb-0.5" />
+            <p className="font-medium text-gray-800 mt-1 text-sm">Calendário</p>
+          </a>
         </div>
 
         {/* Formação Batista */}
