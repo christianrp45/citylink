@@ -62,6 +62,16 @@ export default function CellDetailPage() {
   // Toggle de entryMode (líder)
   const [entryModeLoading, setEntryModeLoading] = useState(false);
 
+  // Saúde da célula
+  type HealthData = {
+    totalMeetings: number;
+    avgRate: number;
+    memberStats: { userId: string; name: string; avatar: string | null; attended: number; eligible: number; rate: number }[];
+    inactiveCount: number;
+  };
+  const [health, setHealth] = useState<HealthData | null>(null);
+  const [healthOpen, setHealthOpen] = useState(false);
+
   // Visitantes
   const [visitors, setVisitors] = useState<CellVisitor[]>([]);
   const [showVisitorForm, setShowVisitorForm] = useState(false);
@@ -81,6 +91,10 @@ export default function CellDetailPage() {
     fetch(`/api/mdc/cells/${cellId}/visitors`)
       .then((r) => r.json())
       .then((data) => Array.isArray(data) && setVisitors(data))
+      .catch(() => {});
+    fetch(`/api/mdc/cells/${cellId}/health`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => data && setHealth(data))
       .catch(() => {});
   }, [cellId]);
 
@@ -393,6 +407,78 @@ export default function CellDetailPage() {
           </div>
           <span className="text-slate-400 text-lg">›</span>
         </Link>
+
+        {/* Saúde da Célula — apenas para líderes */}
+        {isLeader && health && health.totalMeetings > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <button
+              onClick={() => setHealthOpen((o) => !o)}
+              className="w-full flex items-center gap-3 px-4 py-3.5"
+            >
+              <span className="text-2xl">📊</span>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-bold text-slate-800 text-sm">Saúde da Célula</p>
+                <p className="text-slate-500 text-xs">
+                  {health.totalMeetings} reuniões · {health.avgRate}% presença média
+                  {health.inactiveCount > 0 && ` · ${health.inactiveCount} inativo${health.inactiveCount > 1 ? 's' : ''}`}
+                </p>
+              </div>
+              <span className="text-slate-400 text-lg">{healthOpen ? '▲' : '▼'}</span>
+            </button>
+            {healthOpen && (
+              <div className="px-4 pb-4 border-t border-slate-100">
+                {/* Summary chips */}
+                <div className="flex gap-2 flex-wrap pt-3 pb-3">
+                  <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-indigo-100">
+                    📅 {health.totalMeetings} reuniões
+                  </div>
+                  <div className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                    health.avgRate >= 70 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                    health.avgRate >= 50 ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                    'bg-red-50 text-red-600 border-red-100'
+                  }`}>
+                    {health.avgRate >= 70 ? '✅' : health.avgRate >= 50 ? '⚠️' : '🔴'} {health.avgRate}% média
+                  </div>
+                  {health.inactiveCount > 0 && (
+                    <div className="flex items-center gap-1.5 bg-red-50 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-full border border-red-100">
+                      😴 {health.inactiveCount} inativo{health.inactiveCount > 1 ? 's' : ''}
+                    </div>
+                  )}
+                </div>
+                {/* Member attendance list */}
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">Frequência por membro</p>
+                <div className="space-y-2">
+                  {health.memberStats.map((m) => (
+                    <div key={m.userId} className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                        {m.avatar ? <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" /> : (
+                          <span className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-500">
+                            {m.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs font-medium text-slate-700 truncate">{m.name}</span>
+                          <span className={`text-[10px] font-bold flex-shrink-0 ml-2 ${m.rate >= 70 ? 'text-emerald-600' : m.rate >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                            {m.rate}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full transition-all ${m.rate >= 70 ? 'bg-emerald-500' : m.rate >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+                            style={{ width: `${m.rate}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-slate-400 flex-shrink-0 ml-1">{m.attended}/{m.eligible}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Dashboard do Líder */}
         {isLeader && (
