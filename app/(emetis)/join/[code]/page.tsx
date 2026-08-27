@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { Users, CheckCircle2, ChevronRight } from "lucide-react";
 
 interface InvitePreview {
   code: string;
@@ -11,28 +12,24 @@ interface InvitePreview {
   targetId: string;
   targetName: string;
   targetAvatar: string | null;
+  targetDescription: string | null;
+  targetMemberCount: number | null;
   role: string;
   expiresAt: string | null;
   maxUses: number | null;
   usedCount: number;
 }
 
-const typeLabel: Record<string, string> = {
-  church: "Igreja",
-  cell: "Célula",
-  community: "Comunidade",
-};
-
-const typeIcon: Record<string, string> = {
-  church: "⛪",
-  cell: "👥",
-  community: "🏘️",
+const TYPE_CONFIG: Record<string, { label: string; icon: string; gradient: string }> = {
+  church:    { label: "Igreja",     icon: "⛪",  gradient: "from-blue-600 to-indigo-700" },
+  cell:      { label: "Célula",     icon: "👥",  gradient: "from-indigo-600 to-purple-700" },
+  community: { label: "Comunidade", icon: "🏘️", gradient: "from-violet-600 to-purple-700" },
 };
 
 const typeRoute: Record<string, string> = {
   church: "/map",
   cell: "/mdc",
-  community: "/community",
+  community: "/mdc",
 };
 
 export default function JoinPage({
@@ -49,30 +46,24 @@ export default function JoinPage({
   const [joined, setJoined] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Resolver params (Next.js 16 async params)
   useEffect(() => {
     params.then(({ code: c }) => setCode(c.toUpperCase()));
   }, [params]);
 
-  // Redirecionar para login se não autenticado
   useEffect(() => {
     if (status === "unauthenticated" && code) {
       router.push(`/login?redirect=/join/${code}`);
     }
   }, [status, code, router]);
 
-  // Buscar preview do convite
   useEffect(() => {
     if (!code || status !== "authenticated") return;
     setLoading(true);
     fetch(`/api/invite/${code}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setInvite(data);
-        }
+        if (data.error) setError(data.error);
+        else setInvite(data);
       })
       .catch(() => setError("Erro ao carregar convite"))
       .finally(() => setLoading(false));
@@ -99,35 +90,50 @@ export default function JoinPage({
     }
   }
 
+  // Loading skeleton
   if (status === "loading" || loading) {
     return (
-      <div className="flex items-center justify-center h-full min-h-screen bg-slate-50">
-        <div className="text-slate-400">Carregando...</div>
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <div className="h-56 bg-slate-200 animate-pulse rounded-b-3xl" />
+        <div className="px-6 -mt-8 flex flex-col gap-3">
+          <div className="w-16 h-16 rounded-full bg-slate-200 animate-pulse mx-auto" />
+          <div className="h-6 bg-slate-200 animate-pulse rounded-full w-48 mx-auto mt-2" />
+          <div className="h-4 bg-slate-100 animate-pulse rounded-full w-64 mx-auto" />
+          <div className="h-12 bg-slate-200 animate-pulse rounded-2xl mt-6" />
+        </div>
       </div>
     );
   }
 
-  if (joined) {
+  // Success state
+  if (joined && invite) {
+    const cfg = TYPE_CONFIG[invite.type];
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-screen bg-slate-50 gap-4 px-6">
-        <div className="text-5xl">🎉</div>
-        <h1 className="text-2xl font-bold text-slate-800">Bem-vindo(a)!</h1>
-        <p className="text-slate-500 text-center">
-          Você entrou em <strong>{invite?.targetName}</strong>. Redirecionando...
-        </p>
+      <div className={`min-h-screen flex flex-col items-center justify-center bg-gradient-to-br ${cfg.gradient} px-6`}>
+        <div className="text-center">
+          <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 size={40} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Bem-vindo(a)!</h1>
+          <p className="text-white/80 text-base">
+            Você entrou em <strong>{invite.targetName}</strong>.
+          </p>
+          <p className="text-white/60 text-sm mt-1">Redirecionando…</p>
+        </div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-screen bg-slate-50 gap-4 px-6">
-        <div className="text-5xl">🔗</div>
-        <h1 className="text-2xl font-bold text-slate-800">Convite inválido</h1>
-        <p className="text-red-500 text-center">{error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-6 gap-5">
+        <div className="text-6xl">🔗</div>
+        <h1 className="text-xl font-bold text-slate-800">Convite inválido</h1>
+        <p className="text-red-500 text-center text-sm">{error}</p>
         <Link
           href="/"
-          className="px-6 py-2 bg-slate-800 text-white rounded-xl text-sm font-medium"
+          className="px-6 py-3 bg-slate-800 text-white rounded-2xl text-sm font-semibold"
         >
           Ir para o início
         </Link>
@@ -137,60 +143,103 @@ export default function JoinPage({
 
   if (!invite) return null;
 
-  const expiresLabel = invite.expiresAt
-    ? `Expira em ${new Date(invite.expiresAt).toLocaleDateString("pt-BR")}`
-    : "Sem prazo de expiração";
+  const cfg = TYPE_CONFIG[invite.type] ?? { label: invite.type, icon: "🔗", gradient: "from-slate-600 to-slate-800" };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 px-6 py-12">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center gap-6">
-        {/* Avatar / ícone */}
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      {/* Gradient hero */}
+      <div className={`bg-gradient-to-br ${cfg.gradient} pt-12 pb-20 px-6 flex flex-col items-center text-center`}>
+        {/* Avatar */}
         {invite.targetAvatar ? (
           <img
             src={invite.targetAvatar}
             alt={invite.targetName}
-            className="w-20 h-20 rounded-full object-cover border-4 border-slate-100"
+            className="w-20 h-20 rounded-full object-cover border-4 border-white/30 shadow-xl mb-4"
           />
         ) : (
-          <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center text-4xl">
-            {typeIcon[invite.type]}
+          <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-4xl shadow-xl mb-4">
+            {cfg.icon}
           </div>
         )}
 
-        {/* Tipo + nome */}
-        <div className="text-center">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
-            {typeLabel[invite.type]}
-          </p>
-          <h1 className="text-2xl font-bold text-slate-800">{invite.targetName}</h1>
-        </div>
+        {/* Type label */}
+        <span className="text-white/70 text-xs font-bold uppercase tracking-widest mb-2">
+          Você foi convidado para a {cfg.label}
+        </span>
 
-        {/* Detalhes do convite */}
-        <div className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-500 space-y-1">
-          <p>
-            <span className="font-medium text-slate-700">Código:</span>{" "}
-            <span className="font-mono">{invite.code}</span>
-          </p>
-          <p>
-            <span className="font-medium text-slate-700">Papel:</span>{" "}
-            {invite.role}
-          </p>
-          <p className="text-xs text-slate-400">{expiresLabel}</p>
-        </div>
+        {/* Name */}
+        <h1 className="text-2xl font-bold text-white mb-2 leading-tight">
+          {invite.targetName}
+        </h1>
 
-        {/* CTA */}
-        <button
-          onClick={handleJoin}
-          disabled={joining}
-          className="w-full py-3 bg-slate-800 text-white rounded-xl font-semibold text-base hover:bg-slate-700 active:bg-slate-900 transition disabled:opacity-50"
-        >
-          {joining ? "Entrando..." : `Entrar em ${invite.targetName}`}
-        </button>
-
-        <Link href="/" className="text-sm text-slate-400 hover:text-slate-600">
-          Cancelar
-        </Link>
+        {/* Member count */}
+        {invite.targetMemberCount !== null && invite.targetMemberCount > 0 && (
+          <div className="flex items-center gap-1.5 text-white/70 text-sm">
+            <Users size={14} />
+            <span>{invite.targetMemberCount} membro{invite.targetMemberCount !== 1 ? 's' : ''}</span>
+          </div>
+        )}
       </div>
+
+      {/* Card content */}
+      <div className="flex-1 px-5 -mt-6">
+        <div className="bg-white rounded-3xl shadow-xl p-5 space-y-4">
+          {/* Description */}
+          {invite.targetDescription && (
+            <p className="text-sm text-slate-600 leading-relaxed text-center">
+              {invite.targetDescription}
+            </p>
+          )}
+
+          {/* Invite details */}
+          <div className="bg-slate-50 rounded-2xl px-4 py-3 space-y-1.5 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Código</span>
+              <span className="font-mono text-slate-800 font-semibold">{invite.code}</span>
+            </div>
+            {invite.role && invite.role !== 'member' && (
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Papel</span>
+                <span className="text-slate-700 font-medium capitalize">{invite.role}</span>
+              </div>
+            )}
+            {invite.expiresAt && (
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Expira em</span>
+                <span className="text-slate-500 text-xs">{new Date(invite.expiresAt).toLocaleDateString("pt-BR")}</span>
+              </div>
+            )}
+            {invite.maxUses && (
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Usos</span>
+                <span className="text-slate-500 text-xs">{invite.usedCount} / {invite.maxUses}</span>
+              </div>
+            )}
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={handleJoin}
+            disabled={joining}
+            className={`w-full py-4 bg-gradient-to-r ${cfg.gradient} text-white rounded-2xl font-bold text-base flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-60`}
+          >
+            {joining ? (
+              <span className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+            ) : (
+              <>
+                Entrar em {invite.targetName}
+                <ChevronRight size={18} />
+              </>
+            )}
+          </button>
+
+          <Link href="/" className="block text-center text-sm text-slate-400 hover:text-slate-600 py-1">
+            Cancelar
+          </Link>
+        </div>
+      </div>
+
+      <div className="h-8" />
     </div>
   );
 }

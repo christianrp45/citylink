@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { getInviteCode, revokeInviteCode, getCommunityById, getChurchById } from "@/lib/db/queries";
+import { getInviteCode, revokeInviteCode, getCommunityById, getChurchById, getCommunityMembers } from "@/lib/db/queries";
 import { getCellById } from "@/lib/db/queries-cells";
 
 // GET /api/invite/[code] — pré-visualiza o convite (destino + tipo)
@@ -30,18 +30,27 @@ export async function GET(
     );
   }
 
-  // Buscar nome do destino para exibir no preview
+  // Buscar dados do destino para exibir no preview
   let targetName = "";
   let targetAvatar: string | null = null;
+  let targetDescription: string | null = null;
+  let targetMemberCount: number | null = null;
 
   try {
     if (invite.type === "cell") {
       const cell = await getCellById(invite.targetId);
       targetName = cell?.name ?? "";
+      targetDescription = cell?.description ?? null;
+      targetMemberCount = cell?.memberCount ?? null;
     } else if (invite.type === "community") {
-      const community = await getCommunityById(invite.targetId);
+      const [community, members] = await Promise.all([
+        getCommunityById(invite.targetId),
+        getCommunityMembers(invite.targetId),
+      ]);
       targetName = community?.name ?? "";
       targetAvatar = community?.avatar ?? null;
+      targetDescription = community?.description ?? null;
+      targetMemberCount = members.length;
     } else if (invite.type === "church") {
       const church = await getChurchById(invite.targetId);
       targetName = church?.name ?? "";
@@ -56,6 +65,8 @@ export async function GET(
     targetId: invite.targetId,
     targetName,
     targetAvatar,
+    targetDescription,
+    targetMemberCount,
     role: invite.role,
     expiresAt: invite.expiresAt,
     maxUses: invite.maxUses,
