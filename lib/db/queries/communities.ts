@@ -180,8 +180,6 @@ export async function getUserCommunityRole(communityId: string, userId: string) 
   return row ?? null;
 }
 
-/**
- * Deleta uma comunidade e limpa as referências dependentes.
 export async function updateCommunity(
   communityId: string,
   data: {
@@ -200,6 +198,7 @@ export async function updateCommunity(
 }
 
 /**
+ * Deleta uma comunidade e limpa as referências dependentes.
  * Só pode ser chamado pelo admin/owner da comunidade.
  */
 export async function deleteCommunity(communityId: string) {

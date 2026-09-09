@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useChat, type Message } from '@ai-sdk/react';
+import { useChat } from '@ai-sdk/react';
+import { type UIMessage } from 'ai';
 import { DefaultChatTransport } from 'ai';
 import { X, Send, RotateCcw } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -47,10 +48,10 @@ function getContextPrompts(pathname: string): string[] {
   ];
 }
 
-function loadSavedMessages(): Message[] {
+function loadSavedMessages(): UIMessage[] {
   try {
     const saved = localStorage.getItem(TEO_STORAGE_KEY);
-    return saved ? (JSON.parse(saved) as Message[]) : [];
+    return saved ? (JSON.parse(saved) as UIMessage[]) : [];
   } catch {
     return [];
   }
@@ -65,11 +66,11 @@ export function TeoFAB() {
   const pathname = usePathname();
   const contextPrompts = getContextPrompts(pathname);
 
-  const [initialMessages] = useState<Message[]>(() => loadSavedMessages());
+  const [savedMessages] = useState<UIMessage[]>(() => loadSavedMessages());
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: '/api/teo' }),
-    initialMessages,
+    messages: savedMessages,
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';

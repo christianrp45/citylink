@@ -1,6 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { getInviteCode, revokeInviteCode, getCommunityById, getChurchById, getCommunityMembers } from "@/lib/db/queries";
-import { getCellById } from "@/lib/db/queries-cells";
+import { getCellById, getCellMemberCount } from "@/lib/db/queries-cells";
 
 // GET /api/invite/[code] — pré-visualiza o convite (destino + tipo)
 export async function GET(
@@ -38,10 +38,13 @@ export async function GET(
 
   try {
     if (invite.type === "cell") {
-      const cell = await getCellById(invite.targetId);
+      const [cell, memberCount] = await Promise.all([
+        getCellById(invite.targetId),
+        getCellMemberCount(invite.targetId),
+      ]);
       targetName = cell?.name ?? "";
       targetDescription = cell?.description ?? null;
-      targetMemberCount = cell?.memberCount ?? null;
+      targetMemberCount = memberCount;
     } else if (invite.type === "community") {
       const [community, members] = await Promise.all([
         getCommunityById(invite.targetId),

@@ -114,15 +114,15 @@ CREATE TABLE IF NOT EXISTS "UserTalent" (
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "Cell" ADD COLUMN "entryMode" varchar DEFAULT 'invite_only' NOT NULL;--> statement-breakpoint
-ALTER TABLE "CellGuide" ADD COLUMN "leaderNotes" text;--> statement-breakpoint
-ALTER TABLE "Friendship" ADD COLUMN "circle" varchar DEFAULT 'friends' NOT NULL;--> statement-breakpoint
-ALTER TABLE "PrayerInteraction" ADD COLUMN "emoji" varchar(10) DEFAULT '🙏' NOT NULL;--> statement-breakpoint
-ALTER TABLE "TestimonialLike" ADD COLUMN "emoji" varchar(10) DEFAULT '❤️' NOT NULL;--> statement-breakpoint
-ALTER TABLE "User" ADD COLUMN "primaryChurchId" uuid;--> statement-breakpoint
-ALTER TABLE "User" ADD COLUMN "birthDate" date;--> statement-breakpoint
-ALTER TABLE "User" ADD COLUMN "referredBy" uuid;--> statement-breakpoint
-ALTER TABLE "User" ADD COLUMN "personalInviteCode" varchar(10);--> statement-breakpoint
+ALTER TABLE "Cell" ADD COLUMN IF NOT EXISTS "entryMode" varchar DEFAULT 'invite_only' NOT NULL;--> statement-breakpoint
+ALTER TABLE "CellGuide" ADD COLUMN IF NOT EXISTS "leaderNotes" text;--> statement-breakpoint
+ALTER TABLE "Friendship" ADD COLUMN IF NOT EXISTS "circle" varchar DEFAULT 'friends' NOT NULL;--> statement-breakpoint
+ALTER TABLE "PrayerInteraction" ADD COLUMN IF NOT EXISTS "emoji" varchar(10) DEFAULT '🙏' NOT NULL;--> statement-breakpoint
+ALTER TABLE "TestimonialLike" ADD COLUMN IF NOT EXISTS "emoji" varchar(10) DEFAULT '❤️' NOT NULL;--> statement-breakpoint
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "primaryChurchId" uuid;--> statement-breakpoint
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "birthDate" date;--> statement-breakpoint
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "referredBy" uuid;--> statement-breakpoint
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "personalInviteCode" varchar(10);--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "BusinessRecommendation" ADD CONSTRAINT "BusinessRecommendation_communityId_Community_id_fk" FOREIGN KEY ("communityId") REFERENCES "public"."Community"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
