@@ -48,6 +48,7 @@ export async function GET(req: Request) {
     if (!result) return new Response('Certificado não disponível', { status: 404 });
 
     return Response.json({
+      userId: session.user.id,
       userName: userData?.name ?? 'Participante',
       churchName,
       completedAt: result.completedAt,
@@ -80,6 +81,7 @@ export async function GET(req: Request) {
     .sort((a, b) => b.getTime() - a.getTime())[0];
 
   return Response.json({
+    userId: session.user.id,
     userName: userData?.name ?? 'Participante',
     churchName,
     completedAt: lastDate,
