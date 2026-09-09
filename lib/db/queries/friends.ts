@@ -79,18 +79,18 @@ export async function getFriends(userId: string) {
 }
 
 // Retorna mapa friendId → circle para uso no /api/users/nearby
-export async function getFriendCircles(userId: string): Promise<Record<string, "family" | "friends">> {
+export async function getFriendCircles(userId: string): Promise<Record<string, "family" | "friends" | "members">> {
   const rows = await db
     .select({ friendId: friendship.friendId, circle: friendship.circle })
     .from(friendship)
     .where(and(eq(friendship.userId, userId), eq(friendship.status, "accepted")));
-  return Object.fromEntries(rows.map((r) => [r.friendId, (r.circle ?? "friends") as "family" | "friends"]));
+  return Object.fromEntries(rows.map((r) => [r.friendId, (r.circle ?? "friends") as "family" | "friends" | "members"]));
 }
 
 export async function updateFriendCircle(
   userId: string,
   friendId: string,
-  circle: "family" | "friends"
+  circle: "family" | "friends" | "members"
 ) {
   await db
     .update(friendship)

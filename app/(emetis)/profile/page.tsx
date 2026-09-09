@@ -30,7 +30,7 @@ type FriendWithCircle = {
   avatar: string | null;
   profession: string | null;
   status: string;
-  circle: 'family' | 'friends';
+  circle: 'family' | 'friends' | 'members';
 };
 
 type SavedLocation = {
@@ -320,7 +320,8 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleCircleChange(friendId: string, circle: 'family' | 'friends') {
+  async function handleCircleChange(friendId: string, circle: 'family' | 'friends' | 'members') {
+    const previous = friends.find((f) => f.id === friendId)?.circle ?? 'friends';
     setUpdatingCircle(friendId);
     setFriends((prev) =>
       prev.map((f) => (f.id === friendId ? { ...f, circle } : f))
@@ -335,9 +336,7 @@ export default function ProfilePage() {
       // reverte
       setFriends((prev) =>
         prev.map((f) =>
-          f.id === friendId
-            ? { ...f, circle: circle === 'family' ? 'friends' : 'family' }
-            : f
+          f.id === friendId ? { ...f, circle: previous } : f
         )
       );
     } finally {
@@ -1105,6 +1104,9 @@ export default function ProfilePage() {
               <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold">
                 {friends.filter(f => f.circle === 'family').length} família
               </span>
+              <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-semibold">
+                {friends.filter(f => f.circle === 'members').length} membro
+              </span>
             </div>
             {circlesOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
           </button>
@@ -1113,7 +1115,7 @@ export default function ProfilePage() {
             <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 space-y-3">
               <p className="text-xs text-slate-500 leading-relaxed">
                 <strong>Família</strong> vê sua localização exata no mapa.{' '}
-                <strong>Amigos</strong> veem apenas o bairro (~1 km).
+                <strong>Amigos</strong> e <strong>Membros</strong> veem apenas o bairro (~1 km).
               </p>
 
               {friends.length === 0 ? (
@@ -1161,6 +1163,19 @@ export default function ProfilePage() {
                           {updatingCircle === f.id && f.circle !== 'friends' ? (
                             <Loader2 size={10} className="animate-spin" />
                           ) : '👥 Amigo'}
+                        </button>
+                        <button
+                          onClick={() => handleCircleChange(f.id, 'members')}
+                          disabled={updatingCircle === f.id}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                            f.circle === 'members'
+                              ? 'bg-green-600 text-white'
+                              : 'bg-white border border-slate-200 text-slate-500 hover:border-green-300'
+                          }`}
+                        >
+                          {updatingCircle === f.id && f.circle !== 'members' ? (
+                            <Loader2 size={10} className="animate-spin" />
+                          ) : '⛪ Membro'}
                         </button>
                       </div>
                     </div>

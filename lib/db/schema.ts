@@ -207,9 +207,9 @@ export const friendship = pgTable(
     })
       .notNull()
       .default("pending"),
-    // Círculo de Confiança: 'family' vê localização exata, 'friends' vê apenas bairro
+    // Círculo de Confiança: 'family' vê localização exata, 'friends'/'members' veem apenas bairro
     circle: varchar("circle", {
-      enum: ["family", "friends"],
+      enum: ["family", "friends", "members"],
     })
       .notNull()
       .default("friends"),

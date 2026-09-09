@@ -14,9 +14,9 @@ export async function PATCH(
   const { friendId } = await params;
   const { circle } = await request.json();
 
-  if (circle !== "family" && circle !== "friends") {
+  if (circle !== "family" && circle !== "friends" && circle !== "members") {
     return Response.json(
-      { error: "circle deve ser 'family' ou 'friends'" },
+      { error: "circle deve ser 'family', 'friends' ou 'members'" },
       { status: 400 }
     );
   }
