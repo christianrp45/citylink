@@ -19,6 +19,21 @@ interface PublicProfile {
   level: LevelInfo | null;
 }
 
+type CircleType = 'family' | 'friends' | 'members';
+type FriendStatus = 'none' | 'pending' | 'accepted';
+
+const CIRCLES: { value: CircleType; label: string; emoji: string; color: string; active: string }[] = [
+  { value: 'family',  label: 'Família', emoji: '❤️', color: 'border-rose-200 text-rose-600 hover:border-rose-400',   active: 'bg-rose-500 text-white border-rose-500' },
+  { value: 'friends', label: 'Amigo',   emoji: '👥', color: 'border-blue-200 text-blue-600 hover:border-blue-400',   active: 'bg-blue-500 text-white border-blue-500' },
+  { value: 'members', label: 'Membro',  emoji: '⛪', color: 'border-green-200 text-green-700 hover:border-green-400', active: 'bg-green-600 text-white border-green-600' },
+];
+
+const CIRCLE_DESC: Record<CircleType, string> = {
+  family:  'Vê sua localização exata no mapa',
+  friends: 'Vê apenas seu bairro (~1 km)',
+  members: 'Vê apenas seu bairro (~1 km)',
+};
+
 const STATUS_LABEL: Record<string, { label: string; color: string; dot: string }> = {
   'mesa-posta':   { label: 'Mesa Posta',   color: 'text-green-600',  dot: 'bg-green-500' },
   'requer-aviso': { label: 'Requer Aviso', color: 'text-amber-600',  dot: 'bg-amber-400' },
@@ -31,16 +46,33 @@ export default function ConnectPage() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // estado de amizade
+  const [friendStatus, setFriendStatus] = useState<FriendStatus>('none');
+  const [currentCircle, setCurrentCircle] = useState<CircleType>('friends');
+  const [selectedCircle, setSelectedCircle] = useState<CircleType>('friends');
+
+  // ações
   const [sendingRequest, setSendingRequest] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [updatingCircle, setUpdatingCircle] = useState(false);
+  const [circleSuccess, setCircleSuccess] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/users/${userId}`)
-      .then((r) => {
+    Promise.all([
+      fetch(`/api/users/${userId}`).then((r) => {
         if (!r.ok) throw new Error('Usuário não encontrado');
-        return r.json();
+        return r.json() as Promise<PublicProfile>;
+      }),
+      fetch(`/api/friends/${userId}/circle`).then((r) => r.json() as Promise<{ status: string; circle: string | null }>),
+    ])
+      .then(([prof, friendship]) => {
+        setProfile(prof);
+        const status = (friendship.status ?? 'none') as FriendStatus;
+        const circle = (friendship.circle ?? 'friends') as CircleType;
+        setFriendStatus(status);
+        setCurrentCircle(circle);
+        setSelectedCircle(circle);
       })
-      .then(setProfile)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [userId]);
@@ -53,9 +85,26 @@ export default function ConnectPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ friendId: userId }),
       });
-      if (res.ok) setSent(true);
+      if (res.ok) setFriendStatus('pending');
     } finally {
       setSendingRequest(false);
+    }
+  }
+
+  async function handleSaveCircle() {
+    setUpdatingCircle(true);
+    setCircleSuccess(false);
+    try {
+      await fetch(`/api/friends/${userId}/circle`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ circle: selectedCircle }),
+      });
+      setCurrentCircle(selectedCircle);
+      setCircleSuccess(true);
+      setTimeout(() => setCircleSuccess(false), 2500);
+    } finally {
+      setUpdatingCircle(false);
     }
   }
 
@@ -84,12 +133,15 @@ export default function ConnectPage() {
     ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name ?? 'U')}&background=6366f1&color=fff&size=128`;
 
   const statusInfo = STATUS_LABEL[profile.availabilityStatus ?? 'offline'];
+  const circleChanged = selectedCircle !== currentCircle;
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50 pb-24">
       {/* Header */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-700 pt-10 pb-16 px-4 text-center">
-        <p className="text-indigo-200 text-sm mb-4">Você escaneou o QR Code de</p>
+        <p className="text-indigo-200 text-sm mb-4">
+          {friendStatus === 'accepted' ? 'Seu vínculo com' : 'Você escaneou o QR Code de'}
+        </p>
         <div className="relative w-24 h-24 mx-auto">
           <img
             src={avatarUrl}
@@ -126,9 +178,56 @@ export default function ConnectPage() {
           <p className="text-slate-600 text-sm leading-relaxed">{profile.bio}</p>
         )}
 
-        {/* Ações */}
+        {/* ── Seletor de círculo ── */}
+        <div className="space-y-2.5 pt-1">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            {friendStatus === 'accepted' ? 'Tipo de vínculo' : 'Como você o conhece?'}
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {CIRCLES.map((c) => (
+              <button
+                key={c.value}
+                onClick={() => setSelectedCircle(c.value)}
+                className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                  selectedCircle === c.value ? c.active : `bg-white ${c.color}`
+                }`}
+              >
+                <span className="text-lg leading-none">{c.emoji}</span>
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-slate-400 text-center leading-snug">
+            {CIRCLE_DESC[selectedCircle]}
+          </p>
+        </div>
+
+        {/* ── Ações ── */}
         <div className="space-y-3 pt-1">
-          {sent ? (
+          {friendStatus === 'accepted' ? (
+            <>
+              {circleSuccess && (
+                <div className="flex items-center gap-2 justify-center py-2.5 bg-green-50 rounded-xl text-green-700 text-sm font-semibold">
+                  <UserCheck size={16} /> Vínculo atualizado!
+                </div>
+              )}
+              {circleChanged && !circleSuccess && (
+                <button
+                  onClick={handleSaveCircle}
+                  disabled={updatingCircle}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-50 active:scale-95 transition-all"
+                >
+                  {updatingCircle ? <Loader2 size={18} className="animate-spin" /> : <UserCheck size={18} />}
+                  Salvar vínculo
+                </button>
+              )}
+              {!circleChanged && !circleSuccess && (
+                <div className="flex items-center gap-2 justify-center py-2.5 bg-slate-50 rounded-xl text-slate-500 text-sm">
+                  <UserCheck size={16} className="text-indigo-400" /> Já conectados
+                </div>
+              )}
+            </>
+          ) : friendStatus === 'pending' ? (
             <div className="flex items-center gap-2 justify-center py-3 bg-green-50 rounded-xl text-green-700 text-sm font-semibold">
               <UserCheck size={18} />
               Pedido de amizade enviado!
@@ -140,7 +239,7 @@ export default function ConnectPage() {
               className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-50 active:scale-95 transition-all"
             >
               {sendingRequest ? <Loader2 size={18} className="animate-spin" /> : <UserPlus size={18} />}
-              Adicionar como amigo
+              Adicionar como {CIRCLES.find(c => c.value === selectedCircle)?.label.toLowerCase()}
             </button>
           )}
 

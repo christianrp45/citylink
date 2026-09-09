@@ -1,7 +1,27 @@
 import { auth } from "@/app/(auth)/auth";
-import { updateFriendCircle } from "@/lib/db/queries";
+import { getFriendshipStatus, updateFriendCircle } from "@/lib/db/queries";
 
-// PATCH /api/friends/[friendId]/circle — move o amigo entre 'family' e 'friends'
+// GET /api/friends/[friendId]/circle — retorna status da amizade e círculo atual
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ friendId: string }> }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return Response.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
+  const { friendId } = await params;
+  const friendship = await getFriendshipStatus(session.user.id, friendId);
+
+  if (!friendship) {
+    return Response.json({ status: "none", circle: null });
+  }
+
+  return Response.json({ status: friendship.status, circle: friendship.circle ?? "friends" });
+}
+
+// PATCH /api/friends/[friendId]/circle — move o amigo entre os círculos
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ friendId: string }> }
