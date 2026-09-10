@@ -46,7 +46,14 @@ type CellStat = {
   recentMeetings: RecentMeeting[];
 };
 
+type ChurchInfo = {
+  id: string;
+  name: string;
+  denomination: string | null;
+};
+
 type DashboardData = {
+  churches: ChurchInfo[];
   communities: CommunityInfo[];
   cells: CellStat[];
   totals: {
@@ -116,7 +123,7 @@ export default function AdminPage() {
     );
   }
 
-  const { communities, cells, totals } = data;
+  const { churches, communities, cells, totals } = data;
 
   // Filtrar células pela comunidade ativa
   const filteredCells = activeCommunity
@@ -199,6 +206,50 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* Gestão de igrejas */}
+      {churches.length > 0 && (
+        <div className="px-4 mb-4 space-y-2">
+          <h2 className="font-bold text-slate-700 text-sm">Gerenciar Igrejas</h2>
+          {churches.map((ch) => (
+            <Link
+              key={ch.id}
+              href={`/admin/igreja/${ch.id}`}
+              className="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-3 hover:border-indigo-200 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">⛪</span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">{ch.name}</p>
+                  <p className="text-xs text-slate-400">{ch.denomination ?? 'Igreja'} · Membros</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-slate-400" />
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Gestão de comunidades */}
+      <div className="px-4 mb-4 space-y-2">
+        <h2 className="font-bold text-slate-700 text-sm">Gerenciar Comunidades</h2>
+        {communities.map((com) => (
+          <Link
+            key={com.id}
+            href={`/admin/comunidade/${com.id}`}
+            className="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-3 hover:border-indigo-200 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{com.type === 'family' ? '👨‍👩‍👧' : com.type === 'church' ? '⛪' : '🏢'}</span>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">{com.name}</p>
+                <p className="text-xs text-slate-400">{com.type === 'family' ? 'Família' : com.type === 'church' ? 'Igreja' : 'Comunidade'} · Membros & pendentes</p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-slate-400" />
+          </Link>
+        ))}
+      </div>
 
       {/* Lista de células */}
       <div className="px-4 space-y-3">

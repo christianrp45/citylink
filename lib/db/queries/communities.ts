@@ -180,6 +180,28 @@ export async function getUserCommunityRole(communityId: string, userId: string) 
   return row ?? null;
 }
 
+// Adiciona membro diretamente (aprovado imediatamente, usado por admin)
+export async function addCommunityMemberDirect(
+  communityId: string,
+  userId: string,
+  role: "admin" | "moderator" | "member" = "member"
+) {
+  await db
+    .insert(communityMember)
+    .values({ communityId, userId, role, approvedAt: new Date() })
+    .onConflictDoUpdate({
+      target: [communityMember.communityId, communityMember.userId],
+      set: { role, approvedAt: new Date() },
+    });
+}
+
+// Remove membro da comunidade (aprovado ou pendente)
+export async function removeCommunityMember(communityId: string, userId: string) {
+  await db
+    .delete(communityMember)
+    .where(and(eq(communityMember.communityId, communityId), eq(communityMember.userId, userId)));
+}
+
 export async function updateCommunity(
   communityId: string,
   data: {

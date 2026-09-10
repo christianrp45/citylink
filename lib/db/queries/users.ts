@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, isNotNull, ne, eq } from "drizzle-orm";
+import { and, isNotNull, ilike, ne, eq, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { type User, user } from "../schema";
 import { ChatbotError } from "../../errors";
@@ -108,6 +108,18 @@ export async function updateUserPassword(email: string, hashedPassword: string) 
   } catch (_error) {
     throw new ChatbotError("bad_request:database", "Failed to update password");
   }
+}
+
+export async function searchUsers(query: string, excludeId?: string, limit = 20) {
+  const term = `%${query.trim()}%`;
+  const conditions = [or(ilike(user.name, term), ilike(user.email, term))!];
+  if (excludeId) conditions.push(ne(user.id, excludeId));
+
+  return db
+    .select({ id: user.id, name: user.name, email: user.email, avatar: user.avatar, profession: user.profession })
+    .from(user)
+    .where(and(...conditions))
+    .limit(limit);
 }
 
 export async function createGuestUser() {

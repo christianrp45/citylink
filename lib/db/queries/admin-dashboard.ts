@@ -4,6 +4,7 @@ import { and, desc, eq, inArray, count } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   community,
+  church,
   cell,
   cellMember,
   cellMeeting,
@@ -13,13 +14,19 @@ import {
 } from "../schema";
 
 export async function getAdminDashboard(adminUserId: string) {
+  // 0. Igrejas onde o usuário é admin
+  const adminChurches = await db
+    .select({ id: church.id, name: church.name, denomination: church.denomination })
+    .from(church)
+    .where(eq(church.adminUserId, adminUserId));
+
   // 1. Comunidades onde o usuário é admin
   const adminCommunities = await db
     .select({ id: community.id, name: community.name, type: community.type })
     .from(community)
     .where(eq(community.adminUserId, adminUserId));
 
-  if (adminCommunities.length === 0) return null;
+  if (adminCommunities.length === 0 && adminChurches.length === 0) return null;
 
   const communityIds = adminCommunities.map((c) => c.id);
 
@@ -148,5 +155,5 @@ export async function getAdminDashboard(adminUserId: string) {
     })(),
   };
 
-  return { communities: adminCommunities, cells: cellStats, totals };
+  return { churches: adminChurches, communities: adminCommunities, cells: cellStats, totals };
 }
