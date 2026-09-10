@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Bell, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -15,6 +16,25 @@ export function EmetisHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const isRoot = isRootPage(pathname);
+  const [notifCount, setNotifCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchCount() {
+      try {
+        const res = await fetch('/api/notifications');
+        if (!res.ok) return;
+        const data = await res.json();
+        setNotifCount(Array.isArray(data) ? data.length : 0);
+      } catch {
+        // silencioso — sem notificações visíveis se falhar
+      }
+    }
+
+    fetchCount();
+    // Atualiza a cada 60 s enquanto a página estiver aberta
+    const timer = setInterval(fetchCount, 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <header
@@ -49,11 +69,16 @@ export function EmetisHeader() {
 
       <button
         type="button"
+        onClick={() => router.push('/notifications')}
         className="relative p-2 rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors"
         aria-label="Notificações"
       >
         <Bell size={22} strokeWidth={1.8} />
-        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full border border-white/60" />
+        {notifCount > 0 && (
+          <span className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 rounded-full border border-white/60 text-[9px] font-bold text-slate-900 px-0.5">
+            {notifCount > 9 ? '9+' : notifCount}
+          </span>
+        )}
       </button>
     </header>
   );
