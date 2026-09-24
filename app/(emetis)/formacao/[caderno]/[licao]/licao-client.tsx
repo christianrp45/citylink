@@ -14,13 +14,14 @@ interface NavItem { slug: string; titulo: string }
 interface Props {
   meta: CadernoMeta;
   section: FormacaoSectionWithContent;
+  videoId: string | null;
   prev: NavItem | null;
   next: NavItem | null;
   total: number;
   current: number;
 }
 
-export function LicaoClient({ meta, section, prev, next, total, current }: Props) {
+export function LicaoClient({ meta, section, videoId, prev, next, total, current }: Props) {
   const router = useRouter();
   const cor = COR_CLASSES[meta.cor];
   const storageKey = `formacao:${meta.slug}:${section.slug}`;
@@ -112,6 +113,21 @@ export function LicaoClient({ meta, section, prev, next, total, current }: Props
           {section.titulo}
         </h1>
       </div>
+
+      {/* Vídeo-aula, quando disponível */}
+      {videoId && (
+        <div className="px-4 pt-4 flex-shrink-0">
+          <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ aspectRatio: '16 / 9' }}>
+            <iframe
+              className="absolute inset-0 h-full w-full"
+              src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+              title={section.titulo}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
 
       {/* Conteúdo markdown */}
       <div className="flex-1 px-4 py-5">

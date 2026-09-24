@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getCadernoMeta } from '@/lib/data/formacao';
+import { getFormacaoVideoId } from '@/lib/data/formacao-videos';
 import { getFormacaoSection, parseVolumeSections } from '@/lib/formacao-parser';
 import { LicaoClient } from './licao-client';
 
@@ -22,10 +23,13 @@ export default async function LicaoPage({ params }: Props) {
   const prev = currentIdx > 0 ? allSections[currentIdx - 1] : null;
   const next = currentIdx < allSections.length - 1 ? allSections[currentIdx + 1] : null;
 
+  const videoId = getFormacaoVideoId(caderno, licao);
+
   return (
     <LicaoClient
       meta={meta}
       section={section}
+      videoId={videoId}
       prev={prev ? { slug: prev.slug, titulo: prev.titulo } : null}
       next={next ? { slug: next.slug, titulo: next.titulo } : null}
       total={allSections.length}
