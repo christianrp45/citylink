@@ -65,23 +65,26 @@ export function getLanguageModel(modelId: string) {
   return or(modelId);
 }
 
+// Nota: evite o alias "gemini-flash-latest" — ele aponta para o modelo mais
+// recente (ex: gemini-3.8-flash), cuja cota gratuita é muito mais restrita
+// (5 req/min) do que a de uma versão estável já estabelecida (~15 req/min).
+// Isso causava erros de "high demand"/quota excedida no Teo em uso normal.
+
 export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  return _google("gemini-flash-lite-latest") as unknown as LanguageModelV3;
+  return _google("gemini-3.5-flash-lite") as unknown as LanguageModelV3;
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("artifact-model");
   }
-  return _google("gemini-flash-lite-latest") as unknown as LanguageModelV3;
+  return _google("gemini-3.5-flash-lite") as unknown as LanguageModelV3;
 }
 
 // Modelo principal para Teo e funcionalidades pastorais — Gemini Flash
-// Usa o alias "-latest" (em vez de uma versão fixa) porque o Google aposenta
-// versões do Gemini com frequência e já quebrou o Teo duas vezes por isso.
 export function getFreeModel() {
-  return _google("gemini-flash-latest") as unknown as LanguageModelV3;
+  return _google("gemini-3.6-flash") as unknown as LanguageModelV3;
 }
