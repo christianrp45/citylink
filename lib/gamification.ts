@@ -54,6 +54,28 @@ export function currentWeekKey(): string {
   return `${year}-W${String(week).padStart(2, "0")}`;
 }
 
+// ─── Streak (sequência de dias) ────────────────────────────────────────────────
+// Conta qualquer missão concluída no dia como check-in. Datas em UTC (yyyy-mm-dd).
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function daysBetween(a: string, b: string): number {
+  const msPerDay = 86400000;
+  return Math.round(
+    (new Date(`${a}T00:00:00Z`).getTime() - new Date(`${b}T00:00:00Z`).getTime()) / msPerDay
+  );
+}
+
+function nextStreak(lastActivityDate: string | null, currentStreak: number): number {
+  const today = todayKey();
+  if (!lastActivityDate) return 1;
+  const diff = daysBetween(today, lastActivityDate);
+  if (diff === 0) return currentStreak; // já fez check-in hoje
+  if (diff === 1) return currentStreak + 1; // dia seguinte — mantém sequência
+  return 1; // quebrou a sequência — recomeça
+}
+
 // ─── Função principal: conceder pontos ────────────────────────────────────────
 export async function awardPoints(userId: string, action: MissionAction): Promise<void> {
   const mission = MISSIONS[action];
@@ -99,17 +121,30 @@ export async function awardPoints(userId: string, action: MissionAction): Promis
 
   const newTotal = (current?.total ?? 0) + mission.points;
   const newLevel = calcLevel(newTotal);
+  const streak = nextStreak(current?.lastActivityDate ?? null, current?.currentStreak ?? 0);
+  const longestStreak = Math.max(streak, current?.longestStreak ?? 0);
+  const today = todayKey();
 
   if (current) {
     await db
       .update(userPoints)
-      .set({ total: newTotal, level: newLevel, updatedAt: new Date() })
+      .set({
+        total: newTotal,
+        level: newLevel,
+        currentStreak: streak,
+        longestStreak,
+        lastActivityDate: today,
+        updatedAt: new Date(),
+      })
       .where(eq(userPoints.userId, userId));
   } else {
     await db.insert(userPoints).values({
       userId,
       total: newTotal,
       level: newLevel,
+      currentStreak: streak,
+      longestStreak,
+      lastActivityDate: today,
     });
   }
 
@@ -164,6 +199,12 @@ export async function getUserMissionsProgress(userId: string) {
   const level = points?.level ?? "semente";
   const nextLevel = LEVELS.find((l) => l.min > total);
 
+  // Sequência "efetiva" pra exibição: se o último check-in não foi hoje nem
+  // ontem, a sequência já quebrou (mesmo sem uma nova missão pra recalcular).
+  const lastActivityDate = points?.lastActivityDate ?? null;
+  const streakBroken = lastActivityDate ? daysBetween(todayKey(), lastActivityDate) > 1 : true;
+  const currentStreak = streakBroken ? 0 : (points?.currentStreak ?? 0);
+
   return {
     total,
     level,
@@ -171,5 +212,8 @@ export async function getUserMissionsProgress(userId: string) {
     nextLevelName: nextLevel?.name ?? null,
     nextLevelMin: nextLevel?.min ?? null,
     missions: allMissions,
+    currentStreak,
+    longestStreak: points?.longestStreak ?? 0,
+    checkedInToday: lastActivityDate === todayKey(),
   };
 }

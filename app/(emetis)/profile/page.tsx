@@ -199,6 +199,7 @@ export default function ProfilePage() {
     total: number; level: string; weekPoints: number;
     nextLevelName: string | null; nextLevelMin: number | null;
     missions: { action: string; label: string; points: number; emoji: string; completed: boolean }[];
+    currentStreak: number; longestStreak: number; checkedInToday: boolean;
   } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -723,9 +724,21 @@ export default function ProfilePage() {
                     <p className="text-xs text-slate-400">{missions.total} XP acumulado</p>
                   </div>
                 </div>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${style.bg} ${style.text} ${style.border}`}>
-                  {missions.weekPoints} pts esta semana
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${style.bg} ${style.text} ${style.border}`}>
+                    {missions.weekPoints} pts esta semana
+                  </span>
+                  {missions.currentStreak > 0 && (
+                    <span
+                      className="text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1"
+                      style={{ background: 'var(--em-gold-400)', color: '#7C4A03' }}
+                      title={`Recorde: ${missions.longestStreak} dias`}
+                    >
+                      🔥 {missions.currentStreak} {missions.currentStreak === 1 ? 'dia' : 'dias'}
+                      {!missions.checkedInToday && ' · faça algo hoje!'}
+                    </span>
+                  )}
+                </div>
               </div>
               {xpNeeded ? (
                 <>

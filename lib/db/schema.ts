@@ -1007,6 +1007,9 @@ export const userPoints = pgTable("UserPoints", {
   userId: uuid("userId").notNull().unique().references(() => user.id, { onDelete: "cascade" }),
   total: integer("total").notNull().default(0),
   level: varchar("level", { length: 20 }).notNull().default("semente"),
+  currentStreak: integer("currentStreak").notNull().default(0),
+  longestStreak: integer("longestStreak").notNull().default(0),
+  lastActivityDate: date("lastActivityDate"),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
 
