@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { getGuideByMeeting, upsertGuide, deleteGuide, getCellById, getCellMembers, getMeetingById } from "@/lib/db/queries-cells";
+import { getGuideByMeeting, upsertGuide, deleteGuide, getCellById, getCellMembers, getMeetingById, isApprovedCellMember } from "@/lib/db/queries-cells";
 import { getAllPushSubscriptionsForUsers, deletePushSubscription } from "@/lib/db/queries/push";
 import { sendPush } from "@/lib/push";
 
@@ -13,6 +13,11 @@ export async function GET(
   }
 
   const { meetingId } = await params;
+  const meeting = await getMeetingById(meetingId);
+  if (!meeting || !(await isApprovedCellMember(meeting.cellId, session.user.id))) {
+    return Response.json({ error: "Você não faz parte desta célula" }, { status: 403 });
+  }
+
   const guide = await getGuideByMeeting(meetingId);
 
   if (!guide) {
@@ -22,6 +27,7 @@ export async function GET(
   return Response.json(guide);
 }
 
+// Só o líder cria/edita o roteiro — evita conteúdo forjado indo pro push de todo mundo
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ meetingId: string }> }
@@ -32,6 +38,17 @@ export async function POST(
   }
 
   const { meetingId } = await params;
+  const meetingForAuth = await getMeetingById(meetingId);
+  if (!meetingForAuth) {
+    return Response.json({ error: "Reunião não encontrada" }, { status: 404 });
+  }
+  const cellForAuth = await getCellById(meetingForAuth.cellId);
+  const isLeaderForAuth =
+    cellForAuth?.leaderId === session.user.id || cellForAuth?.coLeaderId === session.user.id;
+  if (!isLeaderForAuth) {
+    return Response.json({ error: "Apenas o líder pode criar ou editar o roteiro" }, { status: 403 });
+  }
+
   const body = await request.json();
 
   const {

@@ -4,6 +4,15 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { prayerInteraction, prayerRequest, user } from "../schema";
 
+/** cellId de um pedido de oração, pra checar vínculo antes de deixar interagir */
+export async function getPrayerRequestCellId(id: string): Promise<string | null> {
+  const [row] = await db
+    .select({ cellId: prayerRequest.cellId })
+    .from(prayerRequest)
+    .where(eq(prayerRequest.id, id));
+  return row?.cellId ?? null;
+}
+
 export async function getPrayerRequestsByCell(cellId: string, userId: string) {
   const requests = await db
     .select({

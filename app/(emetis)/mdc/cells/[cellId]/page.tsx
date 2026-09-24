@@ -36,8 +36,9 @@ type CellDetail = {
   memberCount: number;
   isOpen: boolean;
   entryMode: "open" | "invite_only";
-  members: { userId: string; userEmail: string; role: string }[];
-  meetings: {
+  approved: boolean;
+  members?: { userId: string; userEmail: string; role: string }[];
+  meetings?: {
     id: string;
     scheduledAt: string;
     status: string;
@@ -247,7 +248,7 @@ export default function CellDetailPage() {
     );
   }
 
-  const nextMeeting = cell.meetings.find((m) => m.status === 'scheduled');
+  const nextMeeting = cell.meetings?.find((m) => m.status === 'scheduled');
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50 pb-24">
@@ -380,14 +381,26 @@ export default function CellDetailPage() {
             <p className="text-2xl">📚</p>
             <p className="font-medium text-gray-800 mt-1 text-sm">Histórico</p>
           </Link>
-          <a
-            href={`/api/mdc/cells/${cellId}/ical`}
-            download
-            className="bg-white rounded-xl p-4 shadow-sm text-center hover:shadow-md transition flex flex-col items-center"
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const res = await fetch(`/api/mdc/cells/${cellId}/ical-link`);
+                if (!res.ok) {
+                  toast.error('Não foi possível gerar o link do calendário.');
+                  return;
+                }
+                const { url } = await res.json();
+                window.location.href = url;
+              } catch {
+                toast.error('Não foi possível gerar o link do calendário.');
+              }
+            }}
+            className="bg-white rounded-xl p-4 shadow-sm text-center hover:shadow-md transition flex flex-col items-center w-full"
           >
             <CalendarDays size={24} className="text-indigo-500 mb-0.5" />
             <p className="font-medium text-gray-800 mt-1 text-sm">Calendário</p>
-          </a>
+          </button>
         </div>
 
         {/* Formação Batista */}
@@ -566,32 +579,34 @@ export default function CellDetailPage() {
           </div>
         )}
 
-        {/* Participar */}
-        {cell.entryMode === "open" ? (
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-sm text-gray-600 mb-3">
-              Este grupo está com entrada livre.
-            </p>
-            {joinMsg ? (
-              <p className="text-sm font-medium text-emerald-600">{joinMsg}</p>
-            ) : (
-              <button
-                onClick={handleJoin}
-                disabled={joining}
-                className="w-full py-2.5 bg-indigo-600 text-white font-medium text-sm rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
-              >
-                {joining ? 'Entrando...' : '👋 Quero participar desta célula'}
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="bg-amber-50 rounded-xl shadow-sm p-4 border border-amber-100">
-            <p className="text-sm font-medium text-amber-800 mb-1">Acesso via convite</p>
-            <p className="text-xs text-amber-700">
-              Este grupo só aceita novos membros por meio de um link de convite.
-              Peça a alguém que já participa para te enviar o link.
-            </p>
-          </div>
+        {/* Participar — mesmo em célula "aberta", o vínculo fica pendente até o líder aceitar */}
+        {!cell.approved && (
+          cell.entryMode === "open" ? (
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <p className="text-sm text-gray-600 mb-3">
+                Você pode solicitar vínculo com este grupo. O acesso ao conteúdo libera assim que o líder aceitar.
+              </p>
+              {joinMsg ? (
+                <p className="text-sm font-medium text-emerald-600">{joinMsg}</p>
+              ) : (
+                <button
+                  onClick={handleJoin}
+                  disabled={joining}
+                  className="w-full py-2.5 bg-indigo-600 text-white font-medium text-sm rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+                >
+                  {joining ? 'Enviando pedido...' : '👋 Quero participar desta célula'}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="bg-amber-50 rounded-xl shadow-sm p-4 border border-amber-100">
+              <p className="text-sm font-medium text-amber-800 mb-1">Acesso via convite</p>
+              <p className="text-xs text-amber-700">
+                Este grupo só aceita novos membros por meio de um link de convite.
+                Peça a alguém que já participa para te enviar o link.
+              </p>
+            </div>
+          )
         )}
 
         {/* Toggle entryMode — apenas para líder */}
@@ -628,24 +643,31 @@ export default function CellDetailPage() {
           <p className="font-semibold text-gray-900 mb-3">
             Membros ({cell.memberCount})
           </p>
-          <div className="space-y-2">
-            {cell.members.slice(0, 8).map((m) => (
-              <div key={m.userId} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600">
-                  {m.userEmail?.[0]?.toUpperCase() ?? '?'}
+          {cell.members ? (
+            <div className="space-y-2">
+              {cell.members.slice(0, 8).map((m) => (
+                <div key={m.userId} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600">
+                    {m.userEmail?.[0]?.toUpperCase() ?? '?'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">{m.userEmail}</p>
+                  </div>
+                  {m.role === 'leader' && (
+                    <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">
+                      Líder
+                    </span>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-700">{m.userEmail}</p>
-                </div>
-                {m.role === 'leader' && (
-                  <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">
-                    Líder
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">Visível só pra quem já faz parte do grupo.</p>
+          )}
         </div>
+
+        {/* Pedidos de vínculo pendentes — só líder */}
+        {isLeader && <PendingRequests cellId={cellId} />}
       </div>
 
       {/* Seção de Visitantes — visível apenas para líderes */}
@@ -781,6 +803,76 @@ export default function CellDetailPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PendingRequests({ cellId }: { cellId: string }) {
+  const [requests, setRequests] = useState<
+    { userId: string; userName: string | null; userAvatar: string | null }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [actingId, setActingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/mdc/cells/${cellId}/requests`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setRequests)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [cellId]);
+
+  async function respond(userId: string, accept: boolean) {
+    setActingId(userId);
+    try {
+      await fetch(`/api/mdc/cells/${cellId}/requests/${userId}`, {
+        method: accept ? 'POST' : 'DELETE',
+      });
+      setRequests((prev) => prev.filter((r) => r.userId !== userId));
+      if (accept) toast.success('Pedido aceito!');
+    } catch {
+      toast.error('Erro ao processar o pedido.');
+    } finally {
+      setActingId(null);
+    }
+  }
+
+  if (loading || requests.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-4 border border-indigo-100">
+      <p className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <UserPlus size={16} className="text-indigo-500" />
+        Pedidos de vínculo ({requests.length})
+      </p>
+      <div className="space-y-3">
+        {requests.map((r) => (
+          <div key={r.userId} className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600 overflow-hidden flex-shrink-0">
+              {r.userAvatar ? (
+                <img src={r.userAvatar} alt="" className="w-full h-full object-cover" />
+              ) : (
+                r.userName?.[0]?.toUpperCase() ?? '?'
+              )}
+            </div>
+            <p className="flex-1 text-sm text-gray-700 truncate">{r.userName ?? 'Alguém'}</p>
+            <button
+              onClick={() => respond(r.userId, true)}
+              disabled={actingId === r.userId}
+              className="text-xs px-3 py-1.5 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 disabled:opacity-50"
+            >
+              Aceitar
+            </button>
+            <button
+              onClick={() => respond(r.userId, false)}
+              disabled={actingId === r.userId}
+              className="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg font-semibold hover:bg-gray-200 disabled:opacity-50"
+            >
+              Recusar
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

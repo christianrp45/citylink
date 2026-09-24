@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { upsertRsvp } from "@/lib/db/queries-cells";
+import { upsertRsvp, getMeetingById, isApprovedCellMember } from "@/lib/db/queries-cells";
 
 export async function POST(
   request: Request,
@@ -11,6 +11,11 @@ export async function POST(
   }
 
   const { meetingId } = await params;
+  const meeting = await getMeetingById(meetingId);
+  if (!meeting || !(await isApprovedCellMember(meeting.cellId, session.user.id))) {
+    return Response.json({ error: "Você não faz parte desta célula" }, { status: 403 });
+  }
+
   const { status } = await request.json();
 
   const validStatus = ["going", "not-going", "maybe", "no-response"];

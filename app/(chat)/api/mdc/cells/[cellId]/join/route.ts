@@ -2,6 +2,8 @@ import { auth } from "@/app/(auth)/auth";
 import { getCellById, getCellMemberCount, joinCell } from "@/lib/db/queries-cells";
 import { awardPoints } from "@/lib/gamification";
 
+// Sempre é possível solicitar vínculo — o acesso ao conteúdo só é liberado
+// quando o líder aceita o pedido (ver /members/[userId]/approve).
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ cellId: string }> }
@@ -18,20 +20,19 @@ export async function POST(
     return Response.json({ error: "Célula não encontrada" }, { status: 404 });
   }
 
-  if (cellData.entryMode === "invite_only") {
-    return Response.json(
-      { error: "Esta célula só aceita novos membros via convite. Peça um link a alguém do grupo." },
-      { status: 403 }
-    );
-  }
-
   const currentCount = await getCellMemberCount(cellId);
   if (cellData.maxMembers && currentCount >= cellData.maxMembers) {
     return Response.json({ error: "Célula atingiu o número máximo de membros" }, { status: 400 });
   }
 
-  await joinCell(cellId, session.user.id);
-  void awardPoints(session.user.id, "join_group");
+  const { pending } = await joinCell(cellId, session.user.id);
+  if (!pending) void awardPoints(session.user.id, "join_group");
 
-  return Response.json({ success: true, message: "Você entrou na célula!" });
+  return Response.json({
+    success: true,
+    pending,
+    message: pending
+      ? "Pedido enviado! Você terá acesso assim que o líder aceitar."
+      : "Você voltou à célula!",
+  });
 }

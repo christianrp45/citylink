@@ -69,12 +69,16 @@ export async function useInviteCode(code: string, userId: string) {
 
   // Aplicar vínculo conforme o tipo
   if (invite.type === "cell") {
+    // Convite gerado e compartilhado por alguém de dentro já é uma aprovação
+    // implícita — diferente do pedido "quero participar" sem convite, que
+    // fica pendente até o líder aceitar (ver joinCell em cell-members.ts).
     await db
       .insert(cellMember)
       .values({
         cellId: invite.targetId,
         userId,
         role: (invite.role as "member" | "leader" | "co-leader" | "visitor") ?? "member",
+        approvedAt: new Date(),
       })
       .onConflictDoNothing();
   } else if (invite.type === "community") {

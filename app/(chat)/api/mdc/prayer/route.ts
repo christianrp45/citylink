@@ -2,6 +2,7 @@ import { auth } from "@/app/(auth)/auth";
 import {
   createPrayerRequest,
   getPrayerRequestsByCell,
+  isApprovedCellMember,
 } from "@/lib/db/queries-cells";
 
 export async function GET(request: Request) {
@@ -15,6 +16,10 @@ export async function GET(request: Request) {
 
   if (!cellId) {
     return Response.json({ error: "cellId é obrigatório" }, { status: 400 });
+  }
+
+  if (!(await isApprovedCellMember(cellId, session.user.id))) {
+    return Response.json({ error: "Você não faz parte desta célula" }, { status: 403 });
   }
 
   const requests = await getPrayerRequestsByCell(cellId, session.user.id);
@@ -31,6 +36,10 @@ export async function POST(request: Request) {
 
   if (!cellId || !content) {
     return Response.json({ error: "cellId e content são obrigatórios" }, { status: 400 });
+  }
+
+  if (!(await isApprovedCellMember(cellId, session.user.id))) {
+    return Response.json({ error: "Você não faz parte desta célula" }, { status: 403 });
   }
 
   const prayerReq = await createPrayerRequest({

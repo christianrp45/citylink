@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { createMeeting, getMeetingsByCell } from "@/lib/db/queries-cells";
+import { createMeeting, getMeetingsByCell, isApprovedCellMember, getCellById } from "@/lib/db/queries-cells";
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -12,6 +12,10 @@ export async function GET(request: Request) {
 
   if (!cellId) {
     return Response.json({ error: "cellId é obrigatório" }, { status: 400 });
+  }
+
+  if (!(await isApprovedCellMember(cellId, session.user.id))) {
+    return Response.json({ error: "Você não faz parte desta célula" }, { status: 403 });
   }
 
   const meetings = await getMeetingsByCell(cellId);
@@ -29,6 +33,12 @@ export async function POST(request: Request) {
 
   if (!cellId || !scheduledAt) {
     return Response.json({ error: "cellId e scheduledAt são obrigatórios" }, { status: 400 });
+  }
+
+  const cellData = await getCellById(cellId);
+  const isLeader = cellData?.leaderId === session.user.id || cellData?.coLeaderId === session.user.id;
+  if (!isLeader) {
+    return Response.json({ error: "Apenas o líder pode marcar reuniões" }, { status: 403 });
   }
 
   const meeting = await createMeeting({

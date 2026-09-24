@@ -400,6 +400,9 @@ export const cellMember = pgTable(
       .notNull()
       .default("member"),
     isActive: boolean("isActive").notNull().default(true),
+    // null = pedido de vínculo pendente; preenchido = líder aceitou e a pessoa
+    // tem acesso ao conteúdo da célula (chat, orações, reuniões, roteiros)
+    approvedAt: timestamp("approvedAt"),
     joinedAt: timestamp("joinedAt").notNull().defaultNow(),
   },
   (table) => ({

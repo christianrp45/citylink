@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { togglePrayerInteraction } from "@/lib/db/queries-cells";
+import { togglePrayerInteraction, getPrayerRequestCellId, isApprovedCellMember } from "@/lib/db/queries-cells";
 import { awardPoints } from "@/lib/gamification";
 
 export async function POST(
@@ -12,6 +12,11 @@ export async function POST(
   }
 
   const { id } = await params;
+  const cellId = await getPrayerRequestCellId(id);
+  if (!cellId || !(await isApprovedCellMember(cellId, session.user.id))) {
+    return Response.json({ error: "Você não faz parte desta célula" }, { status: 403 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const emoji: string = body?.emoji ?? "🙏";
 

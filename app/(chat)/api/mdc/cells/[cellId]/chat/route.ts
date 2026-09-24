@@ -1,8 +1,8 @@
 import { auth } from "@/app/(auth)/auth";
-import { getCellMessages, createCellMessage, getCellMembers, getAllPushSubscriptionsForUsers, deletePushSubscription } from "@/lib/db/queries";
+import { getCellMessages, createCellMessage, getCellMembers, getAllPushSubscriptionsForUsers, deletePushSubscription, isApprovedCellMember } from "@/lib/db/queries";
 import { sendPush } from "@/lib/push";
 
-// GET /api/mdc/cells/[cellId]/chat — busca mensagens
+// GET /api/mdc/cells/[cellId]/chat — busca mensagens (só membro aprovado)
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ cellId: string }> }
@@ -11,11 +11,15 @@ export async function GET(
   if (!session?.user) return Response.json({ error: "Não autorizado" }, { status: 401 });
 
   const { cellId } = await params;
+  if (!(await isApprovedCellMember(cellId, session.user.id))) {
+    return Response.json({ error: "Você não faz parte desta célula" }, { status: 403 });
+  }
+
   const messages = await getCellMessages(cellId);
   return Response.json(messages);
 }
 
-// POST /api/mdc/cells/[cellId]/chat — envia mensagem
+// POST /api/mdc/cells/[cellId]/chat — envia mensagem (só membro aprovado)
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ cellId: string }> }
@@ -26,6 +30,10 @@ export async function POST(
   }
 
   const { cellId } = await params;
+  if (!(await isApprovedCellMember(cellId, session.user.id))) {
+    return Response.json({ error: "Você não faz parte desta célula" }, { status: 403 });
+  }
+
   const { content } = await req.json();
   if (!content?.trim()) {
     return Response.json({ error: "Mensagem vazia" }, { status: 400 });

@@ -1,6 +1,8 @@
 import { db } from '@/lib/db/client';
 import { cell, cellMeeting } from '@/lib/db/schema';
 import { and, desc, eq, gte } from 'drizzle-orm';
+import { verifyCellIcalToken } from '@/lib/cell-ical-token';
+import { isApprovedCellMember } from '@/lib/db/queries';
 
 function formatICSDate(date: Date): string {
   return date.toISOString().replace(/[-:]/g, '').replace('.000', '');
@@ -10,14 +12,27 @@ function escapeICS(str: string): string {
   return str.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 }
 
-/** GET /api/mdc/cells/[cellId]/ical
+/** GET /api/mdc/cells/[cellId]/ical?u=<userId>&token=<token>
  *  Returns an iCalendar (.ics) file with upcoming cell meetings.
- *  No auth required so users can subscribe via calendar app URL. */
+ *  Sem sessão de verdade (pra funcionar direto no app de calendário), mas
+ *  exige um token assinado emitido só pra um membro aprovado específico —
+ *  ver /members/ical-link. Quem sair da célula perde acesso mesmo com o
+ *  link antigo, porque a checagem de membership é revalidada aqui. */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ cellId: string }> }
 ) {
   const { cellId } = await params;
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('u');
+  const token = searchParams.get('token');
+
+  if (!userId || !token || !verifyCellIcalToken(cellId, userId, token)) {
+    return new Response('Não autorizado', { status: 401 });
+  }
+  if (!(await isApprovedCellMember(cellId, userId))) {
+    return new Response('Não autorizado', { status: 401 });
+  }
 
   const [cellRow] = await db
     .select({ id: cell.id, name: cell.name, address: cell.address })

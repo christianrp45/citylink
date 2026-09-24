@@ -7,6 +7,7 @@ import {
   getCellMemberCount,
   getCellMembers,
   getMeetingsByCell,
+  isApprovedCellMember,
 } from "@/lib/db/queries-cells";
 
 export async function GET(
@@ -25,16 +26,24 @@ export async function GET(
     return Response.json({ error: "Célula não encontrada" }, { status: 404 });
   }
 
-  const [members, meetings, memberCount] = await Promise.all([
+  const memberCount = await getCellMemberCount(cellId);
+
+  // Informação básica é visível pra quem está decidindo pedir vínculo;
+  // membros (e-mail) e reuniões (endereço, notas) só pra quem já foi aceito.
+  const approved = await isApprovedCellMember(cellId, session.user.id);
+  if (!approved) {
+    return Response.json({ ...cellData, memberCount, approved: false });
+  }
+
+  const [members, meetings] = await Promise.all([
     getCellMembers(cellId),
     getMeetingsByCell(cellId),
-    getCellMemberCount(cellId),
   ]);
 
   const leaderMember = members.find((m) => m.role === "leader");
   const leaderName = leaderMember?.userEmail ?? "";
 
-  return Response.json({ ...cellData, members, meetings, memberCount, leaderName });
+  return Response.json({ ...cellData, members, meetings, memberCount, leaderName, approved: true });
 }
 
 export async function PATCH(

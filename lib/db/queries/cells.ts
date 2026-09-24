@@ -76,12 +76,38 @@ export async function createCell(data: {
 }) {
   const [newCell] = await db.insert(cell).values(data).returning();
 
-  // líder entra automaticamente como membro
+  // líder entra automaticamente como membro, já aprovado
   await db.insert(cellMember).values({
     cellId: newCell.id,
     userId: data.leaderId,
     role: "leader",
+    approvedAt: new Date(),
   });
 
   return newCell;
+}
+
+/**
+ * Membro ativo E aprovado (tem acesso ao conteúdo) OU líder/co-líder da célula
+ * — usar em toda rota que lê ou escreve conteúdo específico de uma célula.
+ */
+export async function isApprovedCellMember(cellId: string, userId: string): Promise<boolean> {
+  const [cellRow] = await db
+    .select({ leaderId: cell.leaderId, coLeaderId: cell.coLeaderId })
+    .from(cell)
+    .where(eq(cell.id, cellId));
+  if (!cellRow) return false;
+  if (cellRow.leaderId === userId || cellRow.coLeaderId === userId) return true;
+
+  const [member] = await db
+    .select({ approvedAt: cellMember.approvedAt })
+    .from(cellMember)
+    .where(
+      and(
+        eq(cellMember.cellId, cellId),
+        eq(cellMember.userId, userId),
+        eq(cellMember.isActive, true)
+      )
+    );
+  return !!member?.approvedAt;
 }
