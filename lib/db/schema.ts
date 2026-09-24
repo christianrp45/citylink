@@ -1026,6 +1026,20 @@ export const userMission = pgTable("UserMission", {
 
 export type UserMission = InferSelectModel<typeof userMission>;
 
+export const userBadge = pgTable(
+  "UserBadge",
+  {
+    userId: uuid("userId").notNull().references(() => user.id, { onDelete: "cascade" }),
+    badge: varchar("badge", { length: 50 }).notNull(),
+    unlockedAt: timestamp("unlockedAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.badge] }),
+  })
+);
+
+export type UserBadge = InferSelectModel<typeof userBadge>;
+
 // ─── Formação Batista ──────────────────────────────────────────────────────────
 
 /** Progresso por lição (um registro por lição concluída) */

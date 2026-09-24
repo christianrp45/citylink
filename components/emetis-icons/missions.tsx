@@ -8,7 +8,7 @@
  */
 
 import type { ReactNode } from 'react';
-import type { MissionAction } from '@/lib/gamification';
+import type { MissionAction, BadgeSlug } from '@/lib/gamification';
 
 interface GlyphProps {
   size?: number;
@@ -274,6 +274,62 @@ export function GlyphTarget(p: GlyphProps) {
   );
 }
 
+/** Medalha — marcos de quantidade (missões completadas) */
+function GlyphMedal(p: GlyphProps) {
+  return (
+    <Glyph {...p}>
+      <circle cx="12" cy="14" r="7" fill="currentColor" />
+      <path d="M9 3l1.5 6M15 3l-1.5 6" />
+      <path d="M12 11.5l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z" fill="white" stroke="none" />
+    </Glyph>
+  );
+}
+
+/** Mapa de glifo por badge — reaproveita glifos já desenhados onde faz sentido temático */
+export const BADGE_GLYPHS: Record<BadgeSlug, (p: GlyphProps) => ReactNode> = {
+  streak_7: GlyphFlame,
+  streak_30: GlyphFlame,
+  streak_100: GlyphFlame,
+  missions_25: GlyphMedal,
+  missions_100: GlyphMedal,
+  host: GlyphTable,
+  bridge: GlyphConfetti,
+  intercessor: GlyphPray,
+  graduate: GlyphGraduationCap,
+};
+
+/** Selo circular — moldura compartilhada por Missão/Nível/Conquista */
+function badgeStyle(unlocked: boolean) {
+  return {
+    background: unlocked
+      ? 'linear-gradient(135deg, var(--em-gold-400), var(--em-gold-600))'
+      : 'linear-gradient(135deg, #E2E8F0, #CBD5E1)',
+    color: unlocked ? '#5A3402' : '#64748B',
+    boxShadow: unlocked ? '0 2px 6px rgba(217, 119, 6, 0.35)' : 'none',
+  };
+}
+
+/** Selo de conquista — igual ao MissionBadge, mas pro catálogo de badges permanentes */
+export function AchievementBadge({
+  slug,
+  size = 40,
+  unlocked = false,
+}: {
+  slug: BadgeSlug;
+  size?: number;
+  unlocked?: boolean;
+}) {
+  const GlyphIcon = BADGE_GLYPHS[slug];
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-full flex-shrink-0"
+      style={{ width: size, height: size, ...badgeStyle(unlocked) }}
+    >
+      <GlyphIcon size={Math.round(size * 0.52)} strokeWidth={2} />
+    </span>
+  );
+}
+
 export const LEVEL_GLYPHS: Record<string, (p: GlyphProps) => ReactNode> = {
   semente: GlyphSeed,
   broto: GlyphSprout,
@@ -326,6 +382,33 @@ export const MISSION_GLYPHS: Record<MissionAction, (p: GlyphProps) => ReactNode>
   complete_formacao_all: GlyphTrophy,
 };
 
+/**
+ * Avatar do Teo — mesmo monograma "τ" em gradiente roxo do botão flutuante
+ * de chat (components/teo-fab.tsx). Reaproveitado aqui pra dar ao Teo uma
+ * presença nos momentos de gamificação (progresso, conquistas), em vez de
+ * inventar um personagem novo sem identidade visual já estabelecida.
+ */
+export function TeoAvatar({ size = 40 }: { size?: number }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-full flex-shrink-0 text-white select-none"
+      style={{
+        width: size,
+        height: size,
+        background: 'linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)',
+        boxShadow: '0 2px 8px rgba(99,102,241,0.4)',
+        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontWeight: 700,
+        fontSize: Math.round(size * 0.42),
+        letterSpacing: '-0.5px',
+      }}
+      aria-hidden="true"
+    >
+      τ
+    </span>
+  );
+}
+
 /** Selo circular dourado — moldura padrão pra qualquer ícone de gamificação */
 export function MissionBadge({
   action,
@@ -340,15 +423,7 @@ export function MissionBadge({
   return (
     <span
       className="inline-flex items-center justify-center rounded-full flex-shrink-0"
-      style={{
-        width: size,
-        height: size,
-        background: completed
-          ? 'linear-gradient(135deg, var(--em-gold-400), var(--em-gold-600))'
-          : 'linear-gradient(135deg, #E2E8F0, #CBD5E1)',
-        color: completed ? '#5A3402' : '#64748B',
-        boxShadow: completed ? '0 2px 6px rgba(217, 119, 6, 0.35)' : 'none',
-      }}
+      style={{ width: size, height: size, ...badgeStyle(completed) }}
     >
       <GlyphIcon size={Math.round(size * 0.52)} strokeWidth={2} />
     </span>

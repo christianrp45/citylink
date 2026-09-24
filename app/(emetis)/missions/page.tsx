@@ -4,15 +4,16 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
-import { MissionBadge, LevelBadge, GlyphFlame, GlyphTarget, GlyphLight } from '@/components/emetis-icons/missions';
+import { MissionBadge, LevelBadge, AchievementBadge, TeoAvatar, GlyphFlame, GlyphTarget, GlyphLight } from '@/components/emetis-icons/missions';
 import { IconTrophy } from '@/components/emetis-icons';
-import type { MissionAction } from '@/lib/gamification';
+import type { MissionAction, BadgeSlug } from '@/lib/gamification';
 
 type MissionsProgress = {
   total: number; level: string; weekPoints: number;
   nextLevelName: string | null; nextLevelMin: number | null;
   missions: { action: MissionAction; label: string; points: number; emoji: string; completed: boolean }[];
   currentStreak: number; longestStreak: number; checkedInToday: boolean;
+  badges: { slug: BadgeSlug; label: string; description: string; unlocked: boolean; unlockedAt: string | null }[];
 };
 
 const LEVEL_STYLES: Record<string, { bg: string; bar: string; text: string; border: string }> = {
@@ -27,6 +28,15 @@ const LEVEL_HEX: Record<string, string> = {
 };
 const LEVELS_ORDER = ['semente', 'broto', 'árvore', 'fruto', 'luz'];
 const LEVEL_MINS = [0, 100, 300, 600, 1000];
+
+function teoMessage(m: MissionsProgress): string {
+  if (m.currentStreak >= 30) return `${m.currentStreak} dias seguidos! Sua constância é um testemunho — continue assim.`;
+  if (m.currentStreak >= 7) return 'Uma semana de sequência! Isso já é um hábito se formando de verdade.';
+  if (m.currentStreak > 0 && !m.checkedInToday) return `Sua sequência de ${m.currentStreak} ${m.currentStreak === 1 ? 'dia' : 'dias'} está esperando por você hoje!`;
+  if (m.currentStreak > 0) return `Já são ${m.currentStreak} ${m.currentStreak === 1 ? 'dia' : 'dias'} seguidos. Continue firme!`;
+  if (m.weekPoints > 0) return 'Bom começo essa semana — vamos continuar?';
+  return 'Toda jornada começa com um primeiro passo. Que tal completar sua primeira missão hoje?';
+}
 
 export default function MissionsPage() {
   const { data: session } = useSession();
@@ -51,6 +61,14 @@ export default function MissionsPage() {
     <div className="h-full overflow-y-auto pb-24">
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
         <h1 className="text-lg font-bold text-slate-800">Missões</h1>
+
+        {/* Teo — comentário contextual conforme o progresso */}
+        {missions && (
+          <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-2xl p-3">
+            <TeoAvatar size={36} />
+            <p className="text-xs text-indigo-800 leading-snug flex-1">{teoMessage(missions)}</p>
+          </div>
+        )}
 
         {!missions && (
           <div className="flex justify-center py-12">
@@ -176,6 +194,28 @@ export default function MissionsPage() {
             >
               <IconTrophy size={14} filled /> Ver Ranking Geral
             </Link>
+          </div>
+        )}
+
+        {/* Conquistas */}
+        {missions && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-slate-800">Conquistas</h3>
+              <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">
+                {missions.badges.filter((b) => b.unlocked).length} / {missions.badges.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {missions.badges.map((b) => (
+                <div key={b.slug} className="flex flex-col items-center gap-1.5 text-center" title={b.description}>
+                  <AchievementBadge slug={b.slug} unlocked={b.unlocked} size={48} />
+                  <p className={`text-[11px] leading-tight font-semibold ${b.unlocked ? 'text-slate-700' : 'text-slate-400'}`}>
+                    {b.label}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
