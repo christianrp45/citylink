@@ -69,17 +69,19 @@ export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  return _google("gemini-2.0-flash-lite") as unknown as LanguageModelV3;
+  return _google("gemini-flash-lite-latest") as unknown as LanguageModelV3;
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("artifact-model");
   }
-  return _google("gemini-2.0-flash-lite") as unknown as LanguageModelV3;
+  return _google("gemini-flash-lite-latest") as unknown as LanguageModelV3;
 }
 
 // Modelo principal para Teo e funcionalidades pastorais — Gemini Flash
+// Usa o alias "-latest" (em vez de uma versão fixa) porque o Google aposenta
+// versões do Gemini com frequência e já quebrou o Teo duas vezes por isso.
 export function getFreeModel() {
-  return _google("gemini-2.0-flash") as unknown as LanguageModelV3;
+  return _google("gemini-flash-latest") as unknown as LanguageModelV3;
 }

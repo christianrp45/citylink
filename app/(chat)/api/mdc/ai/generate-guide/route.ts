@@ -115,8 +115,10 @@ ${quebraGelosList}`;
     return Response.json({ error: "Chave da API de IA não configurada no servidor." }, { status: 500 });
   }
 
-  // Gemini 2.0 Flash — gratuito, 1M tokens/dia, Google AI Studio
-  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  // Gemini Flash — gratuito, 1M tokens/dia, Google AI Studio
+  // Usa o alias "-latest" em vez de uma versão fixa: o Google aposenta
+  // versões do Gemini com frequência e isso já quebrou este endpoint antes.
+  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
