@@ -175,6 +175,20 @@ export function IconProfile({ filled, ...p }: IconProps) {
   );
 }
 
+/** Troféu — gamificação/missões (nav) */
+export function IconTrophy({ filled, ...p }: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" fill={filled ? 'currentColor' : 'none'} />
+      <path d="M7 5H4a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4" />
+      <path d="M17 5h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4" />
+      <path d="M12 14v3" />
+      <path d="M8 21h8" />
+      <path d="M12 17c-2.2 0-4 1.79-4 4h8c0-2.21-1.8-4-4-4z" fill={filled ? 'currentColor' : 'none'} />
+    </Svg>
+  );
+}
+
 // ─── UI ICONS ─────────────────────────────────────────────────────────────────
 // Ícones de interface — sem variante filled
 

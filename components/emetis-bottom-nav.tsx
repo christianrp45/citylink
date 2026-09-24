@@ -9,35 +9,27 @@ import {
   IconBible,
   IconChat,
   IconGroups,
-  IconProfile,
+  IconTrophy,
 } from '@/components/emetis-icons';
 
 type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; filled?: boolean; className?: string }>;
 
 const NAV_ITEMS: { href: string; label: string; icon: NavIcon }[] = [
-  { href: '/map',       label: 'Mapa',    icon: IconMap },
-  { href: '/community', label: 'Amigos',  icon: IconCommunity },
-  { href: '/bible',     label: 'Bíblia',  icon: IconBible },
-  { href: '/chat',      label: 'Chat',    icon: IconChat },
-  { href: '/mdc',       label: 'Grupos',  icon: IconGroups },
-  { href: '/profile',   label: 'Perfil',  icon: IconProfile },
+  { href: '/map',       label: 'Mapa',     icon: IconMap },
+  { href: '/community', label: 'Amigos',   icon: IconCommunity },
+  { href: '/bible',     label: 'Bíblia',   icon: IconBible },
+  { href: '/chat',      label: 'Chat',     icon: IconChat },
+  { href: '/mdc',       label: 'Grupos',   icon: IconGroups },
+  { href: '/missions',  label: 'Missões',  icon: IconTrophy },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
-  const [pendingVisits, setPendingVisits] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   const fetchBadges = useCallback(async () => {
     try {
-      const [visitsRes, unreadRes] = await Promise.all([
-        fetch('/api/visits/pending'),
-        fetch('/api/messages/unread'),
-      ]);
-      if (visitsRes.ok) {
-        const data: unknown[] = await visitsRes.json();
-        setPendingVisits(Array.isArray(data) ? data.length : 0);
-      }
+      const unreadRes = await fetch('/api/messages/unread');
       if (unreadRes.ok) {
         const data = await unreadRes.json() as { count: number };
         setUnreadMessages(data.count ?? 0);
@@ -69,7 +61,6 @@ export function BottomNav() {
           const isActive = pathname === href || pathname.startsWith(href + '/');
           // Badge de chat não aparece quando o usuário já está na tela de chat
           const badge =
-            (href === '/profile' && pendingVisits > 0) ? pendingVisits :
             (href === '/chat' && unreadMessages > 0 && !pathname.startsWith('/chat')) ? unreadMessages :
             0;
 

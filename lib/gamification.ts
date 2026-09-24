@@ -155,7 +155,7 @@ export async function awardPoints(userId: string, action: MissionAction): Promis
       await sendPush(sub, {
         title: `${mission.emoji} Missão concluída! +${mission.points}pts`,
         body: mission.label,
-        url: "/profile",
+        url: "/missions",
       });
     }
   } catch {

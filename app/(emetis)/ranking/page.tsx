@@ -192,7 +192,7 @@ export default function RankingPage() {
 
         {/* CTA — ir para missões */}
         <Link
-          href="/profile"
+          href="/missions"
           className="block w-full py-3 text-center text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition-colors"
         >
           Ver minhas missões →

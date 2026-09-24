@@ -5,8 +5,9 @@ import { Bell, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { EmetisIcon, EmetisLogo } from './emetis-icon';
+import { IconProfile } from './emetis-icons';
 
-const ROOT_PATHS = ['/map', '/community', '/bible', '/chat', '/mdc', '/profile', '/businesses', '/events'];
+const ROOT_PATHS = ['/map', '/community', '/bible', '/chat', '/mdc', '/missions', '/businesses', '/events'];
 
 function isRootPage(pathname: string) {
   return ROOT_PATHS.some((p) => pathname === p);
@@ -17,22 +18,31 @@ export function EmetisHeader() {
   const router = useRouter();
   const isRoot = isRootPage(pathname);
   const [notifCount, setNotifCount] = useState(0);
+  const [pendingVisits, setPendingVisits] = useState(0);
 
   useEffect(() => {
-    async function fetchCount() {
+    async function fetchCounts() {
       try {
-        const res = await fetch('/api/notifications');
-        if (!res.ok) return;
-        const data = await res.json();
-        setNotifCount(Array.isArray(data) ? data.length : 0);
+        const [notifRes, visitsRes] = await Promise.all([
+          fetch('/api/notifications'),
+          fetch('/api/visits/pending'),
+        ]);
+        if (notifRes.ok) {
+          const data = await notifRes.json();
+          setNotifCount(Array.isArray(data) ? data.length : 0);
+        }
+        if (visitsRes.ok) {
+          const data: unknown[] = await visitsRes.json();
+          setPendingVisits(Array.isArray(data) ? data.length : 0);
+        }
       } catch {
-        // silencioso — sem notificações visíveis se falhar
+        // silencioso — sem contadores visíveis se falhar
       }
     }
 
-    fetchCount();
+    fetchCounts();
     // Atualiza a cada 60 s enquanto a página estiver aberta
-    const timer = setInterval(fetchCount, 60_000);
+    const timer = setInterval(fetchCounts, 60_000);
     return () => clearInterval(timer);
   }, []);
 
@@ -67,19 +77,34 @@ export function EmetisHeader() {
         </Link>
       </div>
 
-      <button
-        type="button"
-        onClick={() => router.push('/notifications')}
-        className="relative p-2 rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors"
-        aria-label="Notificações"
-      >
-        <Bell size={22} strokeWidth={1.8} />
-        {notifCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 rounded-full border border-white/60 text-[9px] font-bold text-slate-900 px-0.5">
-            {notifCount > 9 ? '9+' : notifCount}
-          </span>
-        )}
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => router.push('/notifications')}
+          className="relative p-2 rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors"
+          aria-label="Notificações"
+        >
+          <Bell size={22} strokeWidth={1.8} />
+          {notifCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 rounded-full border border-white/60 text-[9px] font-bold text-slate-900 px-0.5">
+              {notifCount > 9 ? '9+' : notifCount}
+            </span>
+          )}
+        </button>
+
+        <Link
+          href="/profile"
+          className="relative p-2 rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors"
+          aria-label="Perfil e configurações"
+        >
+          <IconProfile size={22} strokeWidth={1.8} />
+          {pendingVisits > 0 && (
+            <span className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 rounded-full border border-white/60 text-[9px] font-bold text-slate-900 px-0.5">
+              {pendingVisits > 9 ? '9+' : pendingVisits}
+            </span>
+          )}
+        </Link>
+      </div>
     </header>
   );
 }
