@@ -1,7 +1,8 @@
 // GET /api/cron/teo-health
-// Roda periodicamente (vercel.json) para checar se o Teo (Gemini) está
-// respondendo. Se falhar, envia e-mail de alerta via Resend — evita
-// depender de usuários reportarem que o Teo está fora do ar.
+// Roda 1x/dia às 12h (vercel.json — plano atual do Vercel só permite crons
+// diários) para checar se o Teo (Gemini) está respondendo. Se falhar, envia
+// e-mail de alerta via Resend — evita depender de usuários reportarem que
+// o Teo está fora do ar.
 
 import { generateText } from "ai";
 import { getFreeModel } from "@/lib/ai/providers";
