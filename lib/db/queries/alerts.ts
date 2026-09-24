@@ -25,7 +25,9 @@ export async function getAlerts(
     })
     .from(samaritanAlert)
     .leftJoin(user, eq(samaritanAlert.userId, user.id))
-    .where(eq(samaritanAlert.status, "open"))
+    // Pedidos discretos (isPrivate) nunca aparecem no mapa/lista público —
+    // só chegam ao líder de célula via notificação direta (ver createAlert)
+    .where(and(eq(samaritanAlert.status, "open"), eq(samaritanAlert.isPrivate, false)))
     .orderBy(desc(samaritanAlert.createdAt));
 
   if (!lat || !lng) return rows;
@@ -42,6 +44,7 @@ export async function createAlert(data: {
   description: string;
   lat?: string;
   lng?: string;
+  isPrivate?: boolean;
 }) {
   const [created] = await db.insert(samaritanAlert).values(data).returning();
   return created;

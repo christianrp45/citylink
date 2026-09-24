@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Navigation, Users, AlertTriangle, X, Loader2, MessageCircle, Zap, HandHeart, CheckCircle, Home, Clock, Plus, Calendar, Bell, Search, ChevronUp, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import VisitRequestModal from '@/components/visit-request-modal';
 import { WelcomeModal } from '@/components/welcome-modal';
 import { TeoNewUserSheet } from '@/components/teo-new-user-sheet';
@@ -141,7 +142,7 @@ export default function MapPage() {
   const [alerts, setAlerts] = useState<CommunityAlert[]>([]);
   const [selectedAlert, setSelectedAlert] = useState<CommunityAlert | null>(null);
   const [showCreateAlert, setShowCreateAlert] = useState(false);
-  const [alertForm, setAlertForm] = useState({ type: 'urgency' as CommunityAlert['type'], description: '' });
+  const [alertForm, setAlertForm] = useState({ type: 'urgency' as CommunityAlert['type'], description: '', isPrivate: false });
   const [savingAlert, setSavingAlert] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [leaflet, setLeaflet] = useState<any>(null);
@@ -388,6 +389,7 @@ export default function MapPage() {
       const body: Record<string, unknown> = {
         type: alertForm.type,
         description: alertForm.description,
+        isPrivate: alertForm.isPrivate,
       };
       if (userLoc) {
         body.lat = String(userLoc.lat);
@@ -399,9 +401,17 @@ export default function MapPage() {
         body: JSON.stringify(body),
       });
       if (res.ok) {
-        const created: CommunityAlert = await res.json();
-        setAlerts((prev) => [created, ...prev]);
-        setAlertForm({ type: 'urgency', description: '' });
+        const created: CommunityAlert & { leaderNotified?: boolean } = await res.json();
+        if (alertForm.isPrivate) {
+          toast[created.leaderNotified ? 'success' : 'warning'](
+            created.leaderNotified
+              ? 'Pedido discreto enviado ao seu líder de célula.'
+              : 'Pedido registrado, mas você ainda não está em uma célula ativa — ninguém foi notificado automaticamente. Considere ligar 188 (CVV) ou buscar ajuda diretamente.'
+          );
+        } else {
+          setAlerts((prev) => [created, ...prev]);
+        }
+        setAlertForm({ type: 'urgency', description: '', isPrivate: false });
         setShowCreateAlert(false);
       }
     } finally {
@@ -985,15 +995,38 @@ export default function MapPage() {
 
             {/* Recurso de crise — sempre visível na Urgência, já que pode ser risco à vida */}
             {alertForm.type === 'urgency' && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl">
                 <p className="text-xs text-red-700 font-semibold mb-0.5">Está em risco agora ou pensando em desistir da vida?</p>
                 <p className="text-xs text-red-600">
                   Ligue <span className="font-bold">188</span> (CVV — gratuito, sigiloso, 24h) ou acesse{' '}
                   <a href="https://www.cvv.org.br" target="_blank" rel="noopener noreferrer" className="underline font-semibold">cvv.org.br</a>.
-                  Este alerta avisa a comunidade, mas em emergência não espere — ligue agora.
+                  {alertForm.isPrivate ? ' Este pedido não é instantâneo — em emergência não espere, ligue agora.' : ' Este alerta avisa a comunidade, mas em emergência não espere — ligue agora.'}
                 </p>
               </div>
             )}
+
+            {/* Pedido discreto — não vira pino público, vai direto pro líder de célula */}
+            <button
+              type="button"
+              onClick={() => setAlertForm((f) => ({ ...f, isPrivate: !f.isPrivate }))}
+              className={`w-full mb-4 flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${
+                alertForm.isPrivate ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-slate-200'
+              }`}
+            >
+              <span
+                className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  alertForm.isPrivate ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                }`}
+              >
+                {alertForm.isPrivate && <span className="w-2 h-2 rounded-full bg-white" />}
+              </span>
+              <span className="flex-1">
+                <span className="block text-xs font-semibold text-slate-700">Pedido discreto</span>
+                <span className="block text-[11px] text-slate-400 leading-snug">
+                  Não aparece no mapa nem pra comunidade — vai direto e só pro seu líder de célula.
+                </span>
+              </span>
+            </button>
 
             {/* Descrição */}
             <textarea
@@ -1007,10 +1040,12 @@ export default function MapPage() {
             <button
               onClick={handleCreateAlert}
               disabled={savingAlert || !alertForm.description.trim()}
-              className="w-full py-3 bg-red-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-red-600 disabled:opacity-50"
+              className={`w-full py-3 text-white font-bold rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 ${
+                alertForm.isPrivate ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-red-500 hover:bg-red-600'
+              }`}
             >
               {savingAlert ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
-              Enviar Alerta
+              {alertForm.isPrivate ? 'Enviar Pedido Discreto' : 'Enviar Alerta'}
             </button>
           </div>
         </div>

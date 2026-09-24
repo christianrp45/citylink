@@ -5,6 +5,7 @@ import {
   getAcceptedFriendIds,
   getAllPushSubscriptionsForUsers,
   deletePushSubscription,
+  getCellLeaderIdsForUser,
 } from '@/lib/db/queries';
 import { sendPush } from '@/lib/push';
 import { NextRequest } from 'next/server';
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { type, description, lat, lng } = body;
+  const { type, description, lat, lng, isPrivate } = body;
 
   if (!type || !description) {
     return Response.json({ error: 'type e description são obrigatórios' }, { status: 400 });
@@ -66,12 +67,32 @@ export async function POST(req: NextRequest) {
     description,
     lat,
     lng,
+    isPrivate: Boolean(isPrivate),
   });
 
-  // Notificar amigos aceitos (fire-and-forget)
   const senderName = session.user.name ?? session.user.email?.split('@')[0] ?? 'Alguém';
   const pushCfg = ALERT_PUSH[type];
-  if (pushCfg) {
+  let leaderNotified = false;
+
+  if (isPrivate) {
+    // Pedido discreto: não avisa amigos, só o(s) líder(es) de célula direto
+    const leaderIds = await getCellLeaderIdsForUser(session.user.id);
+    leaderNotified = leaderIds.length > 0;
+    if (leaderNotified && pushCfg) {
+      const subs = await getAllPushSubscriptionsForUsers(leaderIds);
+      await Promise.all(
+        subs.map(async (sub) => {
+          const ok = await sendPush(sub, {
+            title: `🔒 ${pushCfg.title} (discreto)`,
+            body: `${senderName}: ${description}`,
+            url: '/community',
+          });
+          if (!ok) await deletePushSubscription(sub.endpoint);
+        })
+      );
+    }
+  } else if (pushCfg) {
+    // Notificar amigos aceitos (fire-and-forget)
     const friendIds = await getAcceptedFriendIds(session.user.id);
     if (friendIds.length > 0) {
       const subs = await getAllPushSubscriptionsForUsers(friendIds);
@@ -88,5 +109,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return Response.json(created, { status: 201 });
+  return Response.json({ ...created, leaderNotified }, { status: 201 });
 }

@@ -4,6 +4,23 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { cell, cellMember, user } from "../schema";
 
+/** Líder(es) das célula(s) ativa(s) de um usuário — pra escalonar pedidos discretos de ajuda */
+export async function getCellLeaderIdsForUser(userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ leaderId: cell.leaderId, coLeaderId: cell.coLeaderId })
+    .from(cellMember)
+    .innerJoin(cell, eq(cellMember.cellId, cell.id))
+    .where(and(eq(cellMember.userId, userId), eq(cellMember.isActive, true)));
+
+  const ids = new Set<string>();
+  for (const row of rows) {
+    ids.add(row.leaderId);
+    if (row.coLeaderId) ids.add(row.coLeaderId);
+  }
+  ids.delete(userId); // não notifica a própria pessoa se ela for líder da célula
+  return [...ids];
+}
+
 export async function getCells(filters?: { communityId?: string | null }) {
   const conditions = [];
   if (filters?.communityId !== undefined) {

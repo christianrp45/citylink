@@ -287,6 +287,8 @@ export const samaritanAlert = pgTable("SamaritanAlert", {
   })
     .notNull()
     .default("open"),
+  // Pedido discreto: não aparece no mapa/lista público, só notifica o líder de célula direto
+  isPrivate: boolean("isPrivate").notNull().default(false),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
 
