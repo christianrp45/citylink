@@ -17,6 +17,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Crons são chamados pelo Vercel (server-to-server), sem sessão de
+  // usuário — a própria rota valida via CRON_SECRET. Sem este bypass,
+  // o middleware redirecionava toda chamada de cron para /api/auth/guest
+  // antes de a rota rodar, e nenhum cron chegava a executar de fato.
+  if (pathname.startsWith("/api/cron/")) {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
