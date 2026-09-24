@@ -11,7 +11,7 @@ type RankEntry = {
   name: string | null;
   avatar: string | null;
   total: number;
-  level: string;
+  level: string | null;
 };
 
 const LEVEL_EMOJI: Record<string, string> = {
@@ -39,34 +39,23 @@ export default function RankingPage() {
 
   const cellId = searchParams.get('cellId');
   const [tab, setTab] = useState<'geral' | 'celula'>(cellId ? 'celula' : 'geral');
-  const [geral, setGeral] = useState<RankEntry[]>([]);
-  const [celula, setCelula] = useState<RankEntry[]>([]);
-  const [loadingGeral, setLoadingGeral] = useState(false);
-  const [loadingCelula, setLoadingCelula] = useState(false);
+  const [period, setPeriod] = useState<'semana' | 'total'>('semana');
+  const [entries, setEntries] = useState<RankEntry[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Busca ranking geral
+  // Busca o ranking sempre que escopo (geral/célula) ou período (semana/total) mudar
   useEffect(() => {
-    setLoadingGeral(true);
-    fetch('/api/ranking')
+    if (tab === 'celula' && !cellId) return;
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (tab === 'celula' && cellId) params.set('cellId', cellId);
+    if (period === 'semana') params.set('period', 'week');
+    fetch(`/api/ranking?${params}`)
       .then((r) => r.json())
-      .then(setGeral)
+      .then(setEntries)
       .catch(() => {})
-      .finally(() => setLoadingGeral(false));
-  }, []);
-
-  // Busca ranking da célula (se cellId disponível)
-  useEffect(() => {
-    if (!cellId) return;
-    setLoadingCelula(true);
-    fetch(`/api/ranking?cellId=${cellId}`)
-      .then((r) => r.json())
-      .then(setCelula)
-      .catch(() => {})
-      .finally(() => setLoadingCelula(false));
-  }, [cellId]);
-
-  const entries = tab === 'celula' ? celula : geral;
-  const loading = tab === 'celula' ? loadingCelula : loadingGeral;
+      .finally(() => setLoading(false));
+  }, [tab, period, cellId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-slate-50 pb-24">
@@ -77,9 +66,11 @@ export default function RankingPage() {
           <Trophy size={22} className="text-yellow-300" />
           <h1 className="text-xl font-bold">Ranking</h1>
         </div>
-        <p className="text-indigo-300 text-sm ml-9">Quem está servindo mais essa semana?</p>
+        <p className="text-indigo-300 text-sm ml-9">
+          {period === 'semana' ? 'Quem está servindo mais essa semana?' : 'Ranking acumulado desde sempre'}
+        </p>
 
-        {/* Abas */}
+        {/* Escopo: geral / célula */}
         <div className="flex gap-2 mt-4 ml-1">
           <button
             onClick={() => setTab('geral')}
@@ -99,6 +90,26 @@ export default function RankingPage() {
               ⛪ Minha Célula
             </button>
           )}
+        </div>
+
+        {/* Período: semana / total */}
+        <div className="flex gap-1 mt-2 ml-1 bg-white/10 rounded-full p-0.5 w-fit">
+          <button
+            onClick={() => setPeriod('semana')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+              period === 'semana' ? 'bg-white text-indigo-700' : 'text-indigo-200 hover:text-white'
+            }`}
+          >
+            Esta semana
+          </button>
+          <button
+            onClick={() => setPeriod('total')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+              period === 'total' ? 'bg-white text-indigo-700' : 'text-indigo-200 hover:text-white'
+            }`}
+          >
+            Total
+          </button>
         </div>
       </div>
 
@@ -147,7 +158,7 @@ export default function RankingPage() {
                       {e.name ?? 'Usuário'} {isMe && <span className="text-xs font-normal text-indigo-500">(você)</span>}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {LEVEL_EMOJI[e.level] ?? '🌱'} {e.level}
+                      {LEVEL_EMOJI[e.level ?? ''] ?? '🌱'} {e.level}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -179,7 +190,7 @@ export default function RankingPage() {
                         <p className={`text-sm font-semibold truncate ${isMe ? 'text-indigo-700' : 'text-slate-700'}`}>
                           {e.name ?? 'Usuário'} {isMe && <span className="text-xs font-normal text-indigo-500">(você)</span>}
                         </p>
-                        <p className="text-xs text-slate-400">{LEVEL_EMOJI[e.level] ?? '🌱'} {e.level}</p>
+                        <p className="text-xs text-slate-400">{LEVEL_EMOJI[e.level ?? ''] ?? '🌱'} {e.level}</p>
                       </div>
                       <span className="text-sm font-bold text-indigo-600 flex-shrink-0">{e.total} pts</span>
                     </div>
