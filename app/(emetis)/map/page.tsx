@@ -983,6 +983,18 @@ export default function MapPage() {
               ))}
             </div>
 
+            {/* Recurso de crise — sempre visível na Urgência, já que pode ser risco à vida */}
+            {alertForm.type === 'urgency' && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-xs text-red-700 font-semibold mb-0.5">Está em risco agora ou pensando em desistir da vida?</p>
+                <p className="text-xs text-red-600">
+                  Ligue <span className="font-bold">188</span> (CVV — gratuito, sigiloso, 24h) ou acesse{' '}
+                  <a href="https://www.cvv.org.br" target="_blank" rel="noopener noreferrer" className="underline font-semibold">cvv.org.br</a>.
+                  Este alerta avisa a comunidade, mas em emergência não espere — ligue agora.
+                </p>
+              </div>
+            )}
+
             {/* Descrição */}
             <textarea
               value={alertForm.description}
