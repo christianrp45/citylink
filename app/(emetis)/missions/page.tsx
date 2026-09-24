@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
+import { MissionBadge, LevelBadge, GlyphFlame, GlyphTarget, GlyphLight } from '@/components/emetis-icons/missions';
+import { IconTrophy } from '@/components/emetis-icons';
+import type { MissionAction } from '@/lib/gamification';
 
 type MissionsProgress = {
   total: number; level: string; weekPoints: number;
   nextLevelName: string | null; nextLevelMin: number | null;
-  missions: { action: string; label: string; points: number; emoji: string; completed: boolean }[];
+  missions: { action: MissionAction; label: string; points: number; emoji: string; completed: boolean }[];
   currentStreak: number; longestStreak: number; checkedInToday: boolean;
 };
 
@@ -19,7 +22,9 @@ const LEVEL_STYLES: Record<string, { bg: string; bar: string; text: string; bord
   fruto:   { bg: 'bg-violet-50', bar: 'bg-violet-500', text: 'text-violet-700', border: 'border-violet-200' },
   luz:     { bg: 'bg-amber-50', bar: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-200' },
 };
-const LEVEL_EMOJIS: Record<string, string> = { semente: '🌱', broto: '🌿', árvore: '🌳', fruto: '🍎', luz: '✨' };
+const LEVEL_HEX: Record<string, string> = {
+  semente: '#334155', broto: '#047857', árvore: '#1D4ED8', fruto: '#6D28D9', luz: '#B45309',
+};
 const LEVELS_ORDER = ['semente', 'broto', 'árvore', 'fruto', 'luz'];
 const LEVEL_MINS = [0, 100, 300, 600, 1000];
 
@@ -36,7 +41,7 @@ export default function MissionsPage() {
   if (isGuest) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-        <p className="text-4xl">🌱</p>
+        <LevelBadge level="semente" size={56} />
         <p className="text-slate-500 font-medium">Crie uma conta pra acompanhar suas missões e sua sequência.</p>
       </div>
     );
@@ -56,7 +61,7 @@ export default function MissionsPage() {
         {/* Nível & XP — card destacado */}
         {missions && (() => {
           const style = LEVEL_STYLES[missions.level] ?? LEVEL_STYLES.semente;
-          const emoji = LEVEL_EMOJIS[missions.level] ?? '🌱';
+          const levelColor = LEVEL_HEX[missions.level] ?? LEVEL_HEX.semente;
           const prevLevelIdx = LEVELS_ORDER.indexOf(missions.level);
           const currentMin = LEVEL_MINS[prevLevelIdx] ?? 0;
           const nextMin = missions.nextLevelMin ?? null;
@@ -67,7 +72,7 @@ export default function MissionsPage() {
             <div className={`rounded-2xl border p-4 ${style.bg} ${style.border}`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{emoji}</span>
+                  <LevelBadge level={missions.level} color={levelColor} size={40} />
                   <div>
                     <p className={`text-base font-bold capitalize ${style.text}`}>{missions.level}</p>
                     <p className="text-xs text-slate-400">{missions.total} XP acumulado</p>
@@ -83,7 +88,7 @@ export default function MissionsPage() {
                       style={{ background: 'var(--em-gold-400)', color: '#7C4A03' }}
                       title={`Recorde: ${missions.longestStreak} dias`}
                     >
-                      🔥 {missions.currentStreak} {missions.currentStreak === 1 ? 'dia' : 'dias'}
+                      <GlyphFlame size={12} /> {missions.currentStreak} {missions.currentStreak === 1 ? 'dia' : 'dias'}
                       {!missions.checkedInToday && ' · faça algo hoje!'}
                     </span>
                   )}
@@ -105,7 +110,9 @@ export default function MissionsPage() {
                   </div>
                 </>
               ) : (
-                <p className={`text-xs font-semibold mt-1 ${style.text}`}>Nível máximo atingido! ✨</p>
+                <p className={`text-xs font-semibold mt-1 flex items-center gap-1 ${style.text}`}>
+                  <GlyphLight size={13} /> Nível máximo atingido!
+                </p>
               )}
             </div>
           );
@@ -116,7 +123,7 @@ export default function MissionsPage() {
           <div className="bg-white rounded-2xl border border-slate-100 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                🎯 Missões da Semana
+                <GlyphTarget size={17} className="text-indigo-600" /> Missões da Semana
               </h3>
               <span className="text-xs font-bold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full">
                 {missions.weekPoints} pts esta semana
@@ -153,7 +160,7 @@ export default function MissionsPage() {
                       : 'bg-slate-50 border border-slate-100'
                   }`}
                 >
-                  <span className="text-lg flex-shrink-0">{m.emoji}</span>
+                  <MissionBadge action={m.action} completed={m.completed} size={32} />
                   <p className={`flex-1 text-xs leading-tight ${m.completed ? 'text-emerald-700 line-through' : 'text-slate-600'}`}>
                     {m.label}
                   </p>
@@ -165,9 +172,9 @@ export default function MissionsPage() {
             </div>
             <Link
               href="/ranking"
-              className="block w-full mt-2 py-2 text-center text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
+              className="w-full mt-2 py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
             >
-              🏆 Ver Ranking Geral
+              <IconTrophy size={14} filled /> Ver Ranking Geral
             </Link>
           </div>
         )}
