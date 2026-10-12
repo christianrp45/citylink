@@ -1,10 +1,10 @@
 import { auth } from "@/app/(auth)/auth";
-import { getChurchById, getChurchMembers, addChurchMember, removeChurchMember } from "@/lib/db/queries";
+import { addChurchMember, getChurchById, getChurchMembers, isChurchAdmin, removeChurchMember } from "@/lib/db/queries";
 
 async function verifyAdmin(churchId: string, userId: string) {
   const ch = await getChurchById(churchId);
   if (!ch) return null;
-  if (ch.adminUserId !== userId) return null;
+  if (!(await isChurchAdmin(churchId, userId))) return null;
   return ch;
 }
 

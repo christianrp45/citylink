@@ -358,6 +358,10 @@ export const cell = pgTable("Cell", {
   description: text("description"),
   // Associação opcional a uma comunidade — null = célula independente
   communityId: uuid("communityId").references(() => community.id),
+  // Associação opcional direta a uma igreja — null = célula sem igreja.
+  // Só o admin da igreja (adminUserId ou ChurchAdmin) pode criar/gerenciar
+  // células com churchId preenchido.
+  churchId: uuid("churchId").references(() => church.id),
   leaderId: uuid("leaderId")
     .notNull()
     .references(() => user.id),
@@ -594,6 +598,27 @@ export const church = pgTable("Church", {
 });
 
 export type Church = InferSelectModel<typeof church>;
+
+// Co-admins de uma igreja — além do church.adminUserId (admin original/owner,
+// não removível por este mecanismo), outros usuários podem ganhar acesso
+// administrativo à mesma igreja.
+export const churchAdmin = pgTable(
+  "ChurchAdmin",
+  {
+    churchId: uuid("churchId")
+      .notNull()
+      .references(() => church.id),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.churchId, table.userId] }),
+  })
+);
+
+export type ChurchAdmin = InferSelectModel<typeof churchAdmin>;
 
 export const testimonial = pgTable("Testimonial", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),

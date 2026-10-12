@@ -21,7 +21,7 @@ export async function getCellLeaderIdsForUser(userId: string): Promise<string[]>
   return [...ids];
 }
 
-export async function getCells(filters?: { communityId?: string | null }) {
+export async function getCells(filters?: { communityId?: string | null; churchId?: string }) {
   const conditions = [];
   if (filters?.communityId !== undefined) {
     conditions.push(
@@ -30,6 +30,9 @@ export async function getCells(filters?: { communityId?: string | null }) {
         : eq(cell.communityId, filters.communityId)
     );
   }
+  if (filters?.churchId) {
+    conditions.push(eq(cell.churchId, filters.churchId));
+  }
 
   return db
     .select({
@@ -37,6 +40,8 @@ export async function getCells(filters?: { communityId?: string | null }) {
       name: cell.name,
       description: cell.description,
       communityId: cell.communityId,
+      churchId: cell.churchId,
+      coLeaderId: cell.coLeaderId,
       neighborhood: cell.neighborhood,
       address: cell.address,
       meetingDay: cell.meetingDay,
@@ -65,7 +70,9 @@ export async function createCell(data: {
   name: string;
   description?: string;
   communityId?: string;
+  churchId?: string;
   leaderId: string;
+  coLeaderId?: string;
   neighborhood?: string;
   address?: string;
   meetingDay?: number;
@@ -74,7 +81,11 @@ export async function createCell(data: {
   maxMembers?: number;
   entryMode?: "open" | "invite_only";
 }) {
-  const [newCell] = await db.insert(cell).values(data).returning();
+  const { coLeaderId, ...cellData } = data;
+  const [newCell] = await db
+    .insert(cell)
+    .values({ ...cellData, coLeaderId })
+    .returning();
 
   // líder entra automaticamente como membro, já aprovado
   await db.insert(cellMember).values({
@@ -84,7 +95,74 @@ export async function createCell(data: {
     approvedAt: new Date(),
   });
 
+  if (coLeaderId) {
+    await db.insert(cellMember).values({
+      cellId: newCell.id,
+      userId: coLeaderId,
+      role: "co-leader",
+      approvedAt: new Date(),
+    });
+  }
+
   return newCell;
+}
+
+/**
+ * Troca líder e/ou co-líder de uma célula já existente (ex: admin da igreja
+ * promovendo um membro). O líder/co-líder anterior, se substituído, cai para
+ * "member" em vez de ser removido da célula.
+ */
+export async function setCellLeadership(
+  cellId: string,
+  updates: { leaderId?: string; coLeaderId?: string | null }
+) {
+  const current = await getCellById(cellId);
+  if (!current) throw new Error("Célula não encontrada");
+
+  const previousLeaderId = current.leaderId;
+  const previousCoLeaderId = current.coLeaderId;
+
+  await db
+    .update(cell)
+    .set({
+      ...(updates.leaderId ? { leaderId: updates.leaderId } : {}),
+      ...(updates.coLeaderId !== undefined ? { coLeaderId: updates.coLeaderId } : {}),
+    })
+    .where(eq(cell.id, cellId));
+
+  async function upsertRole(userId: string, role: "leader" | "co-leader") {
+    const [existing] = await db
+      .select()
+      .from(cellMember)
+      .where(and(eq(cellMember.cellId, cellId), eq(cellMember.userId, userId)));
+    if (existing) {
+      await db
+        .update(cellMember)
+        .set({ role, isActive: true, approvedAt: existing.approvedAt ?? new Date() })
+        .where(and(eq(cellMember.cellId, cellId), eq(cellMember.userId, userId)));
+    } else {
+      await db.insert(cellMember).values({ cellId, userId, role, approvedAt: new Date() });
+    }
+  }
+
+  async function demoteIfReplaced(previousUserId: string | null, newUserId: string | undefined) {
+    if (!previousUserId || !newUserId || previousUserId === newUserId) return;
+    await db
+      .update(cellMember)
+      .set({ role: "member" })
+      .where(and(eq(cellMember.cellId, cellId), eq(cellMember.userId, previousUserId)));
+  }
+
+  if (updates.leaderId) {
+    await upsertRole(updates.leaderId, "leader");
+    await demoteIfReplaced(previousLeaderId, updates.leaderId);
+  }
+  if (updates.coLeaderId) {
+    await upsertRole(updates.coLeaderId, "co-leader");
+    await demoteIfReplaced(previousCoLeaderId, updates.coLeaderId);
+  }
+
+  return getCellById(cellId);
 }
 
 /**
