@@ -1,6 +1,6 @@
 import { auth } from '@/app/(auth)/auth';
 import { db } from '@/lib/db/client';
-import { formacaoTurma, formacaoMatricula, formacaoProgress, formacaoQuizResult, user } from '@/lib/db/schema';
+import { cell, formacaoTurma, formacaoMatricula, formacaoProgress, formacaoQuizResult, user } from '@/lib/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getCadernoMeta } from '@/lib/data/formacao';
 import { parseVolumeSections } from '@/lib/formacao-parser';
@@ -15,6 +15,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const [turma] = await db.select().from(formacaoTurma).where(eq(formacaoTurma.id, id));
   if (!turma) return new Response('Not Found', { status: 404 });
+
+  // Apenas líder/co-líder da célula da turma vê o progresso dos membros
+  const [cellRow] = await db
+    .select({ leaderId: cell.leaderId, coLeaderId: cell.coLeaderId })
+    .from(cell)
+    .where(eq(cell.id, turma.cellId));
+  if (
+    !cellRow ||
+    (cellRow.leaderId !== session.user.id && cellRow.coLeaderId !== session.user.id)
+  ) {
+    return new Response('Forbidden', { status: 403 });
+  }
 
   // Lista de membros matriculados
   const matriculas = await db

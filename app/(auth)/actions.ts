@@ -1,6 +1,6 @@
 "use server";
 
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { z } from "zod";
 
 import { createUser, getUser, updateUserPassword } from "@/lib/db/queries";
@@ -34,7 +34,12 @@ function verifyResetToken(token: string): string | null {
     const expected = createHmac("sha256", secret)
       .update(`${email}|${expiry}`)
       .digest("hex");
-    return sig === expected ? email : null;
+    const sigBuf = Buffer.from(sig, "hex");
+    const expectedBuf = Buffer.from(expected, "hex");
+    const valid =
+      sigBuf.length === expectedBuf.length &&
+      timingSafeEqual(sigBuf, expectedBuf);
+    return valid ? email : null;
   } catch {
     return null;
   }

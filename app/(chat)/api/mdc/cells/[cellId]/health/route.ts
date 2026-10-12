@@ -14,9 +14,15 @@ export async function GET(
 
   const { cellId } = await params;
 
-  // Verify user has access to this cell
-  const [cellRow] = await db.select({ leaderId: cell.leaderId }).from(cell).where(eq(cell.id, cellId));
+  // Apenas líder/co-líder da célula tem acesso ao painel de saúde
+  const [cellRow] = await db
+    .select({ leaderId: cell.leaderId, coLeaderId: cell.coLeaderId })
+    .from(cell)
+    .where(eq(cell.id, cellId));
   if (!cellRow) return Response.json({ error: 'Célula não encontrada' }, { status: 404 });
+  if (cellRow.leaderId !== session.user.id && cellRow.coLeaderId !== session.user.id) {
+    return Response.json({ error: 'Apenas líderes podem ver a saúde da célula' }, { status: 403 });
+  }
 
   // Fetch last 8 completed meetings
   const meetings = await db

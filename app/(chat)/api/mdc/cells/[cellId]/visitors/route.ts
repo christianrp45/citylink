@@ -24,6 +24,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ cellId:
 
   const { cellId } = await params;
 
+  const leader = await isLeader(cellId, session.user.id);
+  if (!leader) return Response.json({ error: 'Apenas líderes podem ver visitantes' }, { status: 403 });
+
   const visitors = await db
     .select()
     .from(cellVisitor)
