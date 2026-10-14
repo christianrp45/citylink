@@ -1,5 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { getCellById, getGuidesForCell, deleteGuide } from "@/lib/db/queries-cells";
+import { isApprovedCellMember } from "@/lib/db/queries";
 
 export async function GET(
   _request: Request,
@@ -11,6 +12,10 @@ export async function GET(
   }
 
   const { cellId } = await params;
+  if (!(await isApprovedCellMember(cellId, session.user.id))) {
+    return Response.json({ error: "Não autorizado" }, { status: 403 });
+  }
+
   const guides = await getGuidesForCell(cellId);
   return Response.json(guides);
 }

@@ -131,10 +131,12 @@ export function LocationSearchPicker({ onSelect, onCancel }: LocationSearchPicke
     }
     setSearching(true);
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&accept-language=pt-BR&countrycodes=br`;
-      const res = await fetch(url, {
-        headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' },
-      });
+      const res = await fetch(`/api/geocode?type=search&q=${encodeURIComponent(q)}`);
+      if (!res.ok) {
+        setResults([]);
+        setOpen(false);
+        return;
+      }
       const data: NominatimResult[] = await res.json();
       setResults(data);
       setOpen(data.length > 0);
@@ -169,9 +171,7 @@ export function LocationSearchPicker({ onSelect, onCancel }: LocationSearchPicke
       );
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=pt-BR`,
-      );
+      const res = await fetch(`/api/geocode?type=reverse&lat=${lat}&lon=${lng}`);
       const data = await res.json();
       const label = formatShortAddress(data) || 'Minha localização';
       setSelected({ lat, lng, label });
@@ -190,9 +190,7 @@ export function LocationSearchPicker({ onSelect, onCancel }: LocationSearchPicke
     // Silently reverse-geocode in the background to update the label
     setReverseLoading(true);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=pt-BR`,
-      );
+      const res = await fetch(`/api/geocode?type=reverse&lat=${lat}&lon=${lng}`);
       const data = await res.json();
       const label = formatShortAddress(data) || 'Local selecionado';
       setSelected({ lat, lng, label });

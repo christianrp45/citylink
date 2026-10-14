@@ -55,6 +55,10 @@ export async function POST(
     return Response.json({ error: "userId e attended são obrigatórios" }, { status: 400 });
   }
 
+  if (!(await isApprovedCellMember(cellId, userId))) {
+    return Response.json({ error: "Usuário não faz parte desta célula" }, { status: 400 });
+  }
+
   await markAttendance(meetingId, userId, attended);
 
   if (attended) void awardPoints(userId, "attend_meeting");
