@@ -265,10 +265,20 @@ export default function MapPage() {
       setCenter([userLoc.lat, userLoc.lng]);
       return;
     }
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      toast.error('Seu navegador não suporta geolocalização.');
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => onLocationObtained({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {}
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error('Permissão de localização negada. Ative o GPS nas configurações do navegador.');
+        } else {
+          toast.error('Não foi possível obter sua localização agora.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
   }, [userLoc, onLocationObtained]);
 
@@ -282,8 +292,19 @@ export default function MapPage() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => onLocationObtained({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {}
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED) {
+            toast.error('Permissão de localização negada. Ative o GPS nas configurações do navegador para ver sua posição no mapa.');
+          } else if (err.code === err.TIMEOUT) {
+            toast.error('Não foi possível obter sua localização a tempo. Tente novamente pelo botão de navegação.');
+          } else {
+            toast.error('Não foi possível obter sua localização agora.');
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
+    } else {
+      toast.error('Seu navegador não suporta geolocalização.');
     }
 
     // Carregar local salvo ativo (usado só no broadcast "Estou disponível", não no mapa)

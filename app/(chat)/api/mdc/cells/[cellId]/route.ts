@@ -71,13 +71,30 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { entryMode } = body;
+  const { name, entryMode } = body;
 
-  if (entryMode !== "open" && entryMode !== "invite_only") {
-    return Response.json({ error: "Modo de entrada inválido" }, { status: 400 });
+  if (name === undefined && entryMode === undefined) {
+    return Response.json({ error: "Informe name ou entryMode" }, { status: 400 });
   }
 
-  await db.update(cell).set({ entryMode }).where(eq(cell.id, cellId));
+  const updates: Partial<{ name: string; entryMode: "open" | "invite_only" }> = {};
 
-  return Response.json({ success: true, entryMode });
+  if (name !== undefined) {
+    const trimmed = String(name).trim();
+    if (!trimmed) {
+      return Response.json({ error: "Nome não pode ser vazio" }, { status: 400 });
+    }
+    updates.name = trimmed.slice(0, 100);
+  }
+
+  if (entryMode !== undefined) {
+    if (entryMode !== "open" && entryMode !== "invite_only") {
+      return Response.json({ error: "Modo de entrada inválido" }, { status: 400 });
+    }
+    updates.entryMode = entryMode;
+  }
+
+  await db.update(cell).set(updates).where(eq(cell.id, cellId));
+
+  return Response.json({ success: true, ...updates });
 }
