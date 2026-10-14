@@ -6,7 +6,7 @@ import {
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
 import { teoPrompt, teoWithPassagePrompt, newUserTeoPrompt } from "@/lib/ai/prompts";
-import { getFreeModel } from "@/lib/ai/providers";
+import { getFreeModel, getFallbackModel } from "@/lib/ai/providers";
 import { searchTheology } from "@/lib/ai/theological-search";
 import { getMessageCountByUserId } from "@/lib/db/queries";
 
@@ -63,12 +63,31 @@ export async function POST(request: Request) {
 
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
-      const result = streamText({
-        model: getFreeModel(),
-        system: systemPrompt,
-        messages: modelMessages,
-      });
-      writer.merge(result.toUIMessageStream());
+      let wroteAnyChunk = false;
+      try {
+        const result = streamText({
+          model: getFreeModel(),
+          system: systemPrompt,
+          messages: modelMessages,
+        });
+        for await (const chunk of result.toUIMessageStream()) {
+          wroteAnyChunk = true;
+          writer.write(chunk);
+        }
+      } catch (err) {
+        // Só tenta fallback se nada foi escrito ainda — evita resposta
+        // duplicada/garbled se o erro ocorrer no meio do streaming.
+        if (wroteAnyChunk) throw err;
+        console.warn("[teo] getFreeModel falhou, tentando fallback:", err instanceof Error ? err.message : err);
+        const fallback = streamText({
+          model: getFallbackModel(),
+          system: systemPrompt,
+          messages: modelMessages,
+        });
+        for await (const chunk of fallback.toUIMessageStream()) {
+          writer.write(chunk);
+        }
+      }
     },
   });
 

@@ -88,3 +88,11 @@ export function getArtifactModel() {
 export function getFreeModel() {
   return _google("gemini-3.6-flash") as unknown as LanguageModelV3;
 }
+
+// Fallback quando a cota gratuita do Gemini esgota (429/503) — modelo
+// gratuito via OpenRouter, testado e disponível em 2026-10-14. Usar só como
+// retry de erro de quota/disponibilidade, nunca como modelo primário (a
+// qualidade/tom não foi ajustado pros prompts do Teo como o Gemini foi).
+export function getFallbackModel() {
+  return or("nvidia/nemotron-3.5-lightning:free");
+}

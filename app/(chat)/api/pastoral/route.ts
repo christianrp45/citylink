@@ -6,7 +6,7 @@ import {
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
 import { pastoralPrompt } from "@/lib/ai/prompts";
-import { getFreeModel } from "@/lib/ai/providers";
+import { getFreeModel, getFallbackModel } from "@/lib/ai/providers";
 import { getMessageCountByUserId } from "@/lib/db/queries";
 
 export const maxDuration = 60;
@@ -36,12 +36,29 @@ export async function POST(request: Request) {
 
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
-      const result = streamText({
-        model: getFreeModel(),
-        system: pastoralPrompt,
-        messages: modelMessages,
-      });
-      writer.merge(result.toUIMessageStream());
+      let wroteAnyChunk = false;
+      try {
+        const result = streamText({
+          model: getFreeModel(),
+          system: pastoralPrompt,
+          messages: modelMessages,
+        });
+        for await (const chunk of result.toUIMessageStream()) {
+          wroteAnyChunk = true;
+          writer.write(chunk);
+        }
+      } catch (err) {
+        if (wroteAnyChunk) throw err;
+        console.warn("[pastoral] getFreeModel falhou, tentando fallback:", err instanceof Error ? err.message : err);
+        const fallback = streamText({
+          model: getFallbackModel(),
+          system: pastoralPrompt,
+          messages: modelMessages,
+        });
+        for await (const chunk of fallback.toUIMessageStream()) {
+          writer.write(chunk);
+        }
+      }
     },
   });
 

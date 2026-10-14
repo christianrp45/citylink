@@ -133,6 +133,35 @@ ${quebraGelosList}`;
     });
   }
 
+  // Fallback quando a cota gratuita do Gemini esgota (429/503 persistente) —
+  // modelo gratuito via OpenRouter, mesmo provedor de fallback do Teo.
+  async function callOpenRouterFallback(): Promise<string | null> {
+    const orKey = process.env.OPENROUTER_API_KEY;
+    if (!orKey) return null;
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${orKey}`,
+        },
+        body: JSON.stringify({
+          model: "nvidia/nemotron-3.5-lightning:free",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (!res.ok) {
+        console.error("[generate-guide] fallback OpenRouter falhou:", res.status, await res.text());
+        return null;
+      }
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content ?? null;
+    } catch (err) {
+      console.error("[generate-guide] fallback OpenRouter erro:", err instanceof Error ? err.message : err);
+      return null;
+    }
+  }
+
   try {
     let aiRes: Response | null = null;
 
@@ -144,28 +173,33 @@ ${quebraGelosList}`;
       if (attempt < 3) await sleep(3000 * attempt);
     }
 
-    if (!aiRes) {
-      return Response.json(
-        { error: "Serviço de IA com alta demanda no momento. Aguarde alguns segundos e tente novamente." },
-        { status: 503 }
-      );
-    }
+    let text: string | null = null;
 
-    if (!aiRes.ok) {
+    if (!aiRes) {
+      // Gemini esgotado após 3 tentativas — tenta fallback antes de desistir
+      console.warn("[generate-guide] Gemini esgotado, tentando fallback OpenRouter");
+      text = await callOpenRouterFallback();
+      if (!text) {
+        return Response.json(
+          { error: "Serviço de IA com alta demanda no momento. Aguarde alguns segundos e tente novamente." },
+          { status: 503 }
+        );
+      }
+    } else if (!aiRes.ok) {
       const errBody = await aiRes.text();
       console.error("[generate-guide] Gemini API error:", aiRes.status, errBody);
       return Response.json(
         { error: `Erro da API de IA (${aiRes.status}): ${errBody.slice(0, 200)}` },
         { status: 500 }
       );
+    } else {
+      const geminiData = await aiRes.json();
+      text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      console.log(`[generate-guide] roteiro gerado com Gemini 3.6 Flash`);
     }
 
-    const geminiData = await aiRes.json();
-    const text: string = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    console.log(`[generate-guide] roteiro gerado com Gemini 2.0 Flash`);
-
     if (!text) {
-      console.error("[generate-guide] Gemini retornou resposta vazia:", JSON.stringify(geminiData).slice(0, 300));
+      console.error("[generate-guide] IA retornou resposta vazia");
       return Response.json({ error: "IA retornou resposta vazia. Tente novamente." }, { status: 500 });
     }
 
