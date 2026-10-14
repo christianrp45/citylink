@@ -38,7 +38,7 @@ export async function getAdminDashboard(adminUserId: string) {
     .orderBy(cell.name);
 
   if (cells.length === 0) {
-    return { communities: adminCommunities, cells: [], totals: null };
+    return { churches: adminChurches, communities: adminCommunities, cells: [], totals: null };
   }
 
   // 3. Stats por célula (mesma lógica do leader dashboard)
