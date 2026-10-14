@@ -669,48 +669,50 @@ export default function CellDetailPage() {
             Membros ({cell.memberCount})
           </p>
           {cell.members ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {cell.members.slice(0, 8).map((m) => (
-                <div key={m.userId} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600 flex-shrink-0">
-                    {m.userEmail?.[0]?.toUpperCase() ?? '?'}
+                <div key={m.userId}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600 flex-shrink-0">
+                      {m.userEmail?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-700 truncate">{m.userEmail}</p>
+                    </div>
+                    {m.role === 'leader' && (
+                      <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full flex-shrink-0">
+                        Líder
+                      </span>
+                    )}
+                    {m.role === 'co-leader' && (
+                      <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full flex-shrink-0">
+                        Co-líder
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-700 truncate">{m.userEmail}</p>
-                  </div>
-                  {m.role === 'leader' && (
-                    <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full flex-shrink-0">
-                      Líder
-                    </span>
-                  )}
-                  {m.role === 'co-leader' && (
-                    <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full flex-shrink-0">
-                      Co-líder
-                    </span>
-                  )}
                   {isLeader && m.role !== 'leader' && (
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div className="flex flex-wrap gap-1.5 mt-1.5 ml-11">
                       <button
                         onClick={() => handleSetLeadership('leaderId', m.userId)}
                         disabled={leadershipActingId !== null}
-                        className="text-[10px] px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg font-semibold hover:bg-amber-100 disabled:opacity-50"
+                        className="text-[11px] px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg font-semibold hover:bg-amber-100 disabled:opacity-50"
                         title="Tornar líder desta célula"
                       >
-                        {leadershipActingId === m.userId ? <Loader2 size={10} className="animate-spin" /> : 'Tornar líder'}
+                        {leadershipActingId === m.userId ? <Loader2 size={10} className="animate-spin inline" /> : 'Tornar líder'}
                       </button>
                       {m.role === 'co-leader' ? (
                         <button
                           onClick={() => handleSetLeadership('coLeaderId', null)}
                           disabled={leadershipActingId !== null}
-                          className="text-[10px] px-2 py-1 bg-gray-100 text-gray-600 rounded-lg font-semibold hover:bg-gray-200 disabled:opacity-50"
+                          className="text-[11px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg font-semibold hover:bg-gray-200 disabled:opacity-50"
                         >
-                          {leadershipActingId === 'remove' ? <Loader2 size={10} className="animate-spin" /> : 'Remover co-líder'}
+                          {leadershipActingId === 'remove' ? <Loader2 size={10} className="animate-spin inline" /> : 'Remover co-líder'}
                         </button>
                       ) : (
                         <button
                           onClick={() => handleSetLeadership('coLeaderId', m.userId)}
                           disabled={leadershipActingId !== null}
-                          className="text-[10px] px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg font-semibold hover:bg-indigo-100 disabled:opacity-50"
+                          className="text-[11px] px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg font-semibold hover:bg-indigo-100 disabled:opacity-50"
                         >
                           Tornar co-líder
                         </button>
