@@ -146,7 +146,7 @@ ${quebraGelosList}`;
           Authorization: `Bearer ${orKey}`,
         },
         body: JSON.stringify({
-          model: "nvidia/nemotron-3.5-lightning:free",
+          model: "nvidia/nemotron-3-super-120b-a12b:free",
           messages: [{ role: "user", content: prompt }],
         }),
       });

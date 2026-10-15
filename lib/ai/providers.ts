@@ -93,6 +93,9 @@ export function getFreeModel() {
 // gratuito via OpenRouter, testado e disponível em 2026-10-14. Usar só como
 // retry de erro de quota/disponibilidade, nunca como modelo primário (a
 // qualidade/tom não foi ajustado pros prompts do Teo como o Gemini foi).
+// nvidia/nemotron-3.5-lightning:free foi testado primeiro mas produzia erro
+// de concordância em português ("eleição eternos"); nemotron-3-super-120b
+// saiu sem erros em teste comparativo com os outros gratuitos disponíveis.
 export function getFallbackModel() {
-  return or("nvidia/nemotron-3.5-lightning:free");
+  return or("nvidia/nemotron-3-super-120b-a12b:free");
 }
